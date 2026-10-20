@@ -1,13 +1,22 @@
-# 📋 Markdown Task Manager
+# 📋 Kanban.md
 
-> **[🇫🇷 Version française / French version](./readmeFR.md)**
+> **[🇫🇷 Version française / French version](./readmeFR.md)** (not yet updated for the redesign)
 
 **Kanban task manager based on local Markdown files**
 
 A complete task management system that transforms your Markdown files into an interactive Kanban board, without database or server. Perfect for developers, distributed teams and integration with AI assistants.
 
 ![Application Overview](docs/images/app-overview.jpg)
-*Overview of the Markdown Task Manager interface with Kanban board, filters, and task management*
+*The Kanban.md board with the demo data from `docs/demo` (light theme)*
+
+> **About this fork.** Kanban.md is a fork of [ioniks/MarkdownTaskManager](https://github.com/ioniks/MarkdownTaskManager) (MPL-2.0, see `LICENSE`). The file format, the AI workflow and the single-file build are unchanged and fully compatible. This fork redesigns the interface:
+>
+> - **One compact top bar**: burger menu (left), search and filters, the **+ Task** button, and a theme menu (right)
+> - **Inline multi-select filters** that show their state in place and collapse into one **Filters** button on narrow screens
+> - **One scroller**: scroll anywhere and every column moves together, with sticky column titles
+> - **Compact cards**: priority dot, quiet tags, a slim progress bar, and the edit button only on hover
+> - **Layered light and dark themes** (page, columns, cards, popovers) with an Auto / Light / Dark switch
+> - A token-based stylesheet (spacing, radius, type and colour variables) instead of scattered inline styles
 
 ---
 
@@ -60,6 +69,8 @@ Markdown Task Manager is a **standalone web application** contained in a single 
 3. **Select** a folder to store your tasks
 
 That's all! 🎉
+
+**Want to look around first?** Choose the `docs/demo` folder of this repository: it holds a small sample board ("Orbit Product Board") with dummy tasks and a few archived ones.
 
 ### First use
 
@@ -435,19 +446,24 @@ With this system, you have:
 ### 1. Interactive Kanban View
 
 ![Kanban Board](docs/images/kanban-board.jpg)
-*Interactive Kanban board with drag & drop, customizable columns, and task counters*
+*Dark theme, scrolled: the column titles stay in place and a hairline shows where cards pass underneath*
 
 - **Customizable columns**: Create and organize your own columns
   - Default: 📝 To Do, 🚀 In Progress, 👀 Review, ✅ Done
-  - Modifiable via "⚙️ Columns" button
+  - Modifiable via the burger menu → **Columns**
 - **Drag & Drop**: Move tasks between columns by dragging
-- **Adaptive layout**: Centered columns using full screen width
-- **Counters**: Number of tasks displayed in each column
+- **One scroller**: Scrolling anywhere on the board moves every column together, so you never have to aim at a column. Column titles are sticky
+- **Adaptive layout**: Columns have a minimum width (280px), share any extra space equally (up to 460px each) and the board scrolls sideways when they do not fit
+- **Counters**: Number of tasks displayed next to each column title
+- **Compact cards**: priority dot, ID, title, short description, category, assignees, tags and a progress bar. Click a tag, category, assignee or priority dot to filter. A pencil appears on hover to edit; click the card for its details
 
 ### 2. Complete Task Management
 
 ![Task Creation Modal](docs/images/task-modal.jpg)
 *Complete task creation and editing modal with all metadata fields and subtasks*
+
+![Task Details](docs/images/task-detail.jpg)
+*Task details: metadata, tags, description, subtasks you can tick off, and notes*
 
 **Creation:**
 - Complete form with all fields
@@ -478,38 +494,26 @@ With this system, you have:
 ### 3. Advanced Filters
 
 ![Advanced Filters](docs/images/filters.jpg)
-*Advanced filtering system with priority, tags, categories, and users filters*
+*Four filters beside the search box. Each button shows how many values are active; removable chips list them below*
 
-**4 types of cumulative filters:**
+**4 filters, each a checklist:**
 
-1. **Priority** 🔴🟡🟢 (color-coded badges)
-   - Filter by task priority level
-   - Options: Critical, High, Medium, Low
-   - Quickly identify urgent tasks
-
-2. **Tags** 🔵 (blue bubbles)
-   - Filter by one or more tags
-   - Example: #bug, #urgent, #backend
-
-3. **Categories** 🟣 (purple bubbles)
-   - Filter by task category
-   - Example: Frontend, Backend, Design
-
-4. **Users** 🟢 (green bubbles)
-   - Filter by assignment
-   - Example: @alice, @bob
+1. **Tags**: filter by one or more tags (e.g. #bug, #feature)
+2. **Category**: e.g. Frontend, Backend, Design
+3. **User**: filter by assignment (e.g. @alice, @bob)
+4. **Priority**: Critical, High, Medium, Low
 
 **How it works:**
-- Select a filter via dropdowns
-- Click on a badge in a task to filter instantly
-- Combine multiple filters (AND logic)
-- Remove a filter individually (✕ on bubble)
-- Clear all filters at once
+- Open a filter and tick one or more values. The button turns blue and shows a count (for example *Tags 2*)
+- Click a tag, category, assignee or priority dot on a card to filter instantly
+- **Values of the same filter are alternatives (OR)**: ticking tags *feature* and *bug* shows cards that have either
+- **Different filters are combined (AND)**: *feature or bug* **and** *Frontend or Backend*
+- Active values also appear as chips under the toolbar. Remove one with ✕, or use **Clear all** at the start of the row
+- On narrow screens (under 1280px) the four buttons collapse into a single **Filters** button with a badge showing the number of active values
 
 **Smart autocomplete:**
 - Filters remember history
 - Even archived values remain available
-- Contextual suggestions during input
 
 ### 4. Archive System
 
@@ -522,7 +526,7 @@ With this system, you have:
 - Organization by sections (e.g., by month, by sprint)
 
 **Consultation:**
-- Dedicated archive view ("📦 Archives" button)
+- Dedicated archive view (burger menu → **Archives**)
 - Search in archives
 - Detailed display of each archived task
 
@@ -537,28 +541,17 @@ With this system, you have:
 
 ### 5. Global Search
 
-**Powerful search functionality:**
-- Search across all active tasks
-- Search through archived tasks
-- Real-time filtering as you type
-- Search in task titles, descriptions, and metadata
-
-**Search features:**
-- Find tasks by ID (e.g., "TASK-042")
-- Search by keywords in title or description
-- Filter results by column
-- View archived tasks matching your search
-
-**Accessibility:**
-- Quick access via search button in header
-- Dedicated search modal
-- Clear results presentation
+- A search box in the top bar, always visible
+- Filters the board as you type, in titles, descriptions and notes
+- Works together with the filters (a card must match the search **and** the filters)
+- Find tasks by ID (e.g. "TASK-042") or by keywords
+- The Archives dialog has its own search box
 
 ### 6. Interface Translation
 
 **Multi-language support:**
 - English, French, German and Simplified Chinese available
-- Language selector in application settings
+- Language selector in the burger menu
 - Complete interface translation
 - Seamless language switching
 
@@ -585,7 +578,7 @@ With this system, you have:
 **Navigation:**
 - Instant project change
 - Auto-restore last project on launch
-- "✏️" button to rename current project
+- Burger menu → **Rename project**
 
 **Storage:**
 - Uses IndexedDB to store directory handles
@@ -602,9 +595,9 @@ With this system, you have:
 ### 9. Other Features
 
 - **Export**: Your Markdown files are already exported!
-- **Theme**: Modern and clean interface
+- **Themes**: Layered light and dark themes (page, columns, cards and menus get lighter the closer they are to you). The theme icon at the right edge offers **Auto** (follows the system), **Light** and **Dark**
 - **Responsive**: Optimized for mobile — touch drag & drop, stacked forms, per-column "+" button
-- **Dark mode**: Light/dark toggle with system auto-detection
+- **Keyboard**: **Esc** closes menus and dialogs
 - **Keyboard shortcuts**: Quick navigation (coming soon)
 
 ---
@@ -717,83 +710,60 @@ Real-time notification system with WebSockets.
 
 ## 🎨 User Interface
 
-### Header
+### Top bar
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ 📋 Task Manager  [Project ▼] [✏️] [📁] [➕] [📦] [⚙️]         │
-└─────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│ ☰  Kanban.md  [Project ▾]  [🔍 Search...]  [Tags ▾][Category ▾][User ▾][Priority ▾]  [+ Task]  ◐ │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
-Buttons:
-- **[Project ▼]**: Recent project selector
-- **[✏️]**: Rename current project
-- **[📁 Open folder]**: Select/change folder
-- **[➕ New task]**: Create a task
-- **[📦 Archives]**: View archived tasks
-- **[⚙️ Columns]**: Manage Kanban columns
+- **☰ Burger menu** (left): Archives, Columns, Folder, Rename project, Remove project from list, Language
+- **[Project ▾]**: Recent project selector
+- **Search and filters**: always reachable. On narrow screens the four filter buttons collapse into one **Filters** button
+- **[+ Task]**: Create a task
+- **◐ Theme** (right): Auto, Light or Dark
 
-### Filter bar
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  Tags: [Select ▼] [+]   Category: [Select ▼] [+]   User: [▼]   │
-│                                                                   │
-│  🔵 #bug ✕    🔵 #urgent ✕    🟣 Frontend ✕    🟢 @alice ✕     │
-└─────────────────────────────────────────────────────────────────┘
-```
+When filters are active, a slim row under the bar lists them as chips, starting with **Clear all**.
 
 ### Kanban
 
 ```
 ┌──────────────┬──────────────┬──────────────┬──────────────┐
-│ 📝 To Do     │ 🚀 Progress  │ 👀 Review    │ ✅ Done      │
-│    (3)       │    (2)       │    (1)       │    (5)       │
+│ Backlog   5  │ In Progress 3│ In Review  3 │ Done       4 │  ← sticky titles
 ├──────────────┼──────────────┼──────────────┼──────────────┤
 │ ┌──────────┐ │ ┌──────────┐ │ ┌──────────┐ │ ┌──────────┐ │
-│ │ TASK-001 │ │ │ TASK-004 │ │ │ TASK-007 │ │ │ TASK-008 │ │
-│ │ Title... │ │ │ Title... │ │ │ Title... │ │ │ Title... │ │
-│ │          │ │ │          │ │ │          │ │ │          │ │
-│ │ 🔴 Crit. │ │ │ 🟡 Med.  │ │ │ 🟢 Low   │ │ │ ✅ Done  │ │
-│ │ 🟣 Front │ │ │ 🟣 Back  │ │ │ 🟣 Front │ │ │ 🟣 Back  │ │
-│ │ 🟢 @alice│ │ │ 🟢 @bob  │ │ │ 🟢 @alice│ │ │ 🟢 @alice│ │
-│ │          │ │ │          │ │ │          │ │ │          │ │
-│ │ ▓▓▓░░ 3/5│ │ │ ▓▓▓▓░ 4/5│ │ │ ▓▓▓▓▓ 5/5│ │ │          │ │
-│ │   [✏️]   │ │ │   [✏️]   │ │ │   [✏️]   │ │ │   [✏️]   │ │
+│ │ ● TASK-1 ✎│ │ │ ● TASK-6 ✎│ │ │ ● TASK-9 ✎│ │ │ ● TASK-12✎│ │   ● priority dot
+│ │ Title    │ │ │ Title    │ │ │ Title    │ │ │ Title    │ │   ✎ on hover only
+│ │ Short... │ │ │ Short... │ │ │ Short... │ │ │ Short... │ │
+│ │ Cat @who │ │ │ Cat @who │ │ │ Cat @who │ │ │ Cat @who │ │
+│ │ ▓▓▓░░ 3/5│ │ │ ▓▓▓▓░ 4/5│ │ │ ▓▓▓▓▓ 5/5│ │ │ ▓▓▓▓▓ 3/3│ │
 │ └──────────┘ │ └──────────┘ │ └──────────┘ │ └──────────┘ │
-│              │              │              │              │
-│ ┌──────────┐ │              │              │              │
-│ │ TASK-002 │ │              │              │              │
-│ │ ...      │ │              │              │              │
-│ └──────────┘ │              │              │              │
 └──────────────┴──────────────┴──────────────┴──────────────┘
 ```
 
-### Task card (details)
+The whole board is one scroller, so scrolling anywhere moves all columns together.
 
+### Task details
+
+Click a card to open its details: metadata, tags, description, subtasks (tick them off in place) and notes. **Edit**, **Archive** and **Delete** are at the bottom; close with ✕, **Esc** or a click outside.
+
+---
+
+## 🛠️ Development
+
+The application is built from `src/` into one self-contained file.
+
+```bash
+npm install          # once (a single dev dependency to minify the output)
+npm run build        # minified task-manager.html
+npm run build:dev    # readable task-manager.html while you work
 ```
-┌──────────────────────────────────────────────┐
-│ TASK-042 | Implement notification system     │
-├──────────────────────────────────────────────┤
-│ Priority: 🟡 High                            │
-│ Category: 🟣 Backend                         │
-│ Assigned: 🟢 @alice, @bob                    │
-│ Created: 2025-01-15                          │
-│ Due: 2025-02-01                              │
-│ Tags: 🔵 #feature #notifications             │
-├──────────────────────────────────────────────┤
-│ Detailed task description...                 │
-│                                              │
-│ Subtasks (3/5):                             │
-│ ☑ Setup WebSocket server                    │
-│ ☑ Create REST API                           │
-│ ☑ Implement email sending                   │
-│ ☐ Notifications UI                          │
-│ ☐ End-to-end tests                          │
-├──────────────────────────────────────────────┤
-│ [Edit] [Archive] [Delete] [Close]           │
-└──────────────────────────────────────────────┘
-```
+
+- `src/styles/00-variables.css` holds the design tokens: spacing, radius, type scale and the light and dark colour ladders. Change a colour or a size there.
+- Surfaces are layered `--c-page` < `--c-column` < `--c-card` < `--c-pop`, so a new component only needs to pick the right level.
+- `src/scripts/13-toolbar.js` holds the menus and popovers; `src/scripts/06-filters.js` the filter logic.
+- `docs/demo/` contains the sample board used for the screenshots above.
 
 ---
 

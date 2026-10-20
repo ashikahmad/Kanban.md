@@ -114,7 +114,7 @@
                 'empty.noTasks': 'No tasks',
 
                 // Buttons and actions
-                'action.restore': '↩️ Restore',
+                'action.restore': 'Restore',
                 'action.delete': '',
                 'action.edit': '',
                 'action.moveUp': 'Move up',
@@ -299,7 +299,7 @@
                 'empty.noTasks': 'Aucune tâche',
 
                 // Buttons and actions
-                'action.restore': '↩️ Restaurer',
+                'action.restore': 'Restaurer',
                 'action.delete': '',
                 'action.edit': '',
                 'action.moveUp': 'Déplacer vers le haut',
@@ -484,7 +484,7 @@
                 'empty.noTasks': 'Keine Aufgaben',
 
                 // Buttons and actions
-                'action.restore': '↩️ Wiederherstellen',
+                'action.restore': 'Wiederherstellen',
                 'action.delete': '',
                 'action.edit': '',
                 'action.moveUp': 'Nach oben',
@@ -668,7 +668,7 @@
                 'empty.noTasks': '暂无任务',
 
                 // Buttons and actions
-                'action.restore': '↩️ 恢复',
+                'action.restore': '恢复',
                 'action.delete': '',
                 'action.edit': '',
                 'action.moveUp': '上移',
