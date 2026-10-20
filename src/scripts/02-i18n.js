@@ -851,6 +851,25 @@
             return priority;
         }
 
+        // Priorities are shown as a colored dot plus their name; the emoji in the board config only picks the dot's color
+        function priorityConfigEntry(priority) {
+            return (config.priorities || []).find(p => clean(p) === clean(priority || ''));
+        }
+
+        function priorityClass(priority) {
+            const emoji = getFirstEmoji(priorityConfigEntry(priority) || priority || '');
+            return priorityIconClasses[emoji] || 'Default';
+        }
+
+        function priorityLabel(priority) {
+            return displayPriority(clean(priority || ''));
+        }
+
+        // Dot + name, as HTML
+        function priorityHtml(priority) {
+            return `<span class="prio-label"><span class="prio ${priorityClass(priority)}" aria-hidden="true"></span>${escapeHtml(priorityLabel(priority))}</span>`;
+        }
+
         // Update all static text elements in the UI
         function updateStaticTexts() {
             // Update page title

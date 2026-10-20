@@ -23,15 +23,6 @@
 
             actions.innerHTML = actionsHtml;
 
-            // Get priority with translation
-            let priorityWithIcon = task.priority;
-            if (task.priority) {
-                const priority = config.priorities.find(p => clean(p) === task.priority);
-                if (priority) {
-                    priorityWithIcon = displayPriority(priority);
-                }
-            }
-
             // Get status name
             const statusColumn = config.columns.find(col => col.id === task.status);
             const statusName = statusColumn ? statusColumn.name : task.status;
@@ -44,7 +35,7 @@
                     </div>
 
                     <dl class="detail-meta">
-                        ${task.priority ? `<div><dt>${t('meta.priority')}</dt><dd>${displayPriority(priorityWithIcon)}</dd></div>` : ''}
+                        ${task.priority ? `<div><dt>${t('meta.priority')}</dt><dd>${priorityHtml(task.priority)}</dd></div>` : ''}
                         ${true ? `<div><dt>${t('meta.status')}</dt><dd>${escapeHtml(statusName)}</dd></div>` : ''}
                         ${task.category ? `<div><dt>${t('meta.category')}</dt><dd>${escapeHtml(task.category)}</dd></div>` : ''}
                         ${task.assignees.length > 0 ? `<div><dt>${t('meta.assigned')}</dt><dd>${escapeHtml(task.assignees.join(', '))}</dd></div>` : ''}

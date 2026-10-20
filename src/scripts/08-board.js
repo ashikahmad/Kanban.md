@@ -86,16 +86,7 @@
             const due = dueStatus(task);
             if (due) taskEl.classList.add(`task-card--${due}`);
 
-            var priorityBadgeClass = "Default";
-            if (config.priorities) {
-                const priority = config.priorities.find(p => clean(p) === task.priority);
-                if (priority) {
-                    const emoji = getFirstEmoji(priority);
-                    if (emoji && priorityIconClasses[emoji]) {
-                        priorityBadgeClass = priorityIconClasses[emoji];
-                    }
-                }
-            }
+            const priorityBadgeClass = priorityClass(task.priority);
 
             const doneCount = task.subtasks.filter(s => s.completed).length;
             const subtaskProgress = task.subtasks.length > 0 ?
@@ -114,7 +105,7 @@
 
             taskEl.innerHTML = `
                 <div class="task-header">
-                    ${task.priority ? `<span class="prio ${priorityBadgeClass}" data-filter="priority" data-filter-value="${escapeHtml(task.priority)}" title="${escapeHtml(displayPriority(task.priority))}"></span>` : ''}
+                    ${task.priority ? `<span class="prio ${priorityBadgeClass}" data-filter="priority" data-filter-value="${escapeHtml(task.priority)}" title="${escapeHtml(priorityLabel(task.priority))}"></span>` : ''}
                     <span class="task-id">${escapeHtml(task.id)}</span>
                     <button class="task-edit-btn" data-edit-task="1" title="${escapeHtml(t('taskDetail.edit'))}" aria-label="${escapeHtml(t('taskDetail.edit'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg></button>
                 </div>

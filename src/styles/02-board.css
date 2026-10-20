@@ -78,6 +78,8 @@
 
         .task-header { display: flex; align-items: center; gap: var(--s-2); min-height: 20px; }
         .task-id { font-size: var(--fs-xs); color: var(--c-faint); font-family: var(--mono); }
+        .prio-label { display: inline-flex; align-items: center; gap: 6px; }
+        .prio-label .prio { cursor: inherit; }
         .prio { width: 8px; height: 8px; border-radius: 50%; background: var(--priority-default); flex: none; cursor: pointer; }
         .prio.Red { background: var(--priority-red); } .prio.Orange { background: var(--priority-orange); }
         .prio.Yellow { background: var(--priority-yellow); } .prio.Green { background: var(--priority-green); }

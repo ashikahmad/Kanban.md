@@ -173,6 +173,7 @@
 
             const filtered = searchTerm ?
                 archivedTasks.filter(t =>
+                    t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     t.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -203,7 +204,7 @@
                     </div>
                     ${task.description ? `<div class="desc">${markdownToHtml(task.description)}</div>` : ''}
                     <div class="task-meta">
-                        ${task.priority ? `<span class="badge">${displayPriority(task.priority)}</span>` : ''}
+                        ${task.priority ? `<span class="badge">${priorityHtml(task.priority)}</span>` : ''}
                         ${task.category ? `<span class="badge">${escapeHtml(task.category)}</span>` : ''}
                         ${task.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
                     </div>

@@ -73,7 +73,7 @@
 
             // Populate priorities select
             document.getElementById('taskPriority').innerHTML = config.priorities.map(priority =>
-                `<option value="${clean(priority)}">${displayPriority(priority)}</option>`
+                `<option value="${clean(priority)}">${escapeHtml(priorityLabel(priority))}</option>`
             ).join('');
 
             // Update autocomplete

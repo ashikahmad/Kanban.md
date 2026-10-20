@@ -91,10 +91,10 @@
         // Filter menus: one checklist per filter type, so several values per type can be active at once
         function filterOptions(type) {
             const { categories, users, tags } = extractUniqueValues();
-            if (type === 'tag') return tags.map(v => ({ value: v, label: v }));
-            if (type === 'category') return categories.map(v => ({ value: v, label: v }));
-            if (type === 'user') return users.map(u => ({ value: normalizeUserId(u), label: u }));
-            return (config.priorities || []).map(p => ({ value: clean(p), label: displayPriority(p) }));
+            if (type === 'tag') return tags.map(v => ({ value: v, label: escapeHtml(v) }));
+            if (type === 'category') return categories.map(v => ({ value: v, label: escapeHtml(v) }));
+            if (type === 'user') return users.map(u => ({ value: normalizeUserId(u), label: escapeHtml(u) }));
+            return (config.priorities || []).map(p => ({ value: clean(p), label: priorityHtml(p) }));
         }
 
         function buildFilterMenus() {
@@ -104,7 +104,7 @@
                 const opts = filterOptions(type);
                 menu.innerHTML = opts.length === 0
                     ? `<div class="fempty">${t('empty.noTasks')}</div>`
-                    : opts.map(o => `<label class="fopt"><input type="checkbox" data-type="${type}" data-value="${escapeHtml(o.value)}" onchange="setFilterValue(this.dataset.type, this.dataset.value, this.checked)"><span>${escapeHtml(o.label)}</span></label>`).join('');
+                    : opts.map(o => `<label class="fopt"><input type="checkbox" data-type="${type}" data-value="${escapeHtml(o.value)}" onchange="setFilterValue(this.dataset.type, this.dataset.value, this.checked)"><span>${o.label}</span></label>`).join('');
             });
             syncFilterUi();
         }
@@ -175,23 +175,12 @@
                 ? `<button class="chip-clear" onclick="clearFilters()">${escapeHtml(t('filters.clearAll'))}</button>`
                 : '';
             container.innerHTML = clearAll + activeFilters.map((f, idx) => {
-                // Determine display value based on filter type
-                let displayValue = f.value;
+                // Priorities show their dot; users their full name from config
+                let label = escapeHtml(f.value);
+                if (f.type === 'priority') label = priorityHtml(f.value);
+                if (f.type === 'user') label = escapeHtml(getUserFullFormat(f.value));
 
-                // For priority filters, display with prefix/emoji from config
-                if (f.type === 'priority' && config.priorities) {
-                    const priority = config.priorities.find(p => clean(p) === f.value);
-                    if (priority) {
-                        displayValue = priority;
-                    }
-                }
-
-                // For user filters, display with full format from config
-                if (f.type === 'user') {
-                    displayValue = getUserFullFormat(f.value);
-                }
-
-                return `<span class="chip" data-type="${f.type}">${escapeHtml(displayPriority(displayValue))}<button onclick="removeFilter(${idx})" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}">&times;</button></span>`;
+                return `<span class="chip" data-type="${f.type}">${label}<button onclick="removeFilter(${idx})" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}">&times;</button></span>`;
             }).join('');
 
             syncFilterUi();
@@ -220,10 +209,11 @@
                 if (!matchesActiveFilters) return false;
             }
 
-            // Check global search term (searches in title, description, and notes)
+            // Check global search term (searches in id, title, description, and notes; "11" finds TASK-011, TASK-111, ...)
             if (globalSearchTerm) {
                 const searchLower = globalSearchTerm.toLowerCase();
                 const matchesSearch =
+                    (task.id && task.id.toLowerCase().includes(searchLower)) ||
                     (task.title && task.title.toLowerCase().includes(searchLower)) ||
                     (task.description && task.description.toLowerCase().includes(searchLower)) ||
                     (task.notes && task.notes.toLowerCase().includes(searchLower));
