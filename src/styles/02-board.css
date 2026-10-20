@@ -31,10 +31,15 @@
             padding: var(--s-3) var(--s-3) var(--s-2);
             background: var(--c-column);
             border-radius: var(--r-md) var(--r-md) 0 0;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.15s;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        /* Once cards scroll underneath, a hairline under the title row shows where they are cut */
+        #kanbanView.is-scrolled .column-header { border-bottom-color: var(--c-border); }
+
         .column-title { font-size: var(--fs-sm); font-weight: 600; text-transform: none; color: var(--c-text); display: flex; align-items: center; gap: var(--s-2); }
         .column-tools { display: flex; align-items: center; gap: var(--s-1); }
         .column-count { font-size: var(--fs-xs); color: var(--c-faint); font-variant-numeric: tabular-nums; }
@@ -100,7 +105,7 @@
         .task-description * { display: inline; margin: 0; }
 
         .task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-1) var(--s-2); font-size: var(--fs-xs); }
-        .badge { padding: 1px var(--s-2); border-radius: var(--r-sm); font-size: var(--fs-xs); font-weight: 500; background: var(--c-column); color: var(--c-muted); }
+        .badge { padding: 1px var(--s-2); border-radius: var(--r-sm); font-size: var(--fs-xs); font-weight: 500; background: var(--c-fill); color: var(--c-muted); }
         .badge[data-filter], .tag[data-filter] { cursor: pointer; }
         .badge[data-filter]:hover { background: var(--c-hover); color: var(--c-text); }
         .badge-due--soon { background: transparent; color: var(--c-warn); }
@@ -110,7 +115,7 @@
 
         .task-subtasks { font-size: var(--fs-xs); color: var(--c-faint); }
         .subtask-progress { display: flex; align-items: center; gap: var(--s-2); font-variant-numeric: tabular-nums; }
-        .progress-bar { flex: 1; height: 3px; background: var(--c-border); border-radius: 2px; overflow: hidden; }
+        .progress-bar { flex: 1; height: 3px; background: var(--c-fill); border-radius: 2px; overflow: hidden; }
         .progress-fill { height: 100%; background: var(--c-ok); transition: width 0.3s; }
 
         pre { margin: var(--s-3) 0; border-radius: var(--r-sm); overflow-x: auto; background: var(--c-code-bg); padding: var(--s-3); }

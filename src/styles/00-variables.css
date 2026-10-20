@@ -14,41 +14,45 @@
             --col-min: 280px;
             --col-max: 460px;
 
-            /* Surfaces */
-            --c-page: #f4f5f7;
-            --c-column: #eceef2;
-            --c-card: #ffffff;
-            --c-hover: #f0f2f6;
-            --c-input: #ffffff;
-            --c-border: #dfe2e8;
-            --c-border-strong: #c6cbd5;
+            /* Surface ladder: the further back, the darker; the nearer the user, the lighter, in both themes:
+               page < column / bar / dialog < card / control < popover. Cool slate neutrals, soft borders.
+               Light mode cannot go lighter than white, so popovers lean on a shadow there. */
+            --c-page: #E9ECF1;      
+            --c-column: #F4F6F9;
+            --c-card: #FFFFFF;
+            --c-input: #FFFFFF;
+            --c-pop: #FFFFFF;
+            --c-hover: rgba(15, 23, 42, 0.05);
+            --c-fill: rgba(100, 116, 139, 0.13);   /* chips, tracks: a tint, so it reads on any level */
+            --c-border: #E1E5EB;
+            --c-border-strong: #CDD3DC;
             /* Text */
-            --c-text: #171a1f;
-            --c-muted: #5f6875;
-            --c-faint: #8b93a1;
+            --c-text: #171A1F;
+            --c-muted: #5F6875;
+            --c-faint: #8B93A1;
             /* Accent and states */
-            --c-accent: #2f5bea;
-            --c-accent-hover: #2349c4;
-            --c-accent-soft: #e8eeff;
-            --c-on-accent: #ffffff;
-            --c-danger: #d23b3b;
-            --c-warn: #b7791f;
-            --c-ok: #2d8a54;
-            --c-overlay: rgba(15, 18, 24, 0.45);
-            --shadow-pop: 0 8px 24px rgba(15, 18, 24, 0.14), 0 0 0 1px var(--c-border);
-            --c-code-bg: #eceef2;
-            --c-code-text: #171a1f;
+            --c-accent: #2F5BEA;
+            --c-accent-hover: #2349C4;
+            --c-accent-soft: rgba(47, 91, 234, 0.10);
+            --c-on-accent: #FFFFFF;
+            --c-danger: #D23B3B;
+            --c-warn: #B7791F;
+            --c-ok: #3FA66A;
+            --c-overlay: rgba(15, 23, 42, 0.40);
+            --shadow-pop: 0 10px 30px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(15, 23, 42, 0.06);
+            --c-code-bg: var(--c-fill);
+            --c-code-text: #171A1F;
 
             /* Priority dots */
-            --priority-default: #8b93a1;
-            --priority-red: #e5484d;
-            --priority-orange: #f08a24;
-            --priority-yellow: #d9a400;
-            --priority-green: #3fa66a;
-            --priority-blue: #3b82f6;
-            --priority-purple: #8b6bd8;
-            --priority-white: #cfd4dc;
-            --priority-black: #1f2937;
+            --priority-default: #8B93A1;
+            --priority-red: #E5484D;
+            --priority-orange: #F08A24;
+            --priority-yellow: #D9A400;
+            --priority-green: #3FA66A;
+            --priority-blue: #3B82F6;
+            --priority-purple: #8B6BD8;
+            --priority-white: #CFD4DC;
+            --priority-black: #1F2937;
 
             /* Aliases for older inline references */
             --bg-primary: var(--c-page); --bg-secondary: var(--c-card); --bg-tertiary: var(--c-column);
@@ -56,33 +60,42 @@
             --text-primary: var(--c-text); --text-secondary: var(--c-muted); --text-label: var(--c-muted);
             --accent: var(--c-accent); --accent-hover: var(--c-accent-hover); --primary: var(--c-accent);
             --bg: var(--c-card); --text: var(--c-text); --border: var(--c-border);
-            --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%235f6875' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+            --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%235F6875' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
             color-scheme: light;
         }
 
         [data-theme="dark"] {
-            --c-page: #0e1013;
-            --c-column: #14171c;
-            --c-card: #1b1f26;
-            --c-hover: #232831;
-            --c-input: #11141a;
-            --c-border: #2a2f38;
-            --c-border-strong: #3a4150;
-            --c-text: #e8eaee;
-            --c-muted: #a0a8b5;
+            --c-page: #0E1013;      
+            --c-column: #14171C;
+            --c-card: #1B1F26;
+            --c-input: #1B1F26;
+            --c-pop: #232831;
+            --c-hover: rgba(255, 255, 255, 0.05);
+            --c-fill: rgba(148, 163, 184, 0.16);
+            --c-border: #252A33;
+            --c-border-strong: #343B47;
+            --c-text: #E8EAEE;
+            --c-muted: #A0A8B5;
             --c-faint: #707988;
-            --c-accent: #7b9bff;
-            --c-accent-hover: #9bb3ff;
-            --c-accent-soft: #1f2a4d;
-            --c-on-accent: #0e1013;
-            --c-danger: #ef6b6b;
-            --c-warn: #e0a94a;
-            --c-ok: #4cc983;
-            --c-overlay: rgba(0, 0, 0, 0.6);
-            --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--c-border);
-            --c-code-bg: #11141a;
-            --c-code-text: #e8eaee;
-            --priority-white: #5b6372;
-            --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23a0a8b5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+            --c-accent: #7B9BFF;
+            --c-accent-hover: #9BB3FF;
+            --c-accent-soft: rgba(123, 155, 255, 0.16);
+            --c-on-accent: #0E1013;
+            --c-danger: #EF6B6B;
+            --c-warn: #E0A94A;
+            --c-ok: #4CC983;
+            --c-overlay: rgba(0, 0, 0, 0.55);
+            --shadow-pop: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07);
+            --c-code-text: #E8EAEE;
+            --priority-default: #707988;
+            --priority-red: #EF6B6B;
+            --priority-orange: #F59E4B;
+            --priority-yellow: #E5B13F;
+            --priority-green: #4CC983;
+            --priority-blue: #6EA8FF;
+            --priority-purple: #B197F0;
+            --priority-white: #5B6372;
+            --priority-black: #8B93A1;
+            --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23A0A8B5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
             color-scheme: dark;
         }

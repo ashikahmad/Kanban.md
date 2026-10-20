@@ -1,6 +1,6 @@
         .notification {
             position: fixed; bottom: var(--s-5); right: var(--s-5);
-            background: var(--c-card); color: var(--c-text);
+            background: var(--c-pop); color: var(--c-text);
             padding: var(--s-3) var(--s-4);
             border-radius: var(--r-sm);
             box-shadow: var(--shadow-pop);

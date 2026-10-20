@@ -1,7 +1,7 @@
         .modal { display: none; position: fixed; inset: 0; background: var(--c-overlay); z-index: 1000; align-items: center; justify-content: center; padding: var(--s-4); }
         .modal.active { display: flex; }
         .modal-content {
-            background: var(--c-card);
+            background: var(--c-column);
             border-radius: var(--r-md);
             width: 100%;
             max-width: 680px;
@@ -38,7 +38,7 @@
         .detail-tags { display: flex; gap: var(--s-2); flex-wrap: wrap; }
         .detail-tags span { color: var(--c-accent); background: var(--c-accent-soft); padding: 1px var(--s-2); border-radius: 10px; font-size: var(--fs-sm); }
         .detail-text { color: var(--c-text); line-height: 1.6; }
-        .detail-notes { background: var(--c-page); border-radius: var(--r-sm); padding: var(--s-3); line-height: 1.6; }
+        .detail-notes { background: var(--c-card); border-radius: var(--r-sm); padding: var(--s-3); line-height: 1.6; }
 
         .subtask-list { list-style: none; display: flex; flex-direction: column; }
         .subtask-item { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-1) var(--s-2); border-radius: var(--r-sm); }
@@ -57,7 +57,7 @@
         .row-card .grow { flex: 1; min-width: 0; }
         .row-card input[type="text"] { height: 28px; }
         .row-card input.col-id { width: 120px; font-family: var(--mono); font-size: var(--fs-sm); }
-        .archive-item { border: 1px solid var(--c-border); border-radius: var(--r-sm); padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); }
+        .archive-item { background: var(--c-card); border: 1px solid var(--c-border); border-radius: var(--r-sm); padding: var(--s-3); display: flex; flex-direction: column; gap: var(--s-2); }
         .archive-item .top { display: flex; justify-content: space-between; align-items: center; gap: var(--s-3); }
         .archive-item .top strong { font-size: var(--fs-md); }
         .archive-item .desc { color: var(--c-muted); font-size: var(--fs-sm); }

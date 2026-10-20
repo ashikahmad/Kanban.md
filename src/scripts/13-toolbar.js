@@ -50,3 +50,9 @@
             else if (e.target.id === 'columnsModal') closeColumnsModal();
             else if (e.target.id === 'archiveModal') closeArchiveModal();
         });
+
+        // Flag the board as scrolled so the sticky column titles can show a hairline under them
+        (function() {
+            const view = document.getElementById('kanbanView');
+            view.addEventListener('scroll', () => view.classList.toggle('is-scrolled', view.scrollTop > 0), { passive: true });
+        })();
