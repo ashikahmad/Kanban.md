@@ -183,32 +183,31 @@
 
             if (filtered.length === 0) {
                 console.log('⚠️ No tasks to display - showing empty message');
-                list.innerHTML = `<p style="text-align: center; color: var(--text-secondary, #999); padding: 2rem;">${t('archives.empty')}</p>`;
+                list.innerHTML = `<div class="empty-state">${t('archives.empty')}</div>`;
                 return;
             }
 
             console.log('✓ Rendering', filtered.length, 'tasks');
 
             list.innerHTML = filtered.map(task => `
-                <div class="task-card" onclick="showTaskDetail(archivedTasks.find(t => t.id === '${task.id}'))">
-                    <div style="background: var(--bg); border: 2px solid var(--border, #e2e8f0); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                            <div>
-                                <span style="background: #6b7280; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${task.id}</span>
-                                <strong style="margin-left: 0.5rem; font-size: 1.1rem;">${escapeHtml(task.title)}</strong>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button onclick="event.stopPropagation(); deleteTask('${task.id}', true)" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ef4444; color: white;">🗑️</button>
-                                <button onclick="event.stopPropagation(); unarchiveTask('${task.id}')" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">${t('action.restore')}</button>
-                            </div>
+                <div class="archive-item" style="cursor: pointer;" onclick="showTaskDetail(archivedTasks.find(t => t.id === '${task.id}'))">
+                    <div class="top">
+                        <div>
+                            <span class="task-id">${task.id}</span>
+                            <strong style="margin-left: var(--s-2);">${escapeHtml(task.title)}</strong>
                         </div>
-                        ${task.description ? `<p style="color: var(--text-secondary, #666); margin: 0.5rem 0;">${markdownToHtml(task.description)}</p>` : ''}
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
-                            ${task.priority ? `<span style="background: #fbbf24; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">${displayPriority(task.priority)}</span>` : ''}
-                            ${task.category ? `<span style="background: #8b5cf6; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">${escapeHtml(task.category)}</span>` : ''}
-                            ${task.tags.map(t => `<span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">${escapeHtml(t)}</span>`).join('')}
+                        <div style="display: flex; gap: var(--s-2);">
+                            <button onclick="event.stopPropagation(); deleteTask('${task.id}', true)" class="btn btn-danger btn-sm" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
+                            <button onclick="event.stopPropagation(); unarchiveTask('${task.id}')" class="btn btn-secondary btn-sm">${t('action.restore')}</button>
                         </div>
                     </div>
+                    ${task.description ? `<div class="desc">${markdownToHtml(task.description)}</div>` : ''}
+                    <div class="task-meta">
+                        ${task.priority ? `<span class="badge">${displayPriority(task.priority)}</span>` : ''}
+                        ${task.category ? `<span class="badge">${escapeHtml(task.category)}</span>` : ''}
+                        ${task.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                </div>
             `).join('');
         }
 

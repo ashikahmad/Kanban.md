@@ -2,14 +2,12 @@
             const modal = document.getElementById('columnsModal');
             const list = document.getElementById('columnsList');
             list.innerHTML = config.columns.map((col, idx) => `
-                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; padding: 0.75rem; background: var(--bg); border: 2px solid var(--border, #cbd5e0); border-radius: 6px; align-items: center;">
-                    <div style="display: flex; gap: 0.25rem;">
-                        <button onclick="moveColumn(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;" title="${t('action.moveUp')}">↑</button>
-                        <button onclick="moveColumn(${idx}, 1)" ${idx === config.columns.length - 1 ? 'disabled' : ''} class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.85rem;" title="${t('action.moveDown')}">↓</button>
-                    </div>
-                    <input type="text" value="${escapeHtml(col.name)}" onchange="updateColumn(${idx}, 'name', this.value)" style="flex: 1; padding: 0.5rem; border: 1px solid var(--border, #cbd5e0); border-radius: 4px; background: var(--bg); color: var(--text);">
-                    <input type="text" value="${escapeHtml(col.id)}" onchange="updateColumn(${idx}, 'id', this.value)" style="width: 120px; padding: 0.5rem; border: 1px solid var(--border, #cbd5e0); border-radius: 4px; background: var(--bg); color: var(--text);" placeholder="ID">
-                    <button onclick="deleteColumn(${idx})" class="btn btn-secondary" style="padding: 0.5rem;">🗑️</button>
+                <div class="row-card">
+                    <button onclick="moveColumn(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="btn btn-ghost btn-sm btn-icon" title="${t('action.moveUp')}" aria-label="${t('action.moveUp')}">↑</button>
+                    <button onclick="moveColumn(${idx}, 1)" ${idx === config.columns.length - 1 ? 'disabled' : ''} class="btn btn-ghost btn-sm btn-icon" title="${t('action.moveDown')}" aria-label="${t('action.moveDown')}">↓</button>
+                    <input type="text" class="grow" value="${escapeHtml(col.name)}" onchange="updateColumn(${idx}, 'name', this.value)">
+                    <input type="text" class="col-id" value="${escapeHtml(col.id)}" onchange="updateColumn(${idx}, 'id', this.value)" placeholder="ID">
+                    <button onclick="deleteColumn(${idx})" class="btn btn-ghost btn-sm btn-icon" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
                 </div>
             `).join('');
             modal.classList.add('active');
@@ -120,10 +118,10 @@
         function renderFormSubtasks() {
             const list = document.getElementById('formSubtasksList');
             list.innerHTML = formSubtasks.map((st, idx) => `
-                <li style="padding: 0.5rem; margin-bottom: 0.25rem; background: var(--bg); border: 1px solid var(--border, #cbd5e0); border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;">
-                    <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleFormSubtask(${idx})" style="width: 16px; height: 16px; cursor: pointer;">
-                    <span style="flex: 1; ${st.completed ? 'text-decoration: line-through; color: #999;' : ''}">${st.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
-                    <button type="button" onclick="deleteFormSubtask(${idx})" style="background: none; border: none; cursor: pointer; color: #e53e3e; font-size: 1rem;">🗑️</button>
+                <li class="subtask-item${st.completed ? ' done' : ''}">
+                    <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleFormSubtask(${idx})">
+                    <span>${st.text.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span>
+                    <button type="button" class="del" onclick="deleteFormSubtask(${idx})" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
                 </li>
             `).join('');
         }

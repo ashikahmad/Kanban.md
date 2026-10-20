@@ -5,17 +5,20 @@
             const modalBody = document.getElementById('modalBody');
             const archiveModal = document.getElementById('archiveModal');
 
-            let actionsHtml = `<button class="btn btn-secondary" onclick="closeModal()">${t('taskDetail.close')}</button>`;
+            let actionsHtml = '';
 
             // If coming from the archiveModal, hide: archive, edit, and delete buttons
             wasArchiveModalActive = archiveModal.classList.contains('active');
             if (wasArchiveModalActive) {
                 archiveModal.classList.remove('active');
+                actionsHtml = '';
             }
             else {
-                actionsHtml += `<button class="btn btn-primary" onclick="editCurrentTask()">${t('taskDetail.edit')}</button>`;
-                actionsHtml += `<button class="btn btn-secondary" onclick="archiveCurrentTask()">${t('taskDetail.archive')}</button>`;
-                actionsHtml += `<button class="btn btn-secondary" onclick="deleteCurrentTask()">${t('taskDetail.delete')}</button>`;
+                actionsHtml = `<div class="push">
+                        <button class="btn btn-danger" onclick="deleteCurrentTask()">${t('taskDetail.delete')}</button>
+                        <button class="btn btn-secondary" onclick="archiveCurrentTask()">${t('taskDetail.archive')}</button>
+                    </div>
+                    <button class="btn btn-primary" onclick="editCurrentTask()">${t('taskDetail.edit')}</button>`;
             }
 
             actions.innerHTML = actionsHtml;
@@ -34,124 +37,63 @@
             const statusName = statusColumn ? statusColumn.name : task.status;
 
             modalBody.innerHTML = `
-                <div style="padding: 1.5rem;">
-                    <!-- Task ID Badge -->
-                    <div style="display: inline-block; background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;">
-                        ${task.id}
+                <div class="detail">
+                    <div>
+                        <div class="detail-id">${escapeHtml(task.id)}</div>
+                        <h3>${escapeHtml(task.title)}</h3>
                     </div>
 
-                    <!-- Title -->
-                    <h3 style="margin: 0 0 1.5rem 0; font-size: 1.5rem; color: var(--text);">${escapeHtml(task.title)}</h3>
+                    <dl class="detail-meta">
+                        ${task.priority ? `<div><dt>${t('meta.priority')}</dt><dd>${displayPriority(priorityWithIcon)}</dd></div>` : ''}
+                        ${true ? `<div><dt>${t('meta.status')}</dt><dd>${escapeHtml(statusName)}</dd></div>` : ''}
+                        ${task.category ? `<div><dt>${t('meta.category')}</dt><dd>${escapeHtml(task.category)}</dd></div>` : ''}
+                        ${task.assignees.length > 0 ? `<div><dt>${t('meta.assigned')}</dt><dd>${escapeHtml(task.assignees.join(', '))}</dd></div>` : ''}
+                        ${task.created ? `<div><dt>${t('meta.created')}</dt><dd>${task.created}</dd></div>` : ''}
+                        ${task.started ? `<div><dt>${t('meta.started')}</dt><dd>${task.started}</dd></div>` : ''}
+                        ${task.due ? `<div><dt>${t('meta.due')}</dt><dd>${task.due}</dd></div>` : ''}
+                        ${task.completed ? `<div><dt>${t('meta.completed')}</dt><dd>${task.completed}</dd></div>` : ''}
+                    </dl>
 
-                    <!-- Metadata Grid -->
-                    <div class="modal-form-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: var(--bg); border-radius: 8px;">
-                        ${task.priority ? `
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.priority')}</div>
-                                <div style="font-weight: 500;">${displayPriority(priorityWithIcon)}</div>
-                            </div>
-                        ` : ''}
-
-                        <div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.status')}</div>
-                            <div style="font-weight: 500;">${escapeHtml(statusName)}</div>
-                        </div>
-
-                        ${task.category ? `
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.category')}</div>
-                                <div style="font-weight: 500;">${escapeHtml(task.category)}</div>
-                            </div>
-                        ` : ''}
-
-                        ${task.assignees.length > 0 ? `
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.assigned')}</div>
-                                <div style="font-weight: 500;">${escapeHtml(task.assignees.join(', '))}</div>
-                            </div>
-                        ` : ''}
-
-                        ${task.created ? `
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.created')}</div>
-                                <div style="font-weight: 500;">${task.created}</div>
-                            </div>
-                        ` : ''}
-
-                        ${task.started ? `
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.started')}</div>
-                                <div style="font-weight: 500;">${task.started}</div>
-                            </div>
-                        ` : ''}
-
-                        ${task.due ? `
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.due')}</div>
-                                <div style="font-weight: 500;">${task.due}</div>
-                            </div>
-                        ` : ''}
-
-                        ${task.completed ? `
-                            <div>
-                                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('meta.completed')}</div>
-                                <div style="font-weight: 500;">${task.completed}</div>
-                            </div>
-                        ` : ''}
-                    </div>
-
-                    <!-- Tags -->
                     ${task.tags.length > 0 ? `
-                        <div style="margin-bottom: 1.5rem;">
-                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">${t('meta.tags')}</div>
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                ${task.tags.map(tag => `
-                                    <span style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
-                                        ${tag}
-                                    </span>
-                                `).join('')}
-                            </div>
+                        <div>
+                            <div class="detail-label">${t('meta.tags')}</div>
+                            <div class="detail-tags">${task.tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join('')}</div>
                         </div>
                     ` : ''}
 
-                    <!-- Description -->
                     ${task.description ? `
-                        <div style="margin-bottom: 1.5rem;">
-                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600;">${t('meta.description')}</div>
-                            <div style="line-height: 1.6; color: var(--text);">${markdownToHtml(task.description)}</div>
+                        <div>
+                            <div class="detail-label">${t('meta.description')}</div>
+                            <div class="detail-text">${markdownToHtml(task.description)}</div>
                         </div>
                     ` : ''}
 
-                    <!-- Subtasks -->
-                    <div style="margin-bottom: 1.5rem;">
-                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem; font-weight: 600;">${t('meta.subtasks', {completed: task.subtasks.filter(st => st.completed).length, total: task.subtasks.length})}</div>
-                        <ul id="subtasksList" style="list-style: none; padding: 0; margin: 0 0 1rem 0;">
+                    <div>
+                        <div class="detail-label">${t('meta.subtasks', {completed: task.subtasks.filter(st => st.completed).length, total: task.subtasks.length})}</div>
+                        <ul id="subtasksList" class="subtask-list">
                             ${task.subtasks.map((st, idx) => {
                                 const escapedText = st.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                 return `
-                                <li style="padding: 0.5rem; margin-bottom: 0.25rem; background: var(--bg); border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;">
-                                    <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask('${task.id}', ${idx})" style="width: 18px; height: 18px; cursor: pointer;">
-                                    <span ondblclick="editSubtask('${task.id}', ${idx})" style="flex: 1; ${st.completed ? 'text-decoration: line-through; color: var(--text-secondary);' : ''} cursor: pointer;" title="${t('tooltip.doubleClickEdit')}">${escapedText}</span>
-                                    <button onclick="deleteSubtask('${task.id}', ${idx})" style="background: none; border: none; cursor: pointer; color: #e53e3e; font-size: 1.1rem; padding: 0.25rem;" title="${t('tooltip.delete')}">🗑️</button>
+                                <li class="subtask-item${st.completed ? ' done' : ''}">
+                                    <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask('${task.id}', ${idx})">
+                                    <span ondblclick="editSubtask('${task.id}', ${idx})" title="${t('tooltip.doubleClickEdit')}">${escapedText}</span>
+                                    <button class="del" onclick="deleteSubtask('${task.id}', ${idx})" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
                                 </li>
                                 `;
                             }).join('')}
                         </ul>
                         ${!wasArchiveModalActive ? `
-                        <div style="display: flex; gap: 0.5rem;">
-                            <input type="text" id="newSubtaskInput" placeholder="${t('subtask.newPlaceholder')}" onkeypress="if(event.key==='Enter') addSubtask('${task.id}')" style="flex: 1; padding: 0.5rem; border: 2px solid var(--border, #cbd5e0); border-radius: 4px; font-size: 0.9rem; background: var(--bg); color: var(--text);">
-                            <button onclick="addSubtask('${task.id}')" class="btn btn-primary" style="padding: 0.5rem 1rem;">${t('taskForm.subtaskAdd')}</button>
+                        <div class="subtask-add">
+                            <input type="text" id="newSubtaskInput" placeholder="${t('subtask.newPlaceholder')}" onkeypress="if(event.key==='Enter') addSubtask('${task.id}')">
+                            <button onclick="addSubtask('${task.id}')" class="btn btn-secondary">${t('taskForm.subtaskAdd')}</button>
                         </div>
                         ` : ''}
                     </div>
 
-                    <!-- Notes -->
                     ${task.notes ? `
-                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #e2e8f0;">
-                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600;">${t('meta.notes')}</div>
-                            <div style="line-height: 1.7; color: var(--text); background: var(--bg); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary);">
-                                ${markdownToHtml(task.notes)}
-                            </div>
+                        <div>
+                            <div class="detail-label">${t('meta.notes')}</div>
+                            <div class="detail-notes">${markdownToHtml(task.notes)}</div>
                         </div>
                     ` : ''}
                 </div>

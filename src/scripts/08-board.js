@@ -26,10 +26,10 @@
                     <div class="column-header">
                         <div class="column-title">
                             ${escapeHtml(column.name)}
+                            <span class="column-count">${columnTasks.length}</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <div class="column-count">${columnTasks.length}</div>
-                            <button class="column-add-btn">+</button>
+                        <div class="column-tools">
+                            <button class="column-add-btn" aria-label="${escapeHtml(t('taskForm.newTask'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
                         </div>
                     </div>
                     <div class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
@@ -97,32 +97,37 @@
                 }
             }
 
+            const doneCount = task.subtasks.filter(s => s.completed).length;
             const subtaskProgress = task.subtasks.length > 0 ?
                 `<div class="task-subtasks">
                     <div class="subtask-progress">
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(task.subtasks.filter(s => s.completed).length / task.subtasks.length * 100)}%"></div>
+                            <div class="progress-fill" style="width: ${(doneCount / task.subtasks.length * 100)}%"></div>
                         </div>
-                        <span>${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}</span>
+                        <span>${doneCount}/${task.subtasks.length}</span>
                     </div>
                 </div>` : '';
 
+            const dueLabel = task.due
+                ? `<span class="badge badge-due${due ? ` badge-due--${due}` : ''}" title="${escapeHtml(t(due === 'overdue' ? 'tooltip.overdue' : (due === 'soon' ? 'tooltip.dueSoon' : 'meta.due')))}">${escapeHtml(task.due)}</span>`
+                : '';
+
             taskEl.innerHTML = `
                 <div class="task-header">
+                    ${task.priority ? `<span class="prio ${priorityBadgeClass}" data-filter="priority" data-filter-value="${escapeHtml(task.priority)}" title="${escapeHtml(displayPriority(task.priority))}"></span>` : ''}
                     <span class="task-id">${escapeHtml(task.id)}</span>
-                    <button class="task-edit-btn" data-edit-task="1" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.25rem;">✏️</button>
+                    <button class="task-edit-btn" data-edit-task="1" title="${escapeHtml(t('taskDetail.edit'))}" aria-label="${escapeHtml(t('taskDetail.edit'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg></button>
                 </div>
                 <div class="task-title">${escapeHtml(task.title)}</div>
                 ${task.description ? `<div class="task-description">${markdownToHtml(task.description)}</div>` : ''}
                 <div class="task-meta">
-                    ${task.due ? `<span class="badge badge-due${due ? ` badge-due--${due}` : ''}" title="${escapeHtml(t(due === 'overdue' ? 'tooltip.overdue' : (due === 'soon' ? 'tooltip.dueSoon' : 'meta.due')))}">${due === 'overdue' ? '⚠️' : '📅'} ${escapeHtml(task.due)}</span>` : ''}
-                    ${task.priority ? `<span class="badge badge-priority ${priorityBadgeClass}" data-filter="priority" data-filter-value="${escapeHtml(task.priority)}" style="cursor: pointer;" title="${t('tooltip.filterByPriority')}">${escapeHtml(displayPriority(task.priority))}</span>` : ''}
-                    ${task.category ? `<span class="badge badge-category" data-filter="category" data-filter-value="${escapeHtml(task.category)}" style="cursor: pointer;" title="${t('tooltip.filterByCategory')}">${escapeHtml(task.category)}</span>` : ''}
+                    ${dueLabel}
+                    ${task.category ? `<span class="badge" data-filter="category" data-filter-value="${escapeHtml(task.category)}" title="${t('tooltip.filterByCategory')}">${escapeHtml(task.category)}</span>` : ''}
                     ${task.assignees.map(a => {
                         const normalizedId = normalizeUserId(a);
-                        return `<span class="badge badge-assignee" data-filter="user" data-filter-value="${escapeHtml(normalizedId)}" style="cursor: pointer;" title="${t('tooltip.filterByUser')}">${escapeHtml(a)}</span>`;
+                        return `<span class="badge" data-filter="user" data-filter-value="${escapeHtml(normalizedId)}" title="${t('tooltip.filterByUser')}">${escapeHtml(a)}</span>`;
                     }).join('')}
-                    ${task.tags.map(tag => `<span class="tag" data-filter="tag" data-filter-value="${escapeHtml(tag)}" style="cursor: pointer;" title="${t('tooltip.filterByTag')}">${escapeHtml(tag)}</span>`).join('')}
+                    ${task.tags.map(tag => `<span class="tag" data-filter="tag" data-filter-value="${escapeHtml(tag)}" title="${t('tooltip.filterByTag')}">${escapeHtml(tag)}</span>`).join('')}
                 </div>
                 ${subtaskProgress}
             `;
