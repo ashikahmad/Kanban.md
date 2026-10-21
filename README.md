@@ -1,8 +1,12 @@
-# Kanban.md
+<p align="center"><img src="docs/images/logo.svg" width="96" alt="Kanban.md logo"></p>
 
-**A Kanban board that lives in plain Markdown files, shared by you in the browser and by AI agents on the command line.**
+<h1 align="center">Kanban.md</h1>
 
-> **[Version française](./readmeFR.md)** · **[Project board](./board/kanban.md)** (what we're building, openly) · Kanban.md began as a fork of [ioniks/MarkdownTaskManager](https://github.com/ioniks/MarkdownTaskManager) (MPL-2.0); see [About this fork](docs/about-this-fork.md).
+<p align="center"><strong>A Kanban board that lives in plain Markdown files, shared by you in the browser and by AI agents on the command line.</strong></p>
+
+<p align="center"><a href="https://ashikahmad.github.io/Kanban.md/app/">Open the app</a> · <a href="https://ashikahmad.github.io/Kanban.md/">Website</a> · <a href="./board/kanban.md">Project board</a> · <a href="./docs/getting-started.md">Docs</a></p>
+
+> **[Version française](./readmeFR.md)** · Kanban.md began as a fork of [ioniks/MarkdownTaskManager](https://github.com/ioniks/MarkdownTaskManager) (MPL-2.0); see [About this fork](docs/about-this-fork.md).
 
 ![Kanban.md board](docs/images/app-overview.jpg)
 *The board with the sample data from `docs/demo`.*
