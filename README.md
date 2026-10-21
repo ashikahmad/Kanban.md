@@ -515,7 +515,7 @@ Measured on the example boards (`npm run measure`; tokens estimated as bytes / 4
 | "What is in this column?" on a 100-task board | ~20,000 tokens | ~1,000 |
 | Read one task | ~20,000 | ~280 |
 | Move a task, tick a subtask, add a note | read the file + an edit call | 25-60 |
-| Fixed cost per session | ~4,700 (format rules) | ~1,800 for all 14 tools, ~650 read-only |
+| Instructions loaded per session | ~4,100 (`AI_WORKFLOW.md` + the skill) | ~1,800 for all 14 tools, ~650 read-only |
 
 - **Minimal patches**: moving a card changes one line, so git diffs stay readable. Everything outside the change is byte-for-byte untouched.
 - **Verified**: every edit is re-parsed and must read back exactly as intended, or nothing is written.

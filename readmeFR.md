@@ -500,7 +500,7 @@ Mesuré sur les tableaux d'exemple (`npm run measure` ; jetons estimés à octet
 | « Que contient cette colonne ? » sur 100 tâches | ~20 000 jetons | ~1 000 |
 | Lire une tâche | ~20 000 | ~280 |
 | Déplacer une tâche, cocher une sous-tâche, ajouter une note | lire le fichier + un appel d'édition | 25-60 |
-| Coût fixe par session | ~4 700 (règles de format) | ~1 800 pour les 14 outils, ~650 en lecture seule |
+| Instructions chargées par session | ~4 100 (`AI_WORKFLOW.md` + la skill) | ~1 800 pour les 14 outils, ~650 en lecture seule |
 
 - **Correctifs minimaux** : déplacer une carte modifie une ligne, les diffs Git restent lisibles. Tout ce qui est hors modification reste identique à l'octet près.
 - **Vérifié** : chaque modification est relue et doit se relire exactement comme prévu, sinon rien n'est écrit.
