@@ -8,6 +8,7 @@
 import { splitLines, stripEol, lineEol, detectEol, toEol } from './text.js';
 import { generateBoard, generateTaskBlock } from './board.js';
 import { formatHousekeepingSpec } from './housekeeping-spec.js';
+import { formatBacklogFileSpec } from './backlog-spec.js';
 
 export class Doc {
     constructor(text) {
@@ -377,7 +378,7 @@ export function setLastTaskId(doc, n) {
     else insertLines(doc, Math.min(1, doc.lines.length), ['', comment]);
 }
 
-const CONFIG_LABELS = { columns: 'Columns', categories: 'Categories', users: 'Users', priorities: 'Priorities', tags: 'Tags', housekeeping: 'Housekeeping' };
+const CONFIG_LABELS = { columns: 'Columns', categories: 'Categories', users: 'Users', priorities: 'Priorities', tags: 'Tags', housekeeping: 'Housekeeping', backlogFile: 'Backlog file' };
 
 function configRange(doc) {
     const h = doc.lines.findIndex((l) => stripEol(l).startsWith('## ⚙️ Configuration'));
@@ -431,4 +432,5 @@ export const configValueText = {
     priorities: (v) => v.join(' | '),
     tags: (v) => v.map((t) => '#' + t).join(' '),
     housekeeping: (v) => formatHousekeepingSpec(v),
+    backlogFile: (v) => formatBacklogFileSpec(v),
 };

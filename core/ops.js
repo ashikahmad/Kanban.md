@@ -7,15 +7,17 @@
 // anything is returned the patched text is re-parsed and must equal the expected state exactly;
 // otherwise nothing is written and a verify_failed error is raised. The text and the state are
 // computed separately on purpose: that is what makes the verify step meaningful.
-import { parseBoard, parseArchive, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks } from './board.js';
+import { parseBoard, parseArchive, parseBacklog, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks } from './board.js';
 import { BoardError, firstDifference, etagOf, stripEol, toEol } from './text.js';
 import { CURRENT_VERSION } from './migrate.js';
 import { normalizeHousekeeping, formatHousekeepingSpec } from './housekeeping-spec.js';
+import { resolveBacklogFile, formatBacklogFileSpec, isValidStoreFileName, BACKLOG_DEFAULT_FILE } from './backlog-spec.js';
 import * as P from './patch.js';
 
 export const DEFAULT_ARCHIVE_STRINGS = { title: '# Task Archive', desc: '> Archived tasks', section: '## ✅ Archives' };
+export const DEFAULT_BACKLOG_STRINGS = { title: '# Backlog', desc: '> Parked tasks, kept out of the board file. A task is here exactly while its status is the backlog column.', section: '## 📥 Backlog' };
 export const TASK_FIELDS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
-export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'sortTasks', 'archiveTasks', 'setHousekeeping', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
+export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'sortTasks', 'archiveTasks', 'setHousekeeping', 'setBacklogFile', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
 const CONFIG_LISTS = ['categories', 'users', 'priorities', 'tags'];
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -129,13 +131,77 @@ function open(ws) {
     }
     const hasArchive = typeof ws.archive === 'string';
     const ap = hasArchive ? parseArchive(ws.archive, bp.config.columns) : { tasks: [], formatVersion: CURRENT_VERSION };
+    // The backlog file, when configured: tasks whose status is its column live there, not in kanban.md.
+    const bf = resolveBacklogFile(bp.config);
+    const hasBacklog = typeof ws.backlog === 'string';
+    const kp = bf && hasBacklog ? parseBacklog(ws.backlog, bp.config.columns, bf.column) : { tasks: [] };
     return {
         board: new P.Doc(ws.board),
         archive: hasArchive ? new P.Doc(ws.archive) : null,
+        backlog: bf && hasBacklog ? new P.Doc(ws.backlog) : null,
+        backlogName: (bp.config.backlogFile && bp.config.backlogFile.file) || BACKLOG_DEFAULT_FILE,
+        strayBacklog: !bf && hasBacklog ? ws.backlog : null, // a backlog.md nobody asked for: never overwritten
         archiveVersion: ap.formatVersion,
-        state: { config: clone(bp.config), tasks: clone(bp.tasks), archive: clone(ap.tasks) },
+        moves: [],
+        state: { config: clone(bp.config), tasks: clone(bp.tasks), archive: clone(ap.tasks), backlog: clone(kp.tasks) },
         origin: ws,
     };
+}
+
+// ---- the three stores: kanban.md ('board'), archive.md ('archive'), the backlog file ('backlog') ----
+const STORE_KINDS = ['board', 'archive', 'backlog'];
+const listOf = (ctx, kind) => (kind === 'board' ? ctx.state.tasks : ctx.state[kind]);
+const setList = (ctx, kind, list) => { if (kind === 'board') ctx.state.tasks = list; else ctx.state[kind] = list; };
+const storeName = (ctx, kind) => (kind === 'board' ? 'kanban.md' : kind === 'archive' ? 'archive.md' : ctx.backlogName);
+
+function backlogDoc(ctx) {
+    if (!ctx.backlog) {
+        if (ctx.strayBacklog !== null && !ctx.state.config.backlogFile) {
+            const stray = parseBacklog(ctx.strayBacklog, ctx.state.config.columns, 'backlog');
+            if (stray.tasks.length) fail('backlog_file_exists', `${ctx.backlogName} already exists and holds ${stray.tasks.length} task(s)`, { hint: 'Move or rename that file first; it is not touched.' });
+        }
+        ctx.backlog = new P.Doc(toEol(generateArchive([], DEFAULT_BACKLOG_STRINGS), ctx.board.eol));
+    }
+    return ctx.backlog;
+}
+const destDoc = (ctx, kind) => (kind === 'archive' ? archiveDoc(ctx) : kind === 'backlog' ? backlogDoc(ctx) : ctx.board);
+
+// Cut a task's block from one store and append it, verbatim, to another.
+function moveBlock(ctx, task, from, to) {
+    const src = ctx[from];
+    const dest = destDoc(ctx, to);
+    const loc = P.locateTask(src, from, task.id);
+    if (!loc) fail('ambiguous_id', `${task.id} appears more than once in ${storeName(ctx, from)}`, { hint: 'Fix the duplicate id by hand first.' });
+    const lines = carry(P.cutBlock(src, loc), task, src, dest);
+    P.pasteBlock(dest, dest.lines.length, lines);
+    setList(ctx, from, listOf(ctx, from).filter((x) => x !== task));
+    listOf(ctx, to).push(task);
+    ctx.moves.push({ from, to });
+}
+
+// Re-establish the invariant after an op: with a backlog file, a task is in it exactly when its status
+// is the backlog column. This is what makes promoting and demoting "just change the status".
+function relocate(ctx) {
+    const bc = resolveBacklogFile(ctx.state.config);
+    if (!bc) return;
+    for (const t of [...ctx.state.tasks]) {
+        if (t.status !== bc.column) continue;
+        syncStatusLine(ctx, { task: t, kind: 'board', doc: ctx.board }, t.status); // the file reads **Status** to know its column
+        moveBlock(ctx, t, 'board', 'backlog');
+    }
+    for (const t of [...ctx.state.backlog]) {
+        if (t.status === bc.column) continue;
+        syncStatusLine(ctx, { task: t, kind: 'backlog', doc: ctx.backlog }, t.status);
+        moveBlock(ctx, t, 'backlog', 'board');
+    }
+}
+
+// Write destinations before sources, so a crash between two writes duplicates a task instead of losing it.
+export function orderKinds(kinds, moves) {
+    const score = (k) => moves.filter((m) => m.to === k).length - moves.filter((m) => m.from === k).length;
+    // ties (no moves, or moves both ways): the side files first, kanban.md last
+    const tie = ['archive', 'backlog', 'board'];
+    return [...kinds].sort((a, b) => score(b) - score(a) || tie.indexOf(a) - tie.indexOf(b));
 }
 
 function archiveDoc(ctx) {
@@ -160,6 +226,8 @@ function findTask(ctx, id) {
     const norm = /^TASK-\d+$/i.test(id || '') ? 'TASK-' + id.slice(5).padStart(3, '0') : id;
     const inBoard = ctx.state.tasks.find((t) => t.id === norm);
     if (inBoard) return { task: inBoard, kind: 'board', doc: ctx.board };
+    const inBacklog = ctx.state.backlog.find((t) => t.id === norm);
+    if (inBacklog) return { task: inBacklog, kind: 'backlog', doc: ctx.backlog };
     const inArchive = ctx.state.archive.find((t) => t.id === norm);
     if (inArchive) {
         if (ctx.archiveVersion < CURRENT_VERSION) needArchiveMigration(ctx);
@@ -170,7 +238,7 @@ function findTask(ctx, id) {
 
 function locate(ctx, found) {
     const loc = P.locateTask(found.doc, found.kind, found.task.id);
-    if (!loc) fail('ambiguous_id', `${found.task.id} appears more than once in ${found.kind === 'board' ? 'kanban.md' : 'archive.md'}`, { hint: 'Fix the duplicate id by hand first.' });
+    if (!loc) fail('ambiguous_id', `${found.task.id} appears more than once in ${storeName(ctx, found.kind)}`, { hint: 'Fix the duplicate id by hand first.' });
     return loc;
 }
 
@@ -227,7 +295,7 @@ function ensureKeys(ctx) {
 // ---- the ops ----------------------------------------------------------------------------------
 
 function maxId(ctx) {
-    return [...ctx.state.tasks, ...ctx.state.archive].reduce((m, t) => Math.max(m, parseInt((t.id.match(/(\d+)$/) || [])[1], 10) || 0), 0);
+    return [...ctx.state.tasks, ...ctx.state.backlog, ...ctx.state.archive].reduce((m, t) => Math.max(m, parseInt((t.id.match(/(\d+)$/) || [])[1], 10) || 0), 0);
 }
 
 const OPS = {
@@ -266,18 +334,31 @@ const OPS = {
     },
 
     moveTask(ctx, op) {
-        const found = findTask(ctx, op.id);
-        if (found.kind !== 'board') fail('task_archived', `${found.task.id} is archived`, { hint: 'Restore it first.' });
+        let found = findTask(ctx, op.id);
+        if (found.kind === 'archive') fail('task_archived', `${found.task.id} is archived`, { hint: 'Restore it first.' });
         checkEtag(ctx, found, op);
-        const { tasks, config } = ctx.state;
+        const { config } = ctx.state;
+        const status = op.status === undefined ? found.task.status : normalizeFields({ status: op.status }, config, { partial: true }).status;
+        if (op.before && op.atEnd) fail('invalid_field', 'give either before or atEnd, not both');
+        const bc = resolveBacklogFile(config);
+        const setStatus = () => { const before = clone(found.task); found.task.status = status; patchFields(ctx, found, before, found.task); };
+        if (found.kind === 'backlog') {
+            if (status === bc.column) return { id: found.task.id, kind: 'backlog' }; // already in the backlog (no positions there)
+            setStatus();       // promote: the status edit is the whole change; the block then moves to kanban.md
+            relocate(ctx);
+            found = findTask(ctx, op.id);
+            if (!op.before && !op.atEnd) return { id: found.task.id, kind: 'board' };
+        } else if (bc && status === bc.column && found.task.status !== status) {
+            setStatus();       // demote: same, in the other direction
+            return { id: found.task.id, kind: 'backlog' };
+        }
+        const { tasks } = ctx.state;
         const t = found.task;
-        const status = op.status === undefined ? t.status : normalizeFields({ status: op.status }, config, { partial: true }).status;
         if (op.before) {
             const b = tasks.find((x) => x.id === op.before);
             if (!b || b.id === t.id) fail('unknown_task', `No task ${op.before} to place it before`);
             if (b.status !== status) fail('before_not_in_column', `${b.id} is not in column "${status}"`);
         }
-        if (op.before && op.atEnd) fail('invalid_field', 'give either before or atEnd, not both');
         const statusChanged = t.status !== status;
         const positional = !!(op.before || op.atEnd);
         if (positional && orderActive(tasks)) {
@@ -414,16 +495,17 @@ const OPS = {
 
     archiveTask(ctx, op) {
         const found = findTask(ctx, op.id);
-        if (found.kind !== 'board') fail('already_archived', `${found.task.id} is already archived`);
+        if (found.kind === 'archive') fail('already_archived', `${found.task.id} is already archived`);
         checkEtag(ctx, found, op);
         const t = found.task;
         const dest = archiveDoc(ctx);
         syncStatusLine(ctx, found, t.status); // the archive reads **Status** to remember the column
-        const lines = carry(P.cutBlock(ctx.board, locate(ctx, found)), t, ctx.board, dest);
+        const lines = carry(P.cutBlock(found.doc, locate(ctx, found)), t, found.doc, dest);
         P.pasteBlock(dest, dest.lines.length, lines);
-        ctx.state.tasks = ctx.state.tasks.filter((x) => x !== t);
+        setList(ctx, found.kind, listOf(ctx, found.kind).filter((x) => x !== t));
         ctx.state.archive.push(t);
-        return { id: t.id, kind: 'archive', order: ['archive', 'board'] };
+        ctx.moves.push({ from: found.kind, to: 'archive' });
+        return { id: t.id, kind: 'archive' };
     },
 
     // Several tasks to the archive in one verified edit (a clean-up is one diff). All or nothing.
@@ -431,7 +513,7 @@ const OPS = {
         const ids = [...new Set((Array.isArray(op.ids) ? op.ids : []).map(String))];
         if (!ids.length) fail('missing_field', 'archiveTasks needs a non-empty "ids" array');
         for (const id of ids) OPS.archiveTask(ctx, { type: 'archiveTask', id });
-        return { ids, count: ids.length, kind: 'archive', order: ['archive', 'board'] };
+        return { ids, count: ids.length, kind: 'archive' };
     },
 
     restoreTask(ctx, op) {
@@ -446,16 +528,42 @@ const OPS = {
         t.status = status;
         ctx.state.archive = ctx.state.archive.filter((x) => x !== t);
         ctx.state.tasks.push(t);
-        return { id: t.id, kind: 'board', order: ['board', 'archive'] };
+        ctx.moves.push({ from: 'archive', to: 'board' });
+        return { id: t.id, kind: 'board' }; // relocate() sends it on to the backlog file if its column is the backlog's
     },
 
     deleteTask(ctx, op) {
         const found = findTask(ctx, op.id);
         checkEtag(ctx, found, op);
         P.cutBlock(found.doc, locate(ctx, found));
-        if (found.kind === 'board') ctx.state.tasks = ctx.state.tasks.filter((x) => x !== found.task);
-        else ctx.state.archive = ctx.state.archive.filter((x) => x !== found.task);
+        setList(ctx, found.kind, listOf(ctx, found.kind).filter((x) => x !== found.task));
         return { id: found.task.id, kind: found.kind };
+    },
+
+    // Turn the backlog file on or off. { enabled: true, column?, file? }: tasks whose status is the column move
+    // into the file (created if need be). { enabled: false }: they come back to kanban.md and the line goes.
+    setBacklogFile(ctx, op) {
+        const config = ctx.state.config;
+        if (op.enabled === false) {
+            if (!config.backlogFile) return { name: 'backlogFile' };
+            config.backlogFile = null; // stop enforcing the invariant, then bring everything home
+            for (const t of [...ctx.state.backlog]) { syncStatusLine(ctx, { task: t, kind: 'backlog', doc: ctx.backlog }, t.status); moveBlock(ctx, t, 'backlog', 'board'); }
+            P.removeConfigLine(ctx.board, 'backlogFile');
+            return { name: 'backlogFile' };
+        }
+        const cols = config.columns.map((c) => c.id);
+        const current = config.backlogFile || {};
+        const file = op.file || current.file || BACKLOG_DEFAULT_FILE;
+        if (!isValidStoreFileName(file)) fail('invalid_field', `Invalid backlog file name "${file}"`, { hint: 'A plain *.md name, not kanban.md or archive.md.' });
+        const column = op.column || current.column || resolveBacklogFile({ columns: config.columns, backlogFile: { file } })?.column;
+        if (!column) fail('missing_field', 'Which column is the backlog? Pass column.', { valid: cols });
+        if (!cols.includes(column)) fail('unknown_status', `Unknown column "${column}"`, { valid: cols });
+        if (ctx.state.backlog.length && file !== current.file) fail('backlog_file_in_use', `${current.file} still holds ${ctx.state.backlog.length} task(s)`, { hint: 'Disable the backlog file first (enabled: false), then enable it under the new name.' });
+        ctx.backlogName = file;
+        backlogDoc(ctx); // create it first: this refuses to overwrite a stray file that holds tasks
+        config.backlogFile = { file, column };
+        P.setConfigLine(ctx.board, 'backlogFile', formatBacklogFileSpec(config.backlogFile), normalizeConfig(config));
+        return { name: 'backlogFile' };
     },
 
     // The "**Housekeeping**:" policy. { off: true } turns the nudges off, { reset: true } removes the line (defaults).
@@ -527,6 +635,16 @@ const OPS = {
         if (orphans.length) fail('orphaned_tasks', `${orphans.length} task(s) are in columns being removed`, { details: { orphans }, hint: 'Pass reassign: { oldColumnId: newColumnId }.' });
         for (const t of ctx.state.tasks) if (reassign[t.status] && !ids.has(t.status)) { statusEdit(ctx, 'board', t, reassign[t.status]); }
         for (const t of ctx.state.archive) if (reassign[t.status] && !ids.has(t.status)) { statusEdit(ctx, 'archive', t, reassign[t.status]); }
+        for (const t of ctx.state.backlog) if (reassign[t.status] && !ids.has(t.status)) { statusEdit(ctx, 'backlog', t, reassign[t.status]); }
+        const bf = ctx.state.config.backlogFile;
+        const bc = resolveBacklogFile(ctx.state.config);
+        if (bc && !ids.has(bc.column)) {
+            // Only a rename (the new id did not exist before) can carry the backlog file along; merging the column into an
+            // existing one, or deleting it, would silently repoint or lose the file's meaning.
+            if (!reassign[bc.column] || current.has(reassign[bc.column])) fail('backlog_column_in_use', `The backlog file holds the tasks of column "${bc.column}"`, { hint: 'Disable the backlog file first (setBacklogFile enabled: false), or rename the column (reassign to a new id).' });
+            ctx.state.config.backlogFile = { file: bf.file, column: reassign[bc.column] };
+            P.setConfigLine(ctx.board, 'backlogFile', formatBacklogFileSpec(ctx.state.config.backlogFile), normalizeConfig(ctx.state.config));
+        }
         ctx.state.config.columns = cols;
         P.setConfigLine(ctx.board, 'columns', P.configValueText.columns(cols), normalizeConfig(ctx.state.config));
         return { name: 'columns' };
@@ -546,7 +664,7 @@ function carry(lines, task, from, to) {
 }
 
 function statusEdit(ctx, kind, task, status) {
-    const doc = kind === 'board' ? ctx.board : ctx.archive;
+    const doc = ctx[kind];
     P.setField(doc, P.locateTask(doc, kind, task.id), 'status', status);
     task.status = status;
 }
@@ -564,34 +682,50 @@ export function applyOp(ws, op, options = {}) {
     const env = { today: options.today || todayISO };
     const ctx = open(ws);
     const result = OPS[op.type](ctx, op, env);
+    relocate(ctx); // whatever the op did to a status, put every task in the file its status belongs to
 
-    const board = ctx.board.toString();
-    const archive = ctx.archive ? ctx.archive.toString() : null;
-    verify(ctx, board, archive);
+    const orig = { board: ws.board, archive: ws.archive ?? null, backlog: ws.backlog ?? null };
+    const texts = {
+        board: ctx.board.toString(),
+        archive: ctx.archive ? ctx.archive.toString() : orig.archive,
+        backlog: ctx.backlog ? ctx.backlog.toString() : orig.backlog, // an unconfigured stray file is left exactly as it was
+    };
+    verify(ctx, texts);
 
-    const changed = { board: board !== ws.board, archive: archive !== (ws.archive ?? null) };
-    const order = result.order || ['board', 'archive'];
-    const files = order.filter((k) => changed[k]).map((k) => ({ name: k === 'board' ? 'kanban.md' : 'archive.md', text: k === 'board' ? board : archive }));
+    const changed = Object.fromEntries(STORE_KINDS.map((k) => [k, texts[k] !== orig[k]]));
+    const files = orderKinds(STORE_KINDS.filter((k) => changed[k]), ctx.moves).map((k) => ({ name: storeName(ctx, k), kind: k, text: texts[k] }));
 
-    // Fresh etag of the affected block, so a caller can chain edits with ifMatch.
-    let etag;
+    // Fresh etag of the affected block (it may have moved to another file), so a caller can chain edits with ifMatch.
+    let etag, kind = result.kind;
     if (result.id) {
-        const doc = result.kind === 'archive' ? ctx.archive : ctx.board;
-        const loc = doc && P.locateTask(doc, result.kind, result.id);
-        if (loc) etag = etagOf(P.blockText(doc, loc));
+        const at = STORE_KINDS.find((k) => listOf(ctx, k).some((t) => t.id === result.id));
+        if (at && ctx[at]) {
+            kind = at;
+            const loc = P.locateTask(ctx[at], at, result.id);
+            if (loc) etag = etagOf(P.blockText(ctx[at], loc));
+        }
     }
-    return { board, archive, files, changed, result: { op: op.type, ...result, order: undefined, etag } };
+    return { ...texts, files, changed, moves: ctx.moves, result: { op: op.type, ...result, kind, etag } };
 }
 
-function verify(ctx, board, archive) {
-    const bp = parseBoard(board);
+function verify(ctx, texts) {
+    const bp = parseBoard(texts.board);
     const diff = firstDifference({ config: ctx.state.config, tasks: ctx.state.tasks }, { config: bp.config, tasks: bp.tasks });
     if (bp.formatVersion < CURRENT_VERSION || diff) {
         fail('verify_failed', 'The change could not be written so that it reads back identically; nothing was written.', { details: diff || { path: 'formatVersion' } });
     }
-    if (archive !== null) {
-        const ap = parseArchive(archive, bp.config.columns);
+    if (texts.archive !== null) {
+        const ap = parseArchive(texts.archive, bp.config.columns);
         const adiff = firstDifference(ctx.state.archive, ap.tasks);
         if (adiff) fail('verify_failed', 'The archive change could not be written so that it reads back identically; nothing was written.', { details: { file: 'archive.md', ...adiff } });
+    }
+    const bc = resolveBacklogFile(ctx.state.config);
+    if (bc) {
+        const kp = texts.backlog === null ? { tasks: [] } : parseBacklog(texts.backlog, bp.config.columns, bc.column);
+        const kdiff = firstDifference(ctx.state.backlog, kp.tasks);
+        if (kdiff) fail('verify_failed', 'The backlog change could not be written so that it reads back identically; nothing was written.', { details: { file: bc.file, ...kdiff } });
+        // the invariant itself
+        const stray = ctx.state.tasks.find((t) => t.status === bc.column) || ctx.state.backlog.find((t) => t.status !== bc.column);
+        if (stray) fail('verify_failed', `${stray.id} is in the wrong file for its status; nothing was written.`, { details: { id: stray.id, status: stray.status } });
     }
 }

@@ -3,10 +3,12 @@
 // its ~16 save call sites) while the file is only ever changed by minimal, verified patches that are
 // applied to the file's CURRENT content, so edits made elsewhere in the meantime survive.
 //
-// State shape (the page's own): { config, tasks, archive }  (see parseBoard / parseArchive).
+// State shape (the page's own): { config, tasks, archive, backlog? }  (see parseBoard / parseArchive;
+// backlog is the optional backlog file's tasks). With a backlog file a task's status decides which file
+// it lives in, so moving a task into or out of the backlog is just a status update.
 // Not expressible as ops (reported in `unsupported`, caller falls back): changes to preserved
 // sections (`extra`), the board title, or a task that appears directly in the archive.
-import { applyOp } from './ops.js';
+import { applyOp, orderKinds } from './ops.js';
 import { deepEqual } from './text.js';
 
 const TASK_KEYS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
@@ -15,7 +17,9 @@ const byId = (tasks) => new Map(tasks.map((t) => [t.id, t]));
 
 export function diffToOps(base, next) {
     const ops = [], unsupported = [];
-    const bB = byId(base.tasks), bA = byId(base.archive), nB = byId(next.tasks), nA = byId(next.archive);
+    // "live" = the board plus the backlog file: the two files a task moves between by changing its status
+    const bB = byId([...base.tasks, ...(base.backlog || [])]), bA = byId(base.archive);
+    const nB = byId([...next.tasks, ...(next.backlog || [])]), nA = byId(next.archive);
     const baseColumnIds = base.config.columns.map((c) => c.id);
     const nextColumnIds = next.config.columns.map((c) => c.id);
 
@@ -104,31 +108,23 @@ export function diffToOps(base, next) {
     return { ops, unsupported };
 }
 
-// Apply ops in order to { board, archive } texts. Returns the final texts, the files to write (in a
-// safe order) and each op's result. Stops at the first failing op (its BoardError carries `opIndex`).
+// Apply ops in order to { board, archive, backlog } texts. Returns the final texts, the files to write (only
+// those that really differ from the start, destinations before sources) and each op's result. Stops at the
+// first failing op (its BoardError carries `opIndex`).
 export function applyOps(ws, ops, options = {}) {
-    let cur = { board: ws.board, archive: ws.archive ?? null };
-    const results = [];
-    const touched = new Set();
+    const start = { board: ws.board, archive: ws.archive ?? null, backlog: ws.backlog ?? null };
+    let cur = { ...start };
+    const results = [], moves = [], names = {};
     for (let i = 0; i < ops.length; i++) {
         const { clientId, ...op } = ops[i];
         let out;
         try { out = applyOp(cur, op, options); }
         catch (e) { e.opIndex = i; throw e; }
-        for (const f of out.files) touched.add(f.name);
-        cur = { board: out.board, archive: out.archive };
+        for (const f of out.files) names[f.kind] = f.name;
+        moves.push(...out.moves);
+        cur = { board: out.board, archive: out.archive, backlog: out.backlog };
         results.push({ ...out.result, ...(clientId && { clientId }) });
     }
-    // An archive move writes the archive first (a crash then duplicates a task rather than losing
-    // it); a batch that only restores writes the board first. Anything else: board first.
-    const types = new Set(ops.map((o) => o.type));
-    const archiveFirst = types.has('archiveTask') || types.has('archiveTasks');
-    const names = ['kanban.md', 'archive.md'].filter((n) => touched.has(n));
-    if (archiveFirst) names.sort((a, b) => (a === 'archive.md' ? -1 : 1) - (b === 'archive.md' ? -1 : 1));
-    return {
-        board: cur.board,
-        archive: cur.archive,
-        results,
-        files: names.map((name) => ({ name, text: name === 'kanban.md' ? cur.board : cur.archive })),
-    };
+    const kinds = orderKinds(Object.keys(names).filter((k) => cur[k] !== start[k]), moves);
+    return { ...cur, results, files: kinds.map((k) => ({ name: names[k], kind: k, text: cur[k] })) };
 }

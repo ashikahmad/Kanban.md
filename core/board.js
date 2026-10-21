@@ -1,4 +1,5 @@
 import { parseHousekeepingSpec, formatHousekeepingSpec } from './housekeeping-spec.js';
+import { parseBacklogFileSpec, formatBacklogFileSpec } from './backlog-spec.js';
 
 // Slugify a column name/heading to an id (lowercase, drop emoji/punctuation, dash spaces).
 // MUST stay identical to the id derivation used when a column has no explicit (id), so that
@@ -20,6 +21,7 @@ export function parseBoard(content) {
         priorities: [],
         tags: [],
         housekeeping: null, // optional "**Housekeeping**:" policy (see housekeeping-spec.js); null = defaults
+        backlogFile: null,  // optional "**Backlog file**:" { file, column? } (see backlog-spec.js); null = no backlog file
         boardTitle: 'Kanban Board'
     };
 
@@ -89,6 +91,9 @@ export function parseBoard(content) {
         if (prioritiesMatch) {
             config.priorities = prioritiesMatch[1].split('|').map(p => p.trim()).filter(Boolean);
         }
+
+        const bfMatch = configText.match(/\*\*Backlog file\*\*:\s*(.+)/);
+        if (bfMatch) config.backlogFile = parseBacklogFileSpec(bfMatch[1].trim());
 
         const hkMatch = configText.match(/\*\*Housekeeping\*\*:\s*(.+)/);
         if (hkMatch) config.housekeeping = parseHousekeepingSpec(hkMatch[1].trim());
@@ -369,6 +374,13 @@ export function parseArchive(content, columns = []) {
     };
 }
 
+// A backlog file (see backlog-spec.js): the same flat list of task blocks as the archive. A task whose
+// **Status** is missing or not a column reads as `column`, the backlog column.
+export function parseBacklog(content, columns = [], column = 'backlog') {
+    const marker = /<!--\s*Format:\s*v(\d+)\s*-->/i.exec(content);
+    return { tasks: parseTaskBlocks(content, column, true, columns), formatVersion: marker ? parseInt(marker[1], 10) : 1 };
+}
+
 const DEFAULT_CATEGORIES = ['Frontend', 'Backend', 'Design', 'DevOps', 'Tests', 'Documentation'];
 const DEFAULT_USERS = ['@user (User)'];
 const DEFAULT_PRIORITIES = ['🔴 Critical', '🟠 High', '🟡 Medium', '🟢 Low'];
@@ -447,6 +459,7 @@ export function generateBoard({ config, tasks }) {
     md += `**Priorities**: ${cfg.priorities.join(' | ')}\n\n`;
     md += `**Tags**: ${cfg.tags.map(t => '#' + t).join(' ')}\n\n`;
     if (cfg.housekeeping) md += `**Housekeeping**: ${formatHousekeepingSpec(cfg.housekeeping)}\n\n`;
+    if (cfg.backlogFile) md += `**Backlog file**: ${formatBacklogFileSpec(cfg.backlogFile)}\n\n`;
     md += `---\n\n`;
 
     md += `## Tasks\n\n`;
