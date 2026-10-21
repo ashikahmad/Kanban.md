@@ -12,7 +12,13 @@ import {
 const pairs = JSON.parse(readFileSync(new URL('./pairs.json', import.meta.url), 'utf8'));
 const read = (dir, name) => readFileSync(new URL(`./${dir}/${name}`, import.meta.url), 'utf8');
 const readJson = (dir, name) => JSON.parse(read(dir, name));
-const viaJson = (v) => JSON.parse(JSON.stringify(v));
+// The golden files come from the legacy code, which predates the optional `order` key; an unset
+// key (null) is the only difference, so drop it before comparing.
+const viaJson = (v) => {
+  const j = JSON.parse(JSON.stringify(v));
+  for (const t of j.tasks || []) if (t.order === null) delete t.order;
+  return j;
+};
 
 // The capture oracle stubbed t() as `[key]`, so the golden archive headings use these.
 const archiveStrings = { title: '[markdown.archiveTitle]', desc: '[markdown.archiveDesc]', section: '[markdown.archiveSection]' };

@@ -86,6 +86,15 @@ Two rules keep diffs small and predictable:
 
 **5.6 V1 files.** Legacy files (status by section) cannot be patched line-wise. Writes to a V1 file fail with `needs_migration`, and migration stays the existing explicit one-time step (with backup) in the page, or `kanbanmd migrate` in the CLI. After that everything is surgical.
 
+**5.7 Manual ordering: an optional `**Order**` key.** (Added in Phase 2.)
+
+- **The field.** `**Order**: 3000` on a task, right after `**Status**`. It is optional, a non-negative integer, and absent from every board until someone asks for it. Boards without it parse, regenerate and diff exactly as before.
+- **Display order.** Within a column, tasks sort by `Order`; tasks without one come after the keyed ones, in file order. With no keys at all this is simply file order. `orderedTasks()` in `core/board.js` is the one definition, used by the CLI, the MCP tools and (Phase 4) the page.
+- **Opting in.** The first manual drag in the page asks "remember manual order?". Yes runs `sortTasks { mode: 'positions' }`: one inserted line per task, once, keys spaced by 1000 in the current order. No keeps today's behaviour (a drop relocates the block). Ordering is "on" whenever any task has a key; there is no separate flag in the file.
+- **While it is on:** a plain move edits only `**Status**` (the card keeps its key, so it lands in the target column where its key says). `before X` writes a key halfway between X and its predecessor, `atEnd` writes the column's maximum plus 1000: each is a status line plus an `Order` line, never a block move. If two neighbours leave no room, the keys are renumbered evenly (one larger diff, rare). New tasks get the next key, so they still go last. A task added by hand with no key sorts last; the next positional op gives it a key. Archive and restore carry the key with the block.
+- **Sorting has two meanings, both explicit** (`sortTasks`): `ids` assigns keys that reflect numeric id order, `positions` assigns keys that reflect the current order (also how ordering is switched on). `clear` removes every key (back to file position). `blocks`, the earlier behaviour, physically reorders blocks by id and is the default while no key exists.
+- **Compatibility.** An older copy of the app does not know the field and would show `**Order**: n` as description text. The current core reads it as metadata. Everything else in the format is unchanged.
+
 ## 6. Write protocol
 
 > Diagram: see **Write protocol** in [mcp-file-diagrams.md](mcp-file-diagrams.md#write-protocol).
@@ -120,7 +129,7 @@ CLI and MCP expose the same operations. `kanbanmd get-board --status in-progress
 | `create_task` | id assigned; `created` defaults to today |
 | `update_task` | partial patch; optional `ifMatch` |
 | `move_task` | `status`; edits the **Status** line in place (one-line diff). Optional `before` id or `atEnd` relocates the block on request; same column and no position is a no-op |
-| `sort_tasks` | the only op that reorders blocks wholesale: by numeric task id, `order` asc/desc, `scope` board/archive/both; blocks move verbatim; no-op if already sorted |
+| `sort_tasks` | `mode`: `ids` / `positions` write `Order` keys (see 5.7), `clear` removes them, `blocks` reorders file blocks by id (default before keys exist); `order` asc/desc; no-op if nothing would change |
 | `toggle_subtask`, `add_subtask`, `append_note` | tiny writes |
 | `archive_task`, `restore_task`, `list_archive` | archive lifecycle |
 | `update_config` | add / rename / remove column (explicit target for orphans), categories, users, tags |
@@ -191,6 +200,7 @@ Phases 1 and 4 are the only ones that change existing page behavior.
 ## 12. Decisions so far, and what is still open
 
 **Decided**
+- Ordering: edits and moves are in place, new tasks are appended last, and manual order is an optional `**Order**` key that the user opts into (5.7).
 - File-backed only; no hub, no browser storage.
 - Stdio MCP server plus CLI, both thin over one core.
 - Surgical patches with a verify step; no whole-file regeneration after migration.
@@ -201,7 +211,7 @@ Phases 1 and 4 are the only ones that change existing page behavior.
 1. **Tool granularity** (about ten fine-grained tools vs fewer broad ones): start fine-grained, measure, merge if heavy?
 2. **Distribution:** script in this repo only, or also an npm package?
 3. **Multi-project:** one server per project folder (matches stdio, simplest), or one server over several?
-4. **Ordering model (decided in Phase 2):** file order is the order cards show within a column. Edits and moves change a task in place; new tasks are appended last; the only thing that reorders blocks wholesale is the explicit `sort_tasks`. Still open: should the **page's** drag and drop follow the same rule? A drop with no target card would then leave the card at its file position instead of the bottom of the column, which feels wrong for dragging. Suggested: a drop onto a specific card passes `before`, a drop at the bottom of a column passes `atEnd` (both relocate on purpose), and only agent and CLI moves default to in place.
+4. **Ordering model: decided** (see 5.7). The page's part is Phase 4: ask on the first manual drag, then a drop onto a card sends `before`, a drop at the bottom of a column sends `atEnd`, and cards render in `orderedTasks()` order.
 5. **Dependencies:** the MCP server needs `@modelcontextprotocol/sdk`; the CLI and core can stay dependency-free. OK to depend on the SDK?
 6. **Activity log location and format:** `.kanban-activity.jsonl` beside the board, or inside a `.kanban/` folder?
 

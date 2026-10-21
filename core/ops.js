@@ -7,12 +7,12 @@
 // anything is returned the patched text is re-parsed and must equal the expected state exactly;
 // otherwise nothing is written and a verify_failed error is raised. The text and the state are
 // computed separately on purpose: that is what makes the verify step meaningful.
-import { parseBoard, parseArchive, generateArchive, generateTaskBlock, normalizeConfig } from './board.js';
+import { parseBoard, parseArchive, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks } from './board.js';
 import { BoardError, firstDifference, etagOf, stripEol, toEol } from './text.js';
 import * as P from './patch.js';
 
 export const DEFAULT_ARCHIVE_STRINGS = { title: '# Task Archive', desc: '> Archived tasks', section: '## ✅ Archives' };
-export const TASK_FIELDS = ['title', 'status', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
+export const TASK_FIELDS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
 export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'sortTasks', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
 const CONFIG_LISTS = ['categories', 'users', 'priorities', 'tags'];
 
@@ -51,6 +51,15 @@ export function normalizeFields(input, config, { partial }) {
         out.status = oneLine(input.status, 'status');
         const ids = config.columns.map((c) => c.id);
         if (!ids.includes(out.status)) fail('unknown_status', `Unknown status "${out.status}"`, { valid: ids, hint: 'Use a column id from the board configuration.' });
+    }
+    if (has('order')) {
+        const v = input.order;
+        if (v === '' || v === null) out.order = null;
+        else {
+            const n = typeof v === 'string' && /^\d+$/.test(v.trim()) ? parseInt(v, 10) : v;
+            if (!Number.isInteger(n) || n < 0) fail('invalid_field', 'order must be a non-negative integer, or empty to clear it');
+            out.order = n;
+        }
     }
     if (has('priority')) {
         out.priority = oneLine(input.priority, 'priority');
@@ -183,6 +192,7 @@ function patchFields(ctx, found, before, after) {
     try {
         if (before.title !== after.title) P.setTitle(doc, loc(), after.title);
         if (before.status !== after.status) P.setStatus(doc, loc(), after.status);
+        if (before.order !== after.order) P.setOrder(doc, loc(), after.order);
         if (before.priority !== after.priority || before.category !== after.category || !same(before.assignees, after.assignees)) P.setMeta(doc, loc(), after);
         if (['created', 'started', 'due', 'completed'].some((k) => before[k] !== after[k])) P.setDates(doc, loc(), after);
         if (!same(before.tags, after.tags)) P.setTags(doc, loc(), after.tags);
@@ -193,6 +203,29 @@ function patchFields(ctx, found, before, after) {
         if (!(e instanceof P.Fallback)) throw e;
         P.replaceBlock(doc, loc(), after); // this one block only, canonical layout
     }
+}
+
+// ---- manual ordering --------------------------------------------------------------------------
+// Optional **Order** keys decide the display order within a column (see orderedTasks in board.js).
+// Ordering is "on" as soon as any board task carries a key. While it is on, positional moves write a
+// key instead of relocating a block, so a reorder is a one- or two-line diff.
+const STEP = 1000;
+const orderActive = (tasks) => tasks.some((t) => t.order != null);
+
+function setKey(ctx, task, key) {
+    const loc = P.locateTask(ctx.board, 'board', task.id);
+    if (!loc) fail('ambiguous_id', `${task.id} appears more than once in kanban.md`, { hint: 'Fix the duplicate id by hand first.' });
+    task.order = key;
+    P.setOrder(ctx.board, loc, key);
+}
+
+// Give every key-less task a key after the existing ones (in file order), so a new or hand-added
+// task cannot sort ahead of a position that is about to be set.
+function ensureKeys(ctx) {
+    const tasks = ctx.state.tasks;
+    if (!orderActive(tasks)) return;
+    let max = Math.max(...tasks.filter((t) => t.order != null).map((t) => t.order));
+    for (const t of tasks) if (t.order == null) setKey(ctx, t, (max += STEP));
 }
 
 // ---- the ops ----------------------------------------------------------------------------------
@@ -209,11 +242,16 @@ const OPS = {
             priority: f.priority || '', category: f.category || '', assignees: f.assignees || [], tags: f.tags || [],
             created: f.created || env.today(), started: f.started || '', due: f.due || '', completed: f.completed || '',
             description: f.description || '', subtasks: f.subtasks || [], notes: f.notes || '', extra: '',
+            order: f.order === undefined ? null : f.order,
         };
         task.notes = task.notes.replace(/\n/g, ctx.board.eol); // the parser keeps the file's EOL inside notes
         checkMeta(task);
         const n = Math.max(ctx.state.config.lastTaskId, maxId(ctx)) + 1;
         task.id = 'TASK-' + String(n).padStart(3, '0');
+        if (f.order === undefined && orderActive(ctx.state.tasks)) { // keep "new tasks go last" under manual ordering
+            ensureKeys(ctx);
+            task.order = Math.max(...ctx.state.tasks.map((t) => t.order)) + STEP;
+        }
         ctx.state.config.lastTaskId = n;
         ctx.state.tasks.push(task);
         P.appendBlockText(ctx.board, generateTaskBlock(task));
@@ -247,6 +285,31 @@ const OPS = {
         }
         if (op.before && op.atEnd) fail('invalid_field', 'give either before or atEnd, not both');
         const statusChanged = t.status !== status;
+        const positional = !!(op.before || op.atEnd);
+        if (positional && orderActive(tasks)) {
+            // Manual ordering is on: write a key, never relocate the block.
+            ensureKeys(ctx);
+            if (statusChanged) { P.setStatus(ctx.board, locate(ctx, found), status); t.status = status; }
+            const col = orderedTasks(tasks).filter((x) => x.status === status);
+            const ti = col.indexOf(t);
+            const others = col.filter((x) => x !== t);
+            if (op.before ? col[ti + 1] && col[ti + 1].id === op.before : col[col.length - 1] === t) return { id: t.id, kind: 'board' }; // already there
+            if (op.before) {
+                const j = others.findIndex((x) => x.id === op.before);
+                const next = others[j].order, prev = j > 0 ? others[j - 1].order : null;
+                const key = prev === null ? Math.floor(next / 2) : Math.floor((prev + next) / 2);
+                if (key < next && (prev === null || key > prev)) setKey(ctx, t, key);
+                else { // no room between the neighbours: renumber evenly, with t placed before the anchor
+                    const list = orderedTasks(tasks).filter((x) => x !== t);
+                    list.splice(list.findIndex((x) => x.id === op.before), 0, t);
+                    list.forEach((x, i) => { if (x.order !== (i + 1) * STEP) setKey(ctx, x, (i + 1) * STEP); });
+                }
+            } else {
+                const pool = others.length ? others : tasks.filter((x) => x !== t);
+                setKey(ctx, t, Math.max(0, ...pool.map((x) => x.order)) + STEP);
+            }
+            return { id: t.id, kind: 'board' };
+        }
         // By default a move edits the **Status** line in place and the block stays where it is in the
         // file (so the diff is one line). The block is relocated only when a position is asked for:
         // `before` (ahead of that task) or `atEnd` (after the last task of the column, as a drag to
@@ -272,15 +335,31 @@ const OPS = {
         return { id: t.id, kind: 'board' };
     },
 
-    // Explicit sort: the only op that reorders blocks wholesale. Blocks move verbatim; by default by
-    // numeric task id, ascending, ties keep their file order.
+    // Explicit sort. Modes:
+    //   blocks    reorder the task blocks in the file by numeric id (the default while no key exists)
+    //   ids       assign keys that reflect id order (the default once ordering is on)
+    //   positions assign keys that reflect the current order (keys, then file position); also how
+    //             manual ordering is switched on
+    //   clear     remove every key (order falls back to file position)
     sortTasks(ctx, op) {
-        const by = op.by || 'id';
-        if (by !== 'id') fail('invalid_field', `Cannot sort by "${by}"`, { valid: ['id'] });
+        const mode = op.mode || (orderActive(ctx.state.tasks) ? 'ids' : 'blocks');
+        if (!['blocks', 'ids', 'positions', 'clear'].includes(mode)) fail('invalid_field', `Unknown sort mode "${mode}"`, { valid: ['blocks', 'ids', 'positions', 'clear'] });
+        if (op.by && op.by !== 'id') fail('invalid_field', `Cannot sort by "${op.by}"`, { valid: ['id'] });
         const dir = op.order === 'desc' ? -1 : 1;
+        const num = (t) => parseInt((t.id.match(/(\d+)$/) || [])[1], 10) || 0;
+        const tasks = ctx.state.tasks;
+
+        if (mode === 'clear') {
+            for (const t of tasks) if (t.order != null) setKey(ctx, t, null);
+            return { mode };
+        }
+        if (mode === 'ids' || mode === 'positions') {
+            const list = mode === 'positions' ? orderedTasks(tasks) : [...tasks].sort((a, b) => dir * (num(a) - num(b)) || tasks.indexOf(a) - tasks.indexOf(b));
+            list.forEach((t, i) => { if (t.order !== (i + 1) * STEP) setKey(ctx, t, (i + 1) * STEP); });
+            return { mode };
+        }
         const scope = op.scope || 'board';
         if (!['board', 'archive', 'both'].includes(scope)) fail('invalid_field', `Unknown scope "${scope}"`, { valid: ['board', 'archive', 'both'] });
-        const num = (t) => parseInt((t.id.match(/(\d+)$/) || [])[1], 10) || 0;
         for (const kind of ['board', 'archive']) {
             if (scope !== 'both' && scope !== kind) continue;
             const doc = kind === 'board' ? ctx.board : ctx.archive;
@@ -293,7 +372,7 @@ const OPS = {
             const sorted = order.map((i) => list[i]);
             if (kind === 'board') ctx.state.tasks = sorted; else ctx.state.archive = sorted;
         }
-        return { scope };
+        return { mode, scope };
     },
 
     toggleSubtask(ctx, op) {

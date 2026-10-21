@@ -229,6 +229,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
         id,
         title: title.trim(),
         status,
+        order: null, // optional manual sort key (**Order**); null = not set
         priority: '',
         category: '',
         assignees: [],
@@ -242,6 +243,10 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
         notes: '',
         extra: '' // verbatim passthrough for unsupported sections (see below)
     };
+
+    // Optional manual sort key
+    const orderMatch = content.match(/^\s*\*\*Order\*\*:\s*(\d+)/m);
+    if (orderMatch) task.order = parseInt(orderMatch[1], 10);
 
     // Parse metadata line
     const metaMatch = content.match(/\*\*Priority\*\*:\s*(\w+)\s*\|\s*\*\*Category\*\*:\s*([^|]+?)(?:\s*\|\s*\*\*Assigned\*\*:\s*(.+?))?$/m);
@@ -279,7 +284,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
 
     for (let line of lines) {
         // Skip metadata lines
-        if (line.match(/^\*\*(Status|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/)) {
+        if (line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/)) {
             continue;
         }
         // Stop at subsections
@@ -326,7 +331,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
     // Capture each section from its header to the next recognised section or end; the generator
     // re-emits task.extra between subtasks and notes. Description/notes parsing are untouched.
     const extraStart = /^\s*\*\*(Links|Review|Dependencies)\*\*\s*:/i;
-    const extraStop = /^\s*\*\*(Status|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Subtasks)\*\*/i;
+    const extraStop = /^\s*\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Subtasks)\*\*/i;
     const extraLines = [];
     let capturingExtra = false;
     for (let line of lines) {
@@ -378,6 +383,7 @@ export function normalizeConfig(config) {
 export function generateTaskBlock(task) {
     let md = `### ${task.id} | ${task.title}\n`;
     md += `**Status**: ${task.status}\n`;
+    if (task.order != null) md += `**Order**: ${task.order}\n`;
 
     let meta = '';
     if (task.priority) meta += `**Priority**: ${task.priority}`;
@@ -483,4 +489,14 @@ ${strings.desc}
 ${strings.section}
 
 `;
+}
+
+// Display order of a board's tasks. With manual ordering on (some tasks carry an **Order** key),
+// tasks sort by key; tasks without one come after the keyed ones, in file order. Without any key
+// this is simply file order. Per-column order is this list filtered by status.
+export function orderedTasks(tasks) {
+    return tasks
+        .map((task, i) => ({ task, i }))
+        .sort((a, b) => ((a.task.order == null) - (b.task.order == null)) || ((a.task.order ?? 0) - (b.task.order ?? 0)) || (a.i - b.i))
+        .map((x) => x.task);
 }

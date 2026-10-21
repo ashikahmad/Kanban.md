@@ -147,6 +147,21 @@ test('cli: sort reorders by id on request', () => {
   assert.deepEqual(after, [...after].sort());
 });
 
+test('cli: manual ordering — positions turns it on, moves write keys, clear turns it off', () => {
+  const dir = project();
+  assert.equal(cli(dir, ['sort', '--mode', 'positions']).json.ok, true);
+  const first = cli(dir, ['list', '--status', 'backlog']).json.tasks;
+  assert.ok(first.every((t) => typeof t.order === 'number'));
+  const [a, b] = [first[0].id, first[1].id];
+  const fileOrder = parseBoard(read(dir)).tasks.map((t) => t.id);
+  assert.equal(cli(dir, ['move', b, 'backlog', '--before', a]).json.ok, true);
+  const shown = cli(dir, ['list', '--status', 'backlog']).json.tasks.map((t) => t.id);
+  assert.deepEqual(shown.slice(0, 2), [b, a]);
+  assert.deepEqual(parseBoard(read(dir)).tasks.map((t) => t.id), fileOrder, 'no block moved');
+  assert.equal(cli(dir, ['sort', '--mode', 'clear']).json.ok, true);
+  assert.ok(!read(dir).includes('**Order**'));
+});
+
 test('cli: create, move, update, note, archive', () => {
   const dir = project();
   const c = cli(dir, ['create', '--title', 'From the CLI', '--status', 'backlog', '--priority', 'High', '--category', 'Backend', '--tags', 'api,cli']);

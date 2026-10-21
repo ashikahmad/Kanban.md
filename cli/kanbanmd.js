@@ -3,7 +3,7 @@
 //   kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command> [args]
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseBoard, parseArchive } from '../core/board.js';
+import { parseBoard, parseArchive, orderedTasks } from '../core/board.js';
 import { BoardError } from '../core/text.js';
 import { TASK_FIELDS } from '../core/ops.js';
 import { readWorkspace, mutate } from '../io/node-fs.js';
@@ -31,14 +31,16 @@ const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
          [--due YYYY-MM-DD] [--description D]
   update <id> --<field> <value> ...                fields: ${TASK_FIELDS.join(', ')}
   move <id> <status> [--before ID | --at-end]       in place by default; a position relocates the block
-  sort [--scope board|archive|both] [--order asc|desc]   reorder blocks by task id (explicit only)
+  sort [--mode blocks|ids|positions|clear] [--order asc|desc] [--scope board|archive|both]
+       blocks: reorder file blocks by id.  ids / positions: write Order keys from id order / current order.
+       clear: remove all Order keys.   (default: ids when keys exist, else blocks)
   toggle <id> <index|text>        subtask <id> <text>        note <id> <text>
   archive <id>   restore <id>   delete <id>
   config <categories|users|priorities|tags> a,b,c
   columns <json>                                   [{"name","id"}], optional "reassign" via apply`;
 
 function summary(t) {
-    return { id: t.id, title: t.title, status: t.status, priority: t.priority, assignees: t.assignees, due: t.due, tags: t.tags };
+    return { id: t.id, title: t.title, status: t.status, ...(t.order != null && { order: t.order }), priority: t.priority, assignees: t.assignees, due: t.due, tags: t.tags };
 }
 
 async function main() {
@@ -54,7 +56,7 @@ async function main() {
         const ws = await readWorkspace(dir);
         const b = parseBoard(ws.board);
         if (cmd === 'list') {
-            const rows = b.tasks.filter((t) => (!flags.status || t.status === flags.status) && (!flags.assignee || t.assignees.some((x) => x.startsWith(flags.assignee))) && (!flags.tag || t.tags.includes('#' + flags.tag.replace(/^#/, ''))));
+            const rows = orderedTasks(b.tasks).filter((t) => (!flags.status || t.status === flags.status) && (!flags.assignee || t.assignees.some((x) => x.startsWith(flags.assignee))) && (!flags.tag || t.tags.includes('#' + flags.tag.replace(/^#/, ''))));
             console.log(JSON.stringify({ ok: true, columns: b.config.columns, tasks: rows.map(summary) }));
         } else {
             need(1, 'task id');
@@ -84,7 +86,7 @@ async function main() {
         need(2, 'task id and status');
         op = { type: 'moveTask', id: a[0], status: a[1], before: flags.before, atEnd: flags['at-end'], ifMatch: flags['if-match'] };
     } else if (cmd === 'sort') {
-        op = { type: 'sortTasks', scope: flags.scope, order: flags.order };
+        op = { type: 'sortTasks', mode: flags.mode, scope: flags.scope, order: flags.order };
     } else if (cmd === 'toggle') {
         need(2, 'task id and subtask index or text');
         op = /^\d+$/.test(a[1]) ? { type: 'toggleSubtask', id: a[0], index: +a[1] } : { type: 'toggleSubtask', id: a[0], text: a[1] };

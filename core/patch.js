@@ -22,7 +22,7 @@ export class Fallback extends Error {}
 
 const HEADER_RE = /^###\s+TASK-(\d+)\s*\|\s*(.+?)\s*$/;
 const META_RE = /\*\*Priority\*\*:\s*(\w+)\s*\|\s*\*\*Category\*\*:\s*([^|]+?)(?:\s*\|\s*\*\*Assigned\*\*:\s*(.+?))?$/;
-const META_LINE_RE = /^\*\*(Status|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/;
+const META_LINE_RE = /^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/;
 const STOP_RE = /^\*\*(Subtasks|Notes|Links|Review|Dependencies)\*\*/;
 const DATE_FIELDS = [['created', 'Created'], ['started', 'Started'], ['due', 'Due'], ['completed', 'Finished']];
 const taskId = (digits) => 'TASK-' + digits.padStart(3, '0');
@@ -64,7 +64,7 @@ export function fieldsOf(doc, loc) {
     const { start, end } = loc;
     const L = (i) => stripEol(doc.lines[i]);
     const f = {
-        header: start, status: -1, meta: null, dates: {}, tags: null,
+        header: start, status: -1, order: null, meta: null, dates: {}, tags: null,
         desc: null, descInterleaved: false,
         subHeaders: [], subItems: [], notes: -1, extraStart: -1, stop: end, lastContent: start,
     };
@@ -73,6 +73,10 @@ export function fieldsOf(doc, loc) {
         const line = L(i);
         if (line.trim()) f.lastContent = i;
         if (f.status < 0 && /^\s*\*\*Status\*\*:\s*[^\r\n]+/.test(line)) f.status = i;
+        if (!f.order) {
+            const m = /^\s*\*\*Order\*\*:\s*(\d+)/.exec(line);
+            if (m) f.order = { line: i, valueStart: m[0].length - m[1].length, valueEnd: m[0].length };
+        }
         if (!f.meta) {
             const m = META_RE.exec(line);
             if (m) f.meta = { line: i, index: m.index, length: m[0].length, priority: m[1].trim(), category: m[2].trim(), assigned: m[3] };
@@ -144,7 +148,7 @@ export function setTitle(doc, loc, title) {
 // preceding field line that exists.
 function insertMetaLine(doc, loc, after, text) {
     const f = fieldsOf(doc, loc);
-    const order = { status: f.status, meta: f.meta && f.meta.line, dates: lineOfDates(f), tags: f.tags && f.tags.line };
+    const order = { status: f.status, order: f.order && f.order.line, meta: f.meta && f.meta.line, dates: lineOfDates(f), tags: f.tags && f.tags.line };
     let at = loc.start + 1;
     for (const key of after) if (order[key] != null && order[key] >= 0) { at = Math.max(at, order[key] + 1); }
     insertLines(doc, at, [text]);
@@ -164,6 +168,17 @@ export function setStatus(doc, loc, status) {
     }
 }
 
+// Optional manual sort key: n (a non-negative integer) or null to remove the line.
+export function setOrder(doc, loc, n) {
+    const f = fieldsOf(doc, loc);
+    if (f.order) {
+        if (n === null) removeLines(doc, f.order.line, f.order.line + 1);
+        else replaceInLine(doc, f.order.line, f.order.valueStart, f.order.valueEnd, String(n));
+    } else if (n !== null) {
+        insertMetaLine(doc, loc, ['status'], `**Order**: ${n}`);
+    }
+}
+
 const metaText = ({ priority, category, assignees }) =>
     `**Priority**: ${priority} | **Category**: ${category}` + (assignees.length ? ` | **Assigned**: ${assignees.join(', ')}` : '');
 
@@ -179,7 +194,7 @@ export function setMeta(doc, loc, meta) {
             replaceInLine(doc, f.meta.line, f.meta.index, f.meta.index + f.meta.length, metaText(meta));
         }
     } else if (!empty) {
-        insertMetaLine(doc, loc, ['status'], metaText(meta));
+        insertMetaLine(doc, loc, ['status', 'order'], metaText(meta));
     }
 }
 
@@ -209,7 +224,7 @@ export function setDates(doc, loc, next) {
         else removeLines(doc, lines[0], lines[0] + 1);
         return;
     }
-    if (datesText(next)) insertMetaLine(doc, loc, ['status', 'meta'], datesText(next));
+    if (datesText(next)) insertMetaLine(doc, loc, ['status', 'order', 'meta'], datesText(next));
 }
 
 export function setTags(doc, loc, tags) {
@@ -224,7 +239,7 @@ export function setTags(doc, loc, tags) {
             replaceInLine(doc, f.tags.line, f.tags.labelStart, line.length, `**Tags**: ${text}`);
         }
     } else if (tags.length) {
-        insertMetaLine(doc, loc, ['status', 'meta', 'dates'], `**Tags**: ${text}`);
+        insertMetaLine(doc, loc, ['status', 'order', 'meta', 'dates'], `**Tags**: ${text}`);
     }
 }
 
