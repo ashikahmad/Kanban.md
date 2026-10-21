@@ -52,6 +52,8 @@ Markdown Task Manager is a **standalone web application** contained in a single 
 - ✅ **Multi-project**: Manage multiple projects with history
 - ✅ **Dark mode & responsive**: Light/dark theme, mobile-ready with touch drag & drop
 - ✅ **Multilingual**: English, French, German and Simplified Chinese
+- ✅ **Humans and AI at the same time**: an optional CLI and MCP server edit the same files safely while you use the browser, and changes show up live
+- ✅ **Cheap for AI**: an agent reads a few hundred tokens instead of the whole board
 
 ---
 
@@ -103,28 +105,36 @@ my-project/
 ```markdown
 # Kanban Board
 
+<!-- Config: Last Task ID: 0 -->
+<!-- Format: v3 -->
+
 ## ⚙️ Configuration
 
-**Columns**: 📝 To Do | 🚀 In Progress | ✅ Done
+**Columns**: 📝 To Do (todo) | 🚀 In Progress (in-progress) | ✅ Done (done)
+
 **Categories**: Frontend, Backend, Design
+
 **Users**: @alice, @bob
-**Tags**: #bug, #feature, #docs
 
-## 📝 To Do
+**Tags**: #bug #feature #docs
 
-## 🚀 In Progress
+---
 
-## ✅ Done
+## Tasks
 ```
 
 **Minimal archive.md template:**
 ```markdown
 # Task Archive
 
-> Archived tasks from the project
+<!-- Format: v3 -->
+
+> Archived tasks
 
 ## ✅ Archives
 ```
+
+(Or simply open an empty folder: the app creates both files for you.)
 
 Then:
 1. Open `kanbanmd.html` in your browser
@@ -245,6 +255,8 @@ AI assistants (Claude, ChatGPT, Copilot, Gemini, etc.) can:
 4. ✅ Document complete result in `**Notes**:`
 5. ✅ Reference tasks in Git commits (`TASK-XXX`)
 6. ✅ Archive on demand only (not automatically)
+
+They can do it by editing the Markdown, or, better, through the **CLI / MCP server** (see *CLI and MCP server* below): cheaper in tokens, validated, and safe while you are using the board.
 
 ### Configuration
 
@@ -441,6 +453,79 @@ With this system, you have:
 
 ---
 
+## 🔌 CLI and MCP server (humans and AI at the same time)
+
+The board is a pair of plain Markdown files, so an agent *can* edit them directly, but that costs tokens (the whole file on every read), invites formatting mistakes, and can overwrite what you are doing in the browser. The optional **`kanbanmd` CLI** and **MCP server** fix all three: they read only what is asked, validate every change, and write minimal patches that merge with your concurrent edits. Your browser picks the changes up within a couple of seconds; your own edits are merged the same way in the other direction.
+
+### Set up the MCP server
+
+```bash
+npm run mcp:install          # once: installs the MCP SDK inside mcp/ (the page and the CLI need no dependencies)
+```
+
+Add it to your MCP client, pointing `--dir` at the project folder that holds `kanban.md`:
+
+```bash
+claude mcp add kanban -- node /path/to/Kanban.md/mcp/server.js --dir /path/to/your/project
+```
+
+```json
+{ "mcpServers": { "kanban": { "command": "node", "args": ["/path/to/Kanban.md/mcp/server.js", "--dir", "/path/to/your/project"] } } }
+```
+
+Add `--read-only` (or `KANBANMD_READONLY=1`) to expose only the 5 read tools: fewer tokens, and no way to write.
+
+### The tools
+
+| Tool | What it does |
+|---|---|
+| `get_board` | Compact list in display order (summaries, filters: `status`, `assignee`, `tag`, `priority`, `category`, `text`, `overdue`, `dueBefore`, paging). `archived: true` / `backlog: true` list those files |
+| `get_task` | One task in full, with its `etag` |
+| `get_config` | Valid columns, priorities, categories, users, tags |
+| `get_board_stats` | Counts by status / assignee / priority, overdue, due soon, housekeeping suggestions |
+| `get_changes_since` | Edits made through the tools since a timestamp |
+| `save_task` | Create (no `id`) or change (`id`) a task |
+| `move_task` | Change column in place (a one-line edit); `before` / `atEnd` also set the position |
+| `subtask`, `add_note` | Add or tick a subtask; append to the notes |
+| `archive_tasks`, `restore_task`, `delete_task` | Archive lifecycle |
+| `sort_tasks` | File-wide reorder, always with an explicit `mode` |
+| `update_config` | Lists, columns, housekeeping policy, backlog file |
+
+Every write takes `dryRun` (preview the diff, write nothing) and most take `ifMatch` (the `etag` from a read: fails with `conflict` if the task changed since). Errors carry a code and the valid choices.
+
+### The CLI
+
+The same operations without MCP, for scripts, CI and agents that only have a shell:
+
+```bash
+node cli/kanbanmd.js --dir . board --status in-progress --assignee @alice
+node cli/kanbanmd.js --dir . move TASK-014 done
+node cli/kanbanmd.js --dir . --dry-run housekeeping --apply      # preview a clean-up
+npm link                                                          # optional: makes `kanbanmd` a global command
+```
+
+`kanbanmd --help` lists everything. Output is always one JSON document.
+
+### Why it is cheaper and safer
+
+Measured on the example boards (`npm run measure`; tokens estimated as bytes / 4):
+
+| | Reading the file | With the tools |
+|---|---|---|
+| "What is in this column?" on a 100-task board | ~20,000 tokens | ~1,000 |
+| Read one task | ~20,000 | ~280 |
+| Move a task, tick a subtask, add a note | read the file + an edit call | 25-60 |
+| Fixed cost per session | ~4,700 (format rules) | ~1,800 for all 14 tools, ~650 read-only |
+
+- **Minimal patches**: moving a card changes one line, so git diffs stay readable. Everything outside the change is byte-for-byte untouched.
+- **Verified**: every edit is re-parsed and must read back exactly as intended, or nothing is written.
+- **Concurrent-safe**: tools take turns with a lock, the browser re-reads before it writes, and ids are assigned atomically.
+- **Format**: tasks use one metadata field per line (format v3). Older files are migrated automatically (with a backup) when opened in the browser, or with `kanbanmd migrate`.
+
+`AI_WORKFLOW.md` tells agents to use the tools first and falls back to the file rules.
+
+---
+
 ## ✨ Application Features
 
 ### 1. Interactive Kanban View
@@ -587,10 +672,10 @@ With this system, you have:
 
 ### 8. Auto-Save
 
-- **Immediate save**: Each modification is written instantly
+- **Immediate save**: Each modification is written instantly, as a **minimal patch**: changing a card edits only that card's lines, so git diffs stay small
 - **No "Save" button**: Everything is automatic
-- **Synchronization**: Markdown files always stay up to date
-- **External editing compatible**: You can edit files manually
+- **Picks up outside changes**: edits made by an AI agent, the CLI or a text editor appear within about two seconds. Your own edit is merged with theirs, never overwriting it; if you have the edit form open on a task that changed, you are asked before it is replaced
+- **Compatible with external editing**: You can edit files manually
 
 ### 9. Other Features
 
@@ -599,6 +684,18 @@ With this system, you have:
 - **Responsive**: Optimized for mobile — touch drag & drop, stacked forms, per-column "+" button
 - **Keyboard**: **Esc** closes menus and dialogs
 - **Keyboard shortcuts**: Quick navigation (coming soon)
+
+### 10. Manual card order (optional)
+
+By default a card sits where its block is in the file. The first time you drag a card to a spot, the app asks whether to **remember the order**: if you say yes, each task gets an `**Order**: 3000` line and every later move changes just two lines (no blocks move). Burger menu → **Manual order** switches it on or off, and **Reset order by task id** puts the cards back in id order.
+
+### 11. Housekeeping nudges
+
+A quiet bar under the header suggests keeping the board small: tasks **finished 30+ days ago** (button: *Archive done*, one confirmed step), **backlog tasks older than 90 days** (outlined), a board over **200 tasks**, or a backlog over **100 tasks** (button: *Move backlog to its own file*). *Snooze 7 days* hides it; *Dismiss* hides it until the numbers change. It never acts on its own. Change the numbers (or turn it off) in the burger menu → **Housekeeping**, or with the optional config line `**Housekeeping**: done=done after=30d | backlog=backlog after=90d | max=200` (`off` silences it).
+
+### 12. Backlog file (optional)
+
+For a very large backlog, a task whose status is the backlog column can live in its own **`backlog.md`**, keeping `kanban.md` small and fast. The backlog column becomes a stub with a count; **Open backlog** shows a panel where you can search, send a task to any column, or archive it. Dragging a card onto the stub parks it; changing a task's status moves it between the files. Switch it on with the nudge (past 100 backlog tasks) or burger menu → **Backlog file**. Config line: `**Backlog file**: backlog.md (backlog)`.
 
 ---
 
@@ -609,10 +706,13 @@ With this system, you have:
 ```
 your-project/
 ├── kanban.md          # Active tasks (required)
-├── archive.md         # Archived tasks (required)
+├── archive.md         # Archived tasks (created on the first archive)
+├── backlog.md         # Backlog tasks (optional, see "Backlog file")
 ├── AI_WORKFLOW.md     # Guidelines for AI (optional)
 └── [AI file].md       # Specific AI configuration (optional)
 ```
+
+Working files the tools may create (add them to `.gitignore`): `.kanban.lock/`, `.kanban-activity.jsonl`, `.*.tmp`.
 
 ### Content of kanban.md
 
@@ -620,21 +720,31 @@ your-project/
 # Kanban Board
 
 <!-- Config: Last Task ID: 42 -->
+<!-- Format: v3 -->
 
 ## ⚙️ Configuration
 
 **Columns**: 📝 To Do (todo) | 🚀 In Progress (in-progress) | ✅ Done (done)
+
 **Categories**: Frontend, Backend, Design
+
 **Users**: @alice (Alice Martin), @bob (Bob Smith)
-**Tags**: #bug, #feature, #docs, #refactor
+
+**Priorities**: 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
+
+**Tags**: #bug #feature #docs #refactor
 
 ---
 
-## 📝 To Do
+## Tasks
 
 ### TASK-001 | My first task
-**Priority**: High | **Category**: Frontend | **Assigned**: @alice
-**Created**: 2025-01-20 | **Due**: 2025-02-01
+**Status**: todo
+**Priority**: High
+**Category**: Frontend
+**Assigned**: @alice
+**Created**: 2025-01-20
+**Due**: 2025-02-01
 **Tags**: #feature #ui
 
 Task description...
@@ -644,29 +754,38 @@ Task description...
 - [x] Completed subtask
 - [ ] Last subtask
 
-## 🚀 In Progress
-
 ### TASK-002 | Other task
+**Status**: in-progress
 ...
-
-## ✅ Done
 
 ### TASK-003 | Completed task
+**Status**: done
 ...
 ```
+
+Every task carries its own **`**Status**:`** (a column id): that is what places it in a column, so moving a card is a one-line edit. Every metadata field has its own line and is optional (a task can have a priority and no category); empty fields are left out. An optional `**Order**: 3000` line holds the manual card order. Optional config lines: `**Housekeeping**: …` and `**Backlog file**: backlog.md (backlog)`.
+
+> **Older files** (v1: one `## Section` per column; v2: priority, category and assignee joined on one line) open fine and are **migrated automatically** the first time you open them in the app, keeping a backup (`kanban.v1-backup.md` / `kanban.v2-backup.md`). The migration refuses anything that would not read back identically. From the command line: `kanbanmd migrate [--dry-run]`.
 
 ### Content of archive.md
 
 ```markdown
 # Task Archive
 
-> Archived tasks from project My Project
+<!-- Format: v3 -->
 
-## ✅ January 2025
+> Archived tasks
+
+## ✅ Archives
 
 ### TASK-042 | Implement notification system
-**Priority**: High | **Category**: Backend | **Assigned**: @alice
-**Created**: 2025-01-15 | **Started**: 2025-01-18 | **Finished**: 2025-01-22
+**Status**: done
+**Priority**: High
+**Category**: Backend
+**Assigned**: @alice
+**Created**: 2025-01-15
+**Started**: 2025-01-18
+**Finished**: 2025-01-22
 **Tags**: #feature #notifications
 
 Real-time notification system with WebSockets.
@@ -675,8 +794,6 @@ Real-time notification system with WebSockets.
 - [x] Setup WebSocket server
 - [x] Create REST API
 - [x] Implement email sending
-- [x] Notifications UI
-- [x] End-to-end tests
 
 **Notes**:
 
@@ -685,26 +802,15 @@ Real-time notification system with WebSockets.
 
 **Modified files**:
 - src/websocket/server.js (lines 1-150)
-- src/api/notifications.js (lines 20-85)
-- src/ui/NotificationPanel.jsx (lines 1-200)
 
 **Technical decisions**:
 - Socket.io for WebSockets (simpler than native ws)
-- SendGrid for emails (100/day free quota)
-- 30-day history in MongoDB
 
 **Tests performed**:
 - ✅ 100 simultaneous connections OK
-- ✅ Automatic reconnection after disconnect
-- ✅ Emails sent in < 2s
-
----
-
-## ✅ December 2024
-
-### TASK-001 | Old archived task
-...
 ```
+
+An archived task keeps its `**Status**` so it can be restored to the right column.
 
 ---
 
@@ -755,15 +861,21 @@ Click a card to open its details: metadata, tags, description, subtasks (tick th
 The application is built from `src/` into one self-contained file.
 
 ```bash
-npm install          # once (a single dev dependency to minify the output)
+npm install          # once (build tools only; the output has no dependencies)
 npm run build        # minified kanbanmd.html
 npm run build:dev    # readable kanbanmd.html while you work
+npm test             # unit, property and end-to-end tests
+npm run mcp:install  # install the MCP SDK (enables the MCP server and its tests)
+npm run measure      # token cost of reads and writes, raw file vs tools
 ```
 
+- `core/` is the pure board logic (parse, generate, validated minimal-patch operations, reads, migration, housekeeping, the backlog file). The page bundles it (esbuild), and the CLI (`cli/`) and MCP server (`mcp/`) import it, so all three always agree on the format. `io/` is the Node file layer (atomic writes, locking).
+- `test/` holds the tests; `test/tools/page-harness.js` and `page-checks.js` check the page in a browser against a fake in-memory folder (see the header of each file).
 - `src/styles/00-variables.css` holds the design tokens: spacing, radius, type scale and the light and dark colour ladders. Change a colour or a size there.
 - Surfaces are layered `--c-page` < `--c-column` < `--c-card` < `--c-pop`, so a new component only needs to pick the right level.
-- `src/scripts/13-toolbar.js` holds the menus and popovers; `src/scripts/06-filters.js` the filter logic.
+- `src/scripts/13-toolbar.js` holds the menus and popovers; `src/scripts/06-filters.js` the filter logic; `src/scripts/04a-persist.js` how the page saves and watches the files.
 - `docs/demo/` contains the sample board used for the screenshots above.
+- `drafts/mcp-file-plan.md` is the design record (decisions, measurements, a log of every step).
 
 ---
 

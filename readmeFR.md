@@ -41,6 +41,8 @@ Le Markdown Task Manager est une **application web autonome** contenue dans un s
 - ✅ **Multi-projets** : Gérez plusieurs projets avec historique
 - ✅ **Mode sombre & responsive** : Thème clair/sombre, prêt pour mobile (glisser-déposer tactile)
 - ✅ **Multilingue** : Anglais, Français, Allemand et Chinois simplifié
+- ✅ **Humains et IA en même temps** : une CLI et un serveur MCP optionnels éditent les mêmes fichiers en toute sécurité pendant que vous utilisez le navigateur, et les changements apparaissent en direct
+- ✅ **Économe pour l'IA** : un agent lit quelques centaines de jetons au lieu du tableau entier
 
 ---
 
@@ -90,28 +92,36 @@ mon-projet/
 ```markdown
 # Kanban Board
 
+<!-- Config: Last Task ID: 0 -->
+<!-- Format: v3 -->
+
 ## ⚙️ Configuration
 
-**Colonnes**: 📝 À faire | 🚀 En cours | ✅ Terminé
-**Catégories**: Frontend, Backend, Design
-**Utilisateurs**: @alice, @bob
-**Tags**: #bug, #feature, #docs
+**Columns**: 📝 À faire (todo) | 🚀 En cours (in-progress) | ✅ Terminé (done)
 
-## 📝 À faire
+**Categories**: Frontend, Backend, Design
 
-## 🚀 En cours
+**Users**: @alice, @bob
 
-## ✅ Terminé
+**Tags**: #bug #feature #docs
+
+---
+
+## Tasks
 ```
 
 **Template archive.md minimal :**
 ```markdown
 # Archive des Tâches
 
-> Tâches archivées du projet
+<!-- Format: v3 -->
+
+> Tâches archivées
 
 ## ✅ Archives
 ```
+
+(Ou ouvrez simplement un dossier vide : l'application crée les deux fichiers pour vous.)
 
 Ensuite :
 1. Ouvrez `kanbanmd.html` dans votre navigateur
@@ -428,6 +438,79 @@ Avec ce système, vous avez :
 
 ---
 
+## 🔌 CLI et serveur MCP (humains et IA en même temps)
+
+Le tableau est une paire de fichiers Markdown, qu'un agent *peut* éditer directement, mais cela coûte des jetons (le fichier entier à chaque lecture), favorise les erreurs de format et peut écraser ce que vous faites dans le navigateur. La **CLI `kanbanmd`** et le **serveur MCP** optionnels règlent les trois points : ils ne lisent que ce qui est demandé, valident chaque modification et écrivent des correctifs minimaux qui fusionnent avec vos modifications simultanées. Votre navigateur reprend les changements en quelques secondes ; vos propres modifications sont fusionnées de la même façon dans l'autre sens.
+
+### Installer le serveur MCP
+
+```bash
+npm run mcp:install          # une fois : installe le SDK MCP dans mcp/ (la page et la CLI n'ont aucune dépendance)
+```
+
+Ajoutez-le à votre client MCP, avec `--dir` pointant vers le dossier du projet qui contient `kanban.md` :
+
+```bash
+claude mcp add kanban -- node /chemin/vers/Kanban.md/mcp/server.js --dir /chemin/vers/votre/projet
+```
+
+```json
+{ "mcpServers": { "kanban": { "command": "node", "args": ["/chemin/vers/Kanban.md/mcp/server.js", "--dir", "/chemin/vers/votre/projet"] } } }
+```
+
+Ajoutez `--read-only` (ou `KANBANMD_READONLY=1`) pour n'exposer que les 5 outils de lecture : moins de jetons, et aucune possibilité d'écrire.
+
+### Les outils
+
+| Outil | Rôle |
+|---|---|
+| `get_board` | Liste compacte dans l'ordre d'affichage (résumés, filtres : `status`, `assignee`, `tag`, `priority`, `category`, `text`, `overdue`, `dueBefore`, pagination). `archived: true` / `backlog: true` listent ces fichiers |
+| `get_task` | Une tâche en entier, avec son `etag` |
+| `get_config` | Colonnes, priorités, catégories, utilisateurs, tags valides |
+| `get_board_stats` | Comptages par statut / personne / priorité, retards, échéances proches, suggestions de ménage |
+| `get_changes_since` | Modifications faites via les outils depuis un instant donné |
+| `save_task` | Créer (sans `id`) ou modifier (`id`) une tâche |
+| `move_task` | Changer de colonne sur place (une seule ligne) ; `before` / `atEnd` fixent aussi la position |
+| `subtask`, `add_note` | Ajouter ou cocher une sous-tâche ; ajouter aux notes |
+| `archive_tasks`, `restore_task`, `delete_task` | Cycle de vie de l'archive |
+| `sort_tasks` | Réordonnancement global, toujours avec un `mode` explicite |
+| `update_config` | Listes, colonnes, politique de ménage, fichier backlog |
+
+Chaque écriture accepte `dryRun` (aperçu du diff, rien n'est écrit) et la plupart acceptent `ifMatch` (l'`etag` d'une lecture : erreur `conflict` si la tâche a changé depuis). Les erreurs portent un code et les choix valides.
+
+### La CLI
+
+Les mêmes opérations sans MCP, pour les scripts, la CI et les agents qui n'ont qu'un shell :
+
+```bash
+node cli/kanbanmd.js --dir . board --status in-progress --assignee @alice
+node cli/kanbanmd.js --dir . move TASK-014 done
+node cli/kanbanmd.js --dir . --dry-run housekeeping --apply      # aperçu d'un nettoyage
+npm link                                                          # optionnel : `kanbanmd` devient une commande globale
+```
+
+`kanbanmd --help` liste tout. La sortie est toujours un seul document JSON.
+
+### Pourquoi c'est moins cher et plus sûr
+
+Mesuré sur les tableaux d'exemple (`npm run measure` ; jetons estimés à octets / 4) :
+
+| | Lire le fichier | Avec les outils |
+|---|---|---|
+| « Que contient cette colonne ? » sur 100 tâches | ~20 000 jetons | ~1 000 |
+| Lire une tâche | ~20 000 | ~280 |
+| Déplacer une tâche, cocher une sous-tâche, ajouter une note | lire le fichier + un appel d'édition | 25-60 |
+| Coût fixe par session | ~4 700 (règles de format) | ~1 800 pour les 14 outils, ~650 en lecture seule |
+
+- **Correctifs minimaux** : déplacer une carte modifie une ligne, les diffs Git restent lisibles. Tout ce qui est hors modification reste identique à l'octet près.
+- **Vérifié** : chaque modification est relue et doit se relire exactement comme prévu, sinon rien n'est écrit.
+- **Sûr en concurrence** : les outils passent chacun leur tour (verrou), le navigateur relit avant d'écrire, les identifiants sont attribués atomiquement.
+- **Format** : les tâches utilisent un champ de métadonnées par ligne (format v3). Les anciens fichiers sont migrés automatiquement (avec sauvegarde) à l'ouverture dans le navigateur, ou avec `kanbanmd migrate`.
+
+`AI_WORKFLOW.md` demande aux agents d'utiliser les outils d'abord et prévoit les règles de fichier en repli.
+
+---
+
 ## ✨ Fonctionnalités de l'Application
 
 ### 1. Vue Kanban Interactive
@@ -592,9 +675,9 @@ Avec ce système, vous avez :
 
 ### 8. Auto-Sauvegarde
 
-- **Sauvegarde immédiate** : Chaque modification est écrite instantanément
+- **Sauvegarde immédiate** : Chaque modification est écrite instantanément sous forme de **correctif minimal** : modifier une carte ne touche que ses lignes, les diffs Git restent petits
 - **Pas de bouton "Sauvegarder"** : Tout est automatique
-- **Synchronisation** : Les fichiers Markdown restent toujours à jour
+- **Reprend les changements extérieurs** : les modifications d'un agent IA, de la CLI ou d'un éditeur de texte apparaissent en quelques secondes. Votre modification est fusionnée avec la leur, jamais écrasée ; si le formulaire d'édition est ouvert sur une tâche qui a changé, une confirmation est demandée avant de la remplacer
 - **Compatible édition externe** : Vous pouvez éditer les fichiers manuellement
 
 ### 9. Autres Fonctionnalités
@@ -605,6 +688,18 @@ Avec ce système, vous avez :
 - **Mode sombre** : Basculement clair/sombre avec détection automatique du système
 - **Raccourcis clavier** : Navigation rapide (à venir)
 
+### 10. Ordre manuel des cartes (optionnel)
+
+Par défaut, une carte reste à l'endroit où se trouve son bloc dans le fichier. La première fois que vous glissez une carte à un endroit précis, l'application demande s'il faut **mémoriser l'ordre** : si oui, chaque tâche reçoit une ligne `**Order**: 3000` et chaque déplacement suivant ne modifie que deux lignes (aucun bloc ne bouge). Menu burger → **Ordre manuel** l'active ou le désactive, et **Réinitialiser l'ordre par identifiant** remet les cartes dans l'ordre des identifiants.
+
+### 11. Rappels de ménage
+
+Une barre discrète sous l'en-tête suggère de garder le tableau léger : tâches **terminées depuis plus de 30 jours** (bouton : *Archiver les terminées*, en une étape confirmée), **tâches du backlog de plus de 90 jours** (contour pointillé), un tableau de plus de **200 tâches**, ou un backlog de plus de **100 tâches** (bouton : *Déplacer le backlog dans son propre fichier*). *Reporter 7 jours* la masque ; *Ignorer* la masque jusqu'à ce que les chiffres changent. Elle n'agit jamais d'elle-même. Réglez les seuils (ou désactivez-la) dans le menu burger → **Ménage**, ou avec la ligne de configuration optionnelle `**Housekeeping**: done=done after=30d | backlog=backlog after=90d | max=200` (`off` la désactive).
+
+### 12. Fichier backlog (optionnel)
+
+Pour un très gros backlog, les tâches dont le statut est la colonne backlog peuvent vivre dans leur propre fichier **`backlog.md`**, ce qui garde `kanban.md` léger et rapide. La colonne backlog devient un cadre avec un compteur ; **Ouvrir le backlog** affiche un panneau pour chercher, envoyer une tâche vers n'importe quelle colonne ou l'archiver. Glisser une carte sur le cadre la range ; changer le statut d'une tâche la déplace entre les fichiers. Activez-le via le rappel (au-delà de 100 tâches de backlog) ou menu burger → **Fichier backlog**. Ligne de configuration : `**Backlog file**: backlog.md (backlog)`.
+
 ---
 
 ## 📁 Structure des Fichiers
@@ -614,10 +709,13 @@ Avec ce système, vous avez :
 ```
 votre-projet/
 ├── kanban.md          # Tâches actives (obligatoire)
-├── archive.md         # Tâches archivées (obligatoire)
+├── archive.md         # Tâches archivées (créé au premier archivage)
+├── backlog.md         # Tâches du backlog (optionnel, voir « Fichier backlog »)
 ├── AI_WORKFLOW.md     # Consignes pour l'IA (optionnel)
 └── [fichier IA].md    # Configuration IA spécifique (optionnel)
 ```
+
+Fichiers de travail que les outils peuvent créer (à ajouter au `.gitignore`) : `.kanban.lock/`, `.kanban-activity.jsonl`, `.*.tmp`.
 
 ### Contenu de kanban.md
 
@@ -625,21 +723,31 @@ votre-projet/
 # Kanban Board
 
 <!-- Config: Last Task ID: 42 -->
+<!-- Format: v3 -->
 
 ## ⚙️ Configuration
 
-**Colonnes**: 📝 À faire (todo) | 🚀 En cours (in-progress) | ✅ Terminé (done)
-**Catégories**: Frontend, Backend, Design
-**Utilisateurs**: @alice (Alice Martin), @bob (Bob Dupont)
-**Tags**: #bug, #feature, #docs, #refactor
+**Columns**: 📝 À faire (todo) | 🚀 En cours (in-progress) | ✅ Terminé (done)
+
+**Categories**: Frontend, Backend, Design
+
+**Users**: @alice (Alice Martin), @bob (Bob Smith)
+
+**Priorities**: 🔴 Critique | 🟠 Haute | 🟡 Moyenne | 🟢 Basse
+
+**Tags**: #bug #feature #docs #refactor
 
 ---
 
-## 📝 À faire
+## Tasks
 
 ### TASK-001 | Ma première tâche
-**Priority**: Haute | **Category**: Frontend | **Assigned**: @alice
-**Created**: 2025-01-20 | **Due**: 2025-02-01
+**Status**: todo
+**Priority**: High
+**Category**: Frontend
+**Assigned**: @alice
+**Created**: 2025-01-20
+**Due**: 2025-02-01
 **Tags**: #feature #ui
 
 Description de la tâche...
@@ -649,67 +757,63 @@ Description de la tâche...
 - [x] Sous-tâche terminée
 - [ ] Dernière sous-tâche
 
-## 🚀 En cours
-
 ### TASK-002 | Autre tâche
+**Status**: in-progress
 ...
 
-## ✅ Terminé
-
-### TASK-003 | Tâche complétée
+### TASK-003 | Tâche terminée
+**Status**: done
 ...
 ```
+
+Chaque tâche porte son propre **`**Status**:`** (un identifiant de colonne) : c'est lui qui la place dans une colonne, donc déplacer une carte revient à modifier une seule ligne. Chaque champ de métadonnées a sa propre ligne et est optionnel (une tâche peut avoir une priorité sans catégorie) ; les champs vides sont omis. Une ligne optionnelle `**Order**: 3000` conserve l'ordre manuel des cartes. Lignes de configuration optionnelles : `**Housekeeping**: …` et `**Backlog file**: backlog.md (backlog)`.
+
+> **Anciens fichiers** (v1 : une `## Section` par colonne ; v2 : priorité, catégorie et assignés sur une même ligne) : ils s'ouvrent normalement et sont **migrés automatiquement** à la première ouverture dans l'application, avec une sauvegarde (`kanban.v1-backup.md` / `kanban.v2-backup.md`). La migration refuse tout ce qui ne se relirait pas à l'identique. En ligne de commande : `kanbanmd migrate [--dry-run]`.
 
 ### Contenu de archive.md
 
 ```markdown
-# Archive des Tâches
+# Task Archive
 
-> Tâches archivées du projet Mon Projet
+<!-- Format: v3 -->
 
-## ✅ Janvier 2025
+> Tâches archivées
 
-### TASK-042 | Implémenter système de notifications
-**Priority**: Haute | **Category**: Backend | **Assigned**: @alice
-**Created**: 2025-01-15 | **Started**: 2025-01-18 | **Finished**: 2025-01-22
+## ✅ Archives
+
+### TASK-042 | Implémenter le système de notifications
+**Status**: done
+**Priority**: High
+**Category**: Backend
+**Assigned**: @alice
+**Created**: 2025-01-15
+**Started**: 2025-01-18
+**Finished**: 2025-01-22
 **Tags**: #feature #notifications
 
-Système de notifications en temps réel avec WebSockets.
+Système de notifications temps réel avec WebSockets.
 
 **Subtasks**:
-- [x] Setup WebSocket server
-- [x] Créer API REST
-- [x] Implémenter envoi emails
-- [x] UI de notifications
-- [x] Tests end-to-end
+- [x] Mise en place du serveur WebSocket
+- [x] API REST
+- [x] Envoi d'emails
 
 **Notes**:
 
-**Résultat** :
+**Result**:
 ✅ Système de notifications fonctionnel avec WebSocket, API REST et emails.
 
-**Fichiers modifiés** :
+**Modified files**:
 - src/websocket/server.js (lignes 1-150)
-- src/api/notifications.js (lignes 20-85)
-- src/ui/NotificationPanel.jsx (lignes 1-200)
 
-**Décisions techniques** :
-- Socket.io pour WebSockets (plus simple que ws natif)
-- SendGrid pour emails (quota 100/jour gratuit)
-- Historique 30 jours en MongoDB
+**Technical decisions**:
+- Socket.io pour les WebSockets (plus simple que ws natif)
 
-**Tests effectués** :
+**Tests performed**:
 - ✅ 100 connexions simultanées OK
-- ✅ Reconnexion automatique après déconnexion
-- ✅ Emails envoyés en < 2s
-
----
-
-## ✅ Décembre 2024
-
-### TASK-001 | Ancienne tâche archivée
-...
 ```
+
+Une tâche archivée conserve son `**Status**` pour pouvoir être restaurée dans la bonne colonne.
 
 ---
 
