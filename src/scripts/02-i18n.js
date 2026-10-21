@@ -919,7 +919,13 @@
             if (typeof updateThemeUi === 'function') updateThemeUi();
 
             // Update language selector to match current language
-            document.getElementById('languageSelector').value = currentLanguage;
+            if (!ddRoot('languageSelector')._ddOptions) {
+                ddSetOptions('languageSelector', [
+                    { value: 'en', label: 'English' }, { value: 'fr', label: 'Français' },
+                    { value: 'de', label: 'Deutsch' }, { value: 'zh_cn', label: '简体中文' }
+                ]);
+            }
+            ddSetValue('languageSelector', currentLanguage, true);
 
             // Update welcome screen
             renderWelcomeScreen();

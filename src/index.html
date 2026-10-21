@@ -20,18 +20,21 @@
                 <button id="renameProjectBtn" class="menu-item" style="display: none;" title="Rename project" onclick="closeMenus(); renameCurrentProject()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg><span class="mi-label">Rename project</span></button>
                 <button id="deleteProjectBtn" class="menu-item danger" style="display: none;" title="Delete project" onclick="closeMenus(); deleteCurrentProject()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg><span class="mi-label">Delete project</span></button>
                 <div class="menu-sep"></div>
-                <div class="menu-row"><label for="languageSelector" class="menu-label"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg><span id="languageLabel">Language</span></label>
-                    <select id="languageSelector" onchange="setLanguage(this.value)">
-                        <option value="en">English</option>
-                        <option value="fr">Français</option>
-                        <option value="de">Deutsch</option>
-                        <option value="zh_cn">简体中文</option>
-                    </select>
+                <div class="menu-row"><span class="menu-label"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg><span id="languageLabel">Language</span></span>
+                    <div class="dd dd-field dd-compact">
+                        <input type="hidden" id="languageSelector" value="en" onchange="setLanguage(this.value)">
+                        <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="languageLabel"></button>
+                        <div class="dd-menu" role="listbox"></div>
+                    </div>
                 </div>
             </div>
         </div>
         <h1 id="headerTitle">Kanban.md</h1>
-        <select id="projectSelector" style="display: none;" aria-label="Project"></select>
+        <div class="dd dd-field dd-compact" id="projectDd" style="display: none;">
+            <input type="hidden" id="projectSelector">
+            <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Project"></button>
+            <div class="dd-menu" role="listbox"></div>
+        </div>
         <div id="filterBar">
             <div class="filter-row">
                 <div class="search-field">
@@ -43,21 +46,21 @@
                     <svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5h12M4.5 8h7M7 12.5h2"/></svg><span id="filterToggleLabel">Filters</span><span class="filter-count" id="filterCount" style="display: none;">0</span>
                 </button>
                 <div class="filter-group" id="filterPanel" onclick="event.stopPropagation()">
-                    <div class="fdrop" data-type="tag">
-                        <button class="fbtn" onclick="toggleFdrop(event, 'tag')" aria-haspopup="true" aria-expanded="false"><span class="flabel">Tags</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
-                        <div class="fmenu" id="fmenu-tag" role="group" onclick="event.stopPropagation()"></div>
+                    <div class="fdrop dd" data-type="tag">
+                        <button class="fbtn dd-trigger" aria-haspopup="true" aria-expanded="false"><span class="flabel">Tags</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
+                        <div class="fmenu dd-menu" id="fmenu-tag" role="group"></div>
                     </div>
-                    <div class="fdrop" data-type="category">
-                        <button class="fbtn" onclick="toggleFdrop(event, 'category')" aria-haspopup="true" aria-expanded="false"><span class="flabel">Category</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
-                        <div class="fmenu" id="fmenu-category" role="group" onclick="event.stopPropagation()"></div>
+                    <div class="fdrop dd" data-type="category">
+                        <button class="fbtn dd-trigger" aria-haspopup="true" aria-expanded="false"><span class="flabel">Category</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
+                        <div class="fmenu dd-menu" id="fmenu-category" role="group"></div>
                     </div>
-                    <div class="fdrop" data-type="user">
-                        <button class="fbtn" onclick="toggleFdrop(event, 'user')" aria-haspopup="true" aria-expanded="false"><span class="flabel">User</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
-                        <div class="fmenu" id="fmenu-user" role="group" onclick="event.stopPropagation()"></div>
+                    <div class="fdrop dd" data-type="user">
+                        <button class="fbtn dd-trigger" aria-haspopup="true" aria-expanded="false"><span class="flabel">User</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
+                        <div class="fmenu dd-menu" id="fmenu-user" role="group"></div>
                     </div>
-                    <div class="fdrop" data-type="priority">
-                        <button class="fbtn" onclick="toggleFdrop(event, 'priority')" aria-haspopup="true" aria-expanded="false"><span class="flabel">Priority</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
-                        <div class="fmenu" id="fmenu-priority" role="group" onclick="event.stopPropagation()"></div>
+                    <div class="fdrop dd" data-type="priority">
+                        <button class="fbtn dd-trigger" aria-haspopup="true" aria-expanded="false"><span class="flabel">Priority</span><span class="fcount"></span><svg class="ic chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6.5l4 4 4-4"/></svg></button>
+                        <div class="fmenu dd-menu" id="fmenu-priority" role="group"></div>
                     </div>
                 </div>
             </div>
@@ -111,15 +114,19 @@
                 </div>
                 <div class="form-grid cols-2">
                     <div class="field">
-                        <label for="taskStatus">Column *</label>
-                        <select id="taskStatus" required></select>
+                        <label id="taskStatusLabel" for="taskStatus">Column *</label>
+                        <div class="dd dd-field">
+                            <input type="hidden" id="taskStatus">
+                            <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="taskStatusLabel"></button>
+                            <div class="dd-menu" role="listbox"></div>
+                        </div>
                     </div>
                     <div class="field">
-                        <label for="taskPriority">Priority</label>
-                        <div class="prio-select" id="prioSelect">
+                        <label id="taskPriorityLabel" for="taskPriority">Priority</label>
+                        <div class="dd dd-field">
                             <input type="hidden" id="taskPriority">
-                            <button type="button" class="prio-btn" id="taskPrioBtn" aria-haspopup="listbox" aria-expanded="false" onclick="togglePrioMenu(event)" onkeydown="onPrioKey(event)"></button>
-                            <div class="prio-menu" id="taskPrioMenu" role="listbox" tabindex="-1" onclick="onPrioMenuClick(event)" onkeydown="onPrioKey(event)"></div>
+                            <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="taskPriorityLabel"></button>
+                            <div class="dd-menu" role="listbox"></div>
                         </div>
                     </div>
                 </div>

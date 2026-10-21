@@ -2,24 +2,13 @@
         function closeMenus() {
             ['filterPanel', 'moreMenu', 'themeMenu'].forEach(id => document.getElementById(id).classList.remove('open'));
             ['filterToggleBtn', 'moreMenuBtn', 'themeMenuBtn'].forEach(id => document.getElementById(id).setAttribute('aria-expanded', 'false'));
-            closeFdrops();
+            ddCloseAll();
         }
 
-        function closeFdrops(except) {
-            document.querySelectorAll('.fdrop.open').forEach(d => {
-                if (d !== except) { d.classList.remove('open'); d.querySelector('.fbtn').setAttribute('aria-expanded', 'false'); }
-            });
-        }
-
-        // A filter dropdown. In the collapsed (narrow) layout the lists are always visible inside the Filters panel.
-        function toggleFdrop(event, type) {
-            event.stopPropagation();
-            const drop = document.querySelector('.fdrop[data-type="' + type + '"]');
-            const wasOpen = drop.classList.contains('open');
-            ['moreMenu', 'themeMenu'].forEach(id => document.getElementById(id).classList.remove('open'));
-            closeFdrops();
-            if (!wasOpen) { drop.classList.add('open'); drop.querySelector('.fbtn').setAttribute('aria-expanded', 'true'); }
-        }
+        // Opening a filter dropdown closes the header popovers
+        document.addEventListener('ddopen', (e) => {
+            if (e.target.closest('.fdrop')) ['moreMenu', 'themeMenu'].forEach(id => document.getElementById(id).classList.remove('open'));
+        });
 
         function togglePopover(panelId, btnId, event) {
             event.stopPropagation();
@@ -36,7 +25,7 @@
         function toggleMoreMenu(event) { togglePopover('moreMenu', 'moreMenuBtn', event); }
         function toggleThemeMenu(event) { togglePopover('themeMenu', 'themeMenuBtn', event); }
 
-        document.addEventListener('click', closeMenus);
+        document.addEventListener('click', (e) => { if (!e.target.closest('.dd-menu')) closeMenus(); });
         document.addEventListener('keydown', (e) => {
             if (e.key !== 'Escape') return;
             closeMenus();

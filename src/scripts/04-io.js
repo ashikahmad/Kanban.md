@@ -227,7 +227,8 @@ ${t('markdown.archiveSection')}
                 // Parse tags
                 const tagsMatch = configText.match(/\*\*Tags\*\*:\s*(.+)/);
                 if (tagsMatch) {
-                    config.tags = tagsMatch[1].split(/\s+/).filter(t => t.startsWith('#')).map(t => t.replace('#', ''));
+                    // Same pattern as task tags, so separators like "#bug, #feature" don't leave a comma on the name
+                    config.tags = (tagsMatch[1].match(/#[\w-]+/g) || []).map(t => t.slice(1));
                     console.log('Parsed tags:', config.tags);
                 }
             }
