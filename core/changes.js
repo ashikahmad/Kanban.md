@@ -122,7 +122,7 @@ export function applyOps(ws, ops, options = {}) {
     // An archive move writes the archive first (a crash then duplicates a task rather than losing
     // it); a batch that only restores writes the board first. Anything else: board first.
     const types = new Set(ops.map((o) => o.type));
-    const archiveFirst = types.has('archiveTask');
+    const archiveFirst = types.has('archiveTask') || types.has('archiveTasks');
     const names = ['kanban.md', 'archive.md'].filter((n) => touched.has(n));
     if (archiveFirst) names.sort((a, b) => (a === 'archive.md' ? -1 : 1) - (b === 'archive.md' ? -1 : 1));
     return {

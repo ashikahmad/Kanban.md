@@ -11,7 +11,7 @@
 import { promises as fs } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
 import { join, basename, dirname } from 'node:path';
-import { applyOp } from '../core/ops.js';
+import { applyOps } from '../core/changes.js';
 import { parseBoard } from '../core/board.js';
 import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
 import { BoardError, unifiedDiff } from '../core/text.js';
@@ -89,20 +89,23 @@ export async function readActivity(dir) {
     return text.split('\n').filter(Boolean).flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
 }
 
-// Apply one op to the project in `dir`. Returns { result, files, diff? }.
-export async function mutate(dir, op, { dryRun = false, retries = 8, actor = 'cli', today, hooks = {}, lockTimeoutMs, lockStaleMs } = {}) {
+// Apply one op, or an array of ops applied in order as one edit, to the project in `dir`.
+// Returns { result, files, diff? } for one op, { results, files, diff? } for an array.
+export async function mutate(dir, opOrOps, { dryRun = false, retries = 8, actor = 'cli', today, hooks = {}, lockTimeoutMs, lockStaleMs } = {}) {
+    const ops = Array.isArray(opOrOps) ? opOrOps : [opOrOps];
+    const shape = (results) => (Array.isArray(opOrOps) ? { results } : { result: results[0] });
     const attempt = async () => {
         const ws = await readWorkspace(dir);
         const hashes = { [BOARD]: sha(ws.board), [ARCHIVE]: sha(ws.archive) };
-        const out = applyOp(ws, op, { today });
+        const out = applyOps(ws, ops, { today });
         if (hooks.afterCompute) await hooks.afterCompute(); // test seam: lets a test interleave a foreign write
         const names = out.files.map((f) => f.name);
 
         if (dryRun) {
             const diff = out.files.map((f) => unifiedDiff(f.name === BOARD ? ws.board : (ws.archive || ''), f.text, f.name)).join('');
-            return { done: { result: out.result, files: names, diff, dryRun: true } };
+            return { done: { ...shape(out.results), files: names, diff, dryRun: true } };
         }
-        if (!out.files.length) return { done: { result: out.result, files: [] } };
+        if (!out.files.length) return { done: { ...shape(out.results), files: [] } };
 
         const staged = [];
         try {
@@ -121,8 +124,9 @@ export async function mutate(dir, op, { dryRun = false, retries = 8, actor = 'cl
             await Promise.all(staged.map((s) => s.abort()));
             throw e;
         }
-        await logActivity(dir, { ts: new Date().toISOString(), actor, op: op.type, id: out.result.id || null, files: names });
-        return { done: { result: out.result, files: names } };
+        const ts = new Date().toISOString();
+        for (let i = 0; i < ops.length; i++) await logActivity(dir, { ts, actor, op: ops[i].type, id: out.results[i].id || null, files: names });
+        return { done: { ...shape(out.results), files: names } };
     };
 
     const run = async () => {
