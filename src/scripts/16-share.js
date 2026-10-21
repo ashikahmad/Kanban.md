@@ -2,7 +2,7 @@
         // Share one task without sharing the board: a preview of exactly what leaves, as plain text (for chat
         // or mail) or as a Markdown block (the file format, importable into another board). Copy it, or hand it
         // to the system share sheet where the browser has one. Nothing is sent anywhere by the app itself.
-        let shareState = { task: null, format: 'text', view: 'rendered', notes: true, assignees: true };
+        let shareState = { task: null, format: 'text', view: 'raw', notes: true, assignees: true };
 
         function buildShareText() {
             const { task, format, notes, assignees } = shareState;

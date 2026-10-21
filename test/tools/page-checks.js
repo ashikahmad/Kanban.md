@@ -486,17 +486,17 @@
     window.confirm = () => true; await toggleManualOrder(); window.confirm = realConfirm; // every task now has an Order line on disk
     const task = tasks.find((t) => t.id === 'TASK-002'); showTaskDetail(task); openShareDialog();
     setShareOption('format', 'markdown');
-    ok(/^### TASK-002 \| Rate limiting for the public API\n\*\*Status\*\*: backlog\n\*\*Priority\*\*: High\n/.test(preview()), preview().slice(0, 120));
+    ok(/^### TASK-002 \| Rate limiting for the public API\n\*\*Status\*\*: backlog  \n\*\*Priority\*\*: High  \n/.test(preview()), preview().slice(0, 120));
     ok(!preview().includes('**Order**'), 'no order key');
     closeShareDialog(); closeModal();
   });
 
-  await check('share: Markdown shows rendered by default with a raw toggle; plain text has no toggle', async () => {
+  await check('share: Markdown shows raw by default with a rendered toggle; plain text has no toggle', async () => {
     await fresh();
     const task = tasks.find((t) => t.id === 'TASK-002'); showTaskDetail(task); openShareDialog();
     const vis = (id) => document.getElementById(id).style.display !== 'none';
     setShareOption('format', 'text'); ok(!vis('shareView') && vis('sharePreview') && !vis('shareRendered'), 'text: raw only');
-    setShareOption('format', 'markdown'); setShareOption('view', 'rendered');
+    setShareOption('format', 'markdown'); ok(vis('sharePreview'), 'raw by default'); setShareOption('view', 'rendered');
     ok(vis('shareView') && vis('shareRendered') && !vis('sharePreview'), 'rendered shown');
     ok(!document.getElementById('shareRendered').textContent.includes('**Status**'), 'markup rendered');
     eq(document.getElementById('sharePreview').value, preview()); ok(preview().startsWith('### TASK-002'), 'raw value kept for Copy');

@@ -48,7 +48,7 @@ test('empty parts are omitted; an unknown column falls back to its id', () => {
 test('markdown is the board format, without the board-specific order key, and reads back', () => {
   const md = taskToMarkdown(task());
   assert.ok(!md.includes('**Order**'));
-  assert.match(md, /^### TASK-014 \| Rate limiting for the API\n\*\*Status\*\*: doing\n\*\*Priority\*\*: High\n/);
+  assert.match(md, /^### TASK-014 \| Rate limiting for the API\n\*\*Status\*\*: doing  \n\*\*Priority\*\*: High  \n/);
   // (the status is a column id, so it only means something on a board that has that column: import must map it)
   const board = `# B\n\n<!-- Format: v3 -->\n\n## ⚙️ Configuration\n\n**Columns**: To Do (todo) | In Progress (doing)\n\n---\n\n## Tasks\n\n${md}`;
   const back = parseBoard(board).tasks[0];
