@@ -7,6 +7,13 @@ import { applyOp } from '../core/ops.js';
 import { applyOps, diffToOps } from '../core/changes.js';
 import { BoardError, etagOf } from '../core/text.js';
 import { Doc, blocksOf } from '../core/patch.js';
+import { getBoard, getTask, getConfig, getStats } from '../core/read.js';
+import { getHousekeeping, archiveCandidates, staleBacklogIds } from '../core/housekeeping.js';
+import { mutate, readWorkspace } from '../io/node-fs.js';
+import { mkdtempSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 const task = (id, o = {}) => ({ id, title: `Task ${id}`, status: 'todo', order: null, priority: '', category: '', assignees: [], tags: [], created: '2026-10-01', started: '', due: '', completed: '', description: '', subtasks: [], notes: '', extra: '', ...o });
 const COLS = [{ name: '📥 Backlog', id: 'backlog' }, { name: 'To Do', id: 'todo' }, { name: '✅ Done', id: 'done' }];
@@ -353,3 +360,136 @@ for (let seed = 1; seed <= 6; seed++) {
     assert.ok(applied > 60, `only ${applied} ops applied`);
   });
 }
+
+// ---- file I/O: three files, one lock, one compare-and-swap ---------------------------------------------
+
+const CLI = new URL('../cli/kanbanmd.js', import.meta.url).pathname;
+function project(ws = SEED()) {
+  const dir = mkdtempSync(join(tmpdir(), 'kanbanmd-bl-'));
+  writeFileSync(join(dir, 'kanban.md'), ws.board);
+  if (ws.archive) writeFileSync(join(dir, 'archive.md'), ws.archive);
+  if (ws.backlog) writeFileSync(join(dir, ws.backlogName || 'backlog.md'), ws.backlog);
+  return dir;
+}
+const read = (dir, f) => readFileSync(join(dir, f), 'utf8');
+
+test('mutate enables the backlog file on disk, and every later edit sees it', async () => {
+  const dir = project();
+  const out = await mutate(dir, { type: 'setBacklogFile', enabled: true });
+  assert.deepEqual(out.files, ['backlog.md', 'kanban.md']);
+  assert.deepEqual(ids(parseBacklog(read(dir, 'backlog.md'), COLS, 'backlog').tasks), ['TASK-001', 'TASK-003']);
+  assert.equal((await readWorkspace(dir)).backlog, read(dir, 'backlog.md'));
+  await mutate(dir, { type: 'moveTask', id: 'TASK-001', status: 'todo' });
+  assert.ok(!read(dir, 'backlog.md').includes('TASK-001'));
+  assert.ok(read(dir, 'kanban.md').includes('### TASK-001'));
+  assert.deepEqual(readdirSync(dir).filter((f) => f.endsWith('.tmp')), []);
+});
+
+test('a custom file name is read and written; dry-run diffs show the real before/after for the backlog file', async () => {
+  const dir = project();
+  await mutate(dir, { type: 'setBacklogFile', enabled: true, file: 'ideas.md' });
+  assert.ok(existsSync(join(dir, 'ideas.md')) && !existsSync(join(dir, 'backlog.md')));
+  const dry = await mutate(dir, { type: 'updateTask', id: 'TASK-003', set: { title: 'Renamed in the file' } }, { dryRun: true });
+  assert.deepEqual(dry.files, ['ideas.md']);
+  assert.match(dry.diff, /^\+### TASK-003 \| Renamed in the file$/m);
+  assert.ok(!read(dir, 'ideas.md').includes('Renamed in the file'), 'dry run wrote nothing');
+});
+
+test('a foreign write to the backlog file between compute and commit forces a recompute', async () => {
+  const dir = project();
+  await mutate(dir, { type: 'setBacklogFile', enabled: true });
+  let calls = 0;
+  await mutate(dir, { type: 'moveTask', id: 'TASK-001', status: 'todo' }, {
+    hooks: { afterCompute: () => { if (calls++ === 0) writeFileSync(join(dir, 'backlog.md'), read(dir, 'backlog.md').replace('Task TASK-003', 'Edited by someone else')); } },
+  });
+  assert.equal(calls, 2, 'the first attempt was discarded');
+  assert.ok(read(dir, 'backlog.md').includes('Edited by someone else'), 'their edit survived');
+  assert.ok(read(dir, 'kanban.md').includes('### TASK-001'));
+});
+
+test('an unconfigured backlog.md is read as a stray and left alone', async () => {
+  const stray = '# Mine\n\n### TASK-500 | Not ours\n**Status**: backlog\n';
+  const dir = project({ ...SEED(), backlog: stray });
+  await mutate(dir, { type: 'updateTask', id: 'TASK-002', set: { title: 'x' } });
+  assert.equal(read(dir, 'backlog.md'), stray);
+  await assert.rejects(mutate(dir, { type: 'setBacklogFile', enabled: true }), (e) => e.code === 'backlog_file_exists');
+});
+
+// ---- reads ---------------------------------------------------------------------------------------
+
+test('reads: the board listing, counts, config, stats and task lookup all know the backlog file', () => {
+  const on = ENABLED();
+  const board = getBoard(on, {}, { today: '2026-10-25' });
+  assert.deepEqual(board.tasks.map((t) => t.id).sort(), ['TASK-002', 'TASK-004'], 'the board file only');
+  assert.deepEqual(board.columns.map((c) => [c.id, c.count]), [['backlog', 2], ['todo', 1], ['done', 1]], 'but the counts are the real ones');
+  const bl = getBoard(on, { backlog: true });
+  assert.deepEqual([bl.total, bl.tasks.map((t) => t.id)], [2, ['TASK-001', 'TASK-003']]);
+  assert.deepEqual(Object.keys(bl.tasks[0]), ['id', 'title', 'status', 'etag']);
+  assert.deepEqual(getBoard(on, { backlog: true, text: 'verbatim' }).tasks.map((t) => t.id), ['TASK-001'], 'filters apply inside the backlog file (text searches descriptions)');
+  const t = getTask(on, 'TASK-001');
+  assert.equal(t.backlog, true);
+  assert.equal(t.etag, etagOf(blockMap(on.backlog, 'backlog').get('TASK-001')));
+  assert.equal(getTask(on, 'TASK-002').backlog, undefined);
+  assert.deepEqual(getConfig(on).backlogFile, { file: 'backlog.md', column: 'backlog', tasks: 2 });
+  assert.ok(!('backlogFile' in getConfig(SEED())));
+  const stats = getStats(on, { today: '2026-10-25' });
+  assert.deepEqual([stats.total, stats.backlog, stats.byStatus.backlog], [4, 2, 2]);
+  assert.equal(code(() => getBoard(SEED(), { backlog: true })), 'no_backlog_file');
+});
+
+test('a task found by get_task keeps working after it moves between files', () => {
+  const on = ENABLED();
+  const moved = run(on, { type: 'moveTask', id: 'TASK-001', status: 'todo' });
+  assert.equal(getTask(moved, 'TASK-001').backlog, undefined);
+  assert.equal(getTask(moved, 'TASK-001').status, 'todo');
+});
+
+test('an unconfigured stray file is invisible to reads', () => {
+  const ws = { ...SEED(), backlog: '# stray\n\n### TASK-500 | x\n**Status**: backlog\n' };
+  assert.equal(code(() => getTask(ws, 'TASK-500')), 'unknown_task');
+  assert.equal(getStats(ws, { today: '2026-10-25' }).total, 4);
+});
+
+// ---- the nudge -----------------------------------------------------------------------------------
+
+test('backlog_large: past 100 backlog tasks the nudge suggests a separate file; once it is on, no longer', () => {
+  const many = Array.from({ length: 101 }, (_, i) => task(`TASK-${String(i + 1).padStart(3, '0')}`, { status: 'backlog', created: '2026-10-20' }));
+  const ws = mk(many);
+  const s = getHousekeeping(ws, { today: '2026-10-25' }).suggestions.find((x) => x.kind === 'backlog_large');
+  assert.deepEqual([s.count, s.max, s.column], [101, 100, 'backlog']);
+  assert.match(s.message, /101 tasks in "backlog" \(limit 100\)/);
+  assert.equal(getHousekeeping(mk(many.slice(0, 100)), { today: '2026-10-25' }).suggestions.find((x) => x.kind === 'backlog_large'), undefined, '100 is fine');
+  const on = run(ws, { type: 'setBacklogFile', enabled: true });
+  assert.equal(getHousekeeping(on, { today: '2026-10-25' }).suggestions.find((x) => x.kind === 'backlog_large'), undefined);
+  assert.equal(getStats(ws, { today: '2026-10-25' }).housekeeping.some((x) => x.kind === 'backlog_large'), true);
+});
+
+test('stale backlog tasks are found inside the backlog file too', () => {
+  const ws = mk([task('TASK-001', { status: 'backlog', created: '2020-01-01' }), task('TASK-002', { status: 'backlog', created: '2026-10-20' })]);
+  const on = run(ws, { type: 'setBacklogFile', enabled: true });
+  assert.deepEqual(staleBacklogIds(on, { today: '2026-10-25' }), ['TASK-001']);
+  assert.deepEqual(getHousekeeping(on, { today: '2026-10-25' }).suggestions.map((x) => x.kind), ['stale_backlog']);
+  assert.deepEqual(archiveCandidates(on, { today: '2026-10-25' }), []);
+});
+
+// ---- CLI -----------------------------------------------------------------------------------------
+
+const cli = (dir, ...a) => JSON.parse(spawnSync(process.execPath, [CLI, '--dir', dir, ...a], { encoding: 'utf8' }).stdout);
+
+test('cli: backlog --enable, list, promote with move, demote, --disable', () => {
+  const dir = project();
+  assert.equal(cli(dir, 'backlog').error.code, 'no_backlog_file');
+  const en = cli(dir, 'backlog', '--enable');
+  assert.deepEqual(en.files, ['backlog.md', 'kanban.md']);
+  assert.deepEqual(ids(cli(dir, 'backlog').tasks), ['TASK-001', 'TASK-003']);
+  assert.deepEqual(ids(cli(dir, 'board').tasks).sort(), ['TASK-002', 'TASK-004']);
+  assert.equal(cli(dir, 'move', 'TASK-001', 'todo').ok, true);
+  assert.deepEqual(ids(cli(dir, 'backlog').tasks), ['TASK-003']);
+  assert.equal(cli(dir, 'move', 'TASK-002', 'backlog').ok, true);
+  assert.deepEqual(ids(cli(dir, 'backlog').tasks), ['TASK-003', 'TASK-002']);
+  assert.equal(cli(dir, 'task', 'TASK-002').task.backlog, true);
+  const dis = cli(dir, 'backlog', '--disable');
+  assert.equal(dis.ok, true);
+  assert.equal(cli(dir, 'backlog').error.code, 'no_backlog_file');
+  assert.equal(cli(dir, 'board', '--status', 'backlog').total, 2);
+});

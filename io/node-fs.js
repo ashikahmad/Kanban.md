@@ -14,6 +14,7 @@ import { join, basename, dirname } from 'node:path';
 import { applyOps } from '../core/changes.js';
 import { parseBoard } from '../core/board.js';
 import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
+import { backlogFileNameOf } from '../core/backlog-spec.js';
 import { BoardError, unifiedDiff } from '../core/text.js';
 
 const BOARD = 'kanban.md', ARCHIVE = 'archive.md', ACTIVITY = '.kanban-activity.jsonl', LOCK = '.kanban.lock';
@@ -28,7 +29,9 @@ async function readOptional(path) {
 export async function readWorkspace(dir) {
     const board = await readOptional(join(dir, BOARD));
     if (board === null) throw new BoardError('no_board', `No ${BOARD} in ${dir}`, { hint: 'Pass --dir pointing at the project folder.' });
-    return { board, archive: await readOptional(join(dir, ARCHIVE)) };
+    // The backlog file: the one the board declares, else a default-named file if one happens to exist (the
+    // ops need to see it to refuse to overwrite it).
+    return { board, archive: await readOptional(join(dir, ARCHIVE)), backlog: await readOptional(join(dir, backlogFileNameOf(board))) };
 }
 
 // Write `text` to a temp file next to `path` and return handles to commit (rename) or abort it.
@@ -96,13 +99,17 @@ export async function mutate(dir, opOrOps, { dryRun = false, retries = 8, actor 
     const shape = (results) => (Array.isArray(opOrOps) ? { results } : { result: results[0] });
     const attempt = async () => {
         const ws = await readWorkspace(dir);
-        const hashes = { [BOARD]: sha(ws.board), [ARCHIVE]: sha(ws.archive) };
+        const backlogName = backlogFileNameOf(ws.board);
         const out = applyOps(ws, ops, { today });
+        // every file this edit read or will write: if any of them changes before the rename, start over
+        const watched = [...new Set([BOARD, ARCHIVE, backlogName, ...out.files.map((f) => f.name)])];
+        const hashes = {};
+        for (const name of watched) hashes[name] = sha(name === BOARD ? ws.board : name === ARCHIVE ? ws.archive : name === backlogName ? ws.backlog : await readOptional(join(dir, name)));
         if (hooks.afterCompute) await hooks.afterCompute(); // test seam: lets a test interleave a foreign write
         const names = out.files.map((f) => f.name);
 
         if (dryRun) {
-            const diff = out.files.map((f) => unifiedDiff(f.name === BOARD ? ws.board : (ws.archive || ''), f.text, f.name)).join('');
+            const diff = out.files.map((f) => unifiedDiff(ws[f.kind] || '', f.text, f.name)).join('');
             return { done: { ...shape(out.results), files: names, diff, dryRun: true } };
         }
         if (!out.files.length) return { done: { ...shape(out.results), files: [] } };
@@ -111,8 +118,9 @@ export async function mutate(dir, opOrOps, { dryRun = false, retries = 8, actor 
         try {
             for (const f of out.files) staged.push(await stage(join(dir, f.name), f.text));
             // Last check before the renames: did a writer outside the lock (the page) move anything?
-            const now = { [BOARD]: sha(await readOptional(join(dir, BOARD))), [ARCHIVE]: sha(await readOptional(join(dir, ARCHIVE))) };
-            if (now[BOARD] !== hashes[BOARD] || now[ARCHIVE] !== hashes[ARCHIVE]) {
+            let moved = false;
+            for (const name of watched) if (sha(await readOptional(join(dir, name))) !== hashes[name]) moved = true;
+            if (moved) {
                 await Promise.all(staged.map((s) => s.abort()));
                 return { retry: true };
             }

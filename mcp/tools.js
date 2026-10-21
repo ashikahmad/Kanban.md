@@ -24,8 +24,8 @@ const filterProps = {
 export const TOOLS = [
     {
         name: 'get_board',
-        description: 'Compact task list in display order (summaries only), plus per-column counts and rev. Filter here instead of reading files. archived: true lists the archive instead (reverse: newest first).',
-        inputSchema: { type: 'object', properties: { ...filterProps, archived: { type: 'boolean' }, reverse: { type: 'boolean' } } },
+        description: 'Compact task list in display order (summaries only), plus per-column counts and rev. Filter here instead of reading files. archived: true or backlog: true list that side file instead (reverse: newest first).',
+        inputSchema: { type: 'object', properties: { ...filterProps, archived: { type: 'boolean' }, backlog: { type: 'boolean' }, reverse: { type: 'boolean' } } },
         run: (ws, a) => (a.archived ? listArchive(ws, a) : getBoard(ws, a)),
     },
     {
@@ -136,7 +136,7 @@ TOOLS.push(
     },
     {
         name: 'update_config',
-        description: 'Replace config lists, the column list (reassign maps removed column ids to new ones), or the housekeeping policy ({off}, {reset}, or done/backlog {column, afterDays} and max).',
+        description: 'Replace config lists, the column list (reassign maps removed column ids to new ones), the housekeeping policy ({off}, {reset}, or done/backlog {column, afterDays} and max), or the backlog file ({enabled, column, file}: its column\'s tasks live there; a status change moves a task in or out).',
         inputSchema: {
             type: 'object',
             properties: {
@@ -144,7 +144,7 @@ TOOLS.push(
                 priorities: { type: 'array', items: { type: 'string' } }, tags: { type: 'array', items: { type: 'string' } },
                 columns: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, id: { type: 'string' } }, required: ['name', 'id'] } },
                 reassign: { type: 'object', additionalProperties: { type: 'string' } },
-                housekeeping: { type: 'object' }, dryRun,
+                housekeeping: { type: 'object' }, backlogFile: { type: 'object' }, dryRun,
             },
         },
         write: (a) => {
@@ -152,7 +152,8 @@ TOOLS.push(
             if (a.columns) ops.push({ type: 'setColumns', columns: a.columns, reassign: a.reassign });
             for (const name of ['categories', 'users', 'priorities', 'tags']) if (a[name]) ops.push({ type: 'setConfigList', name, values: a[name] });
             if (a.housekeeping) ops.push({ type: 'setHousekeeping', ...a.housekeeping });
-            if (!ops.length) throw new BoardError('missing_field', 'Pass at least one of columns, categories, users, priorities, tags, housekeeping');
+            if (a.backlogFile) ops.push({ type: 'setBacklogFile', ...a.backlogFile });
+            if (!ops.length) throw new BoardError('missing_field', 'Pass at least one of columns, categories, users, priorities, tags, housekeeping, backlogFile');
             return ops;
         },
     },

@@ -11,7 +11,7 @@ import { BoardError } from '../core/text.js';
 import { TASK_FIELDS } from '../core/ops.js';
 import { readWorkspace, readActivity, mutate, migrateProject } from '../io/node-fs.js';
 
-const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse', 'apply']);
+const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse', 'apply', 'enable', 'disable']);
 function parseArgs(argv) {
     const flags = {}, pos = [];
     for (let i = 0; i < argv.length; i++) {
@@ -34,6 +34,8 @@ const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
   task <id> [--fields a,b]   one task in full, with its etag.  (alias: show)
   config              valid columns, priorities, categories, users, tags
   archived [filters] [--reverse]   archived tasks (to archive one: archive <id>)
+  backlog [filters]                tasks in the backlog file;  backlog --enable [--column ID] [--file NAME.md]  /  --disable
+                                   moves the backlog column's tasks into (or back out of) their own file
   stats               counts by status / assignee / priority, overdue and due soon
   changes [--since ISO]   edits made through the tools (the page's edits are not logged)
     filters: --status a,b --assignee @x --tag t --priority P --category C --text "words"
@@ -64,6 +66,12 @@ async function main() {
 
     if (!cmd || cmd === 'help' || flags.help !== undefined) { console.log(HELP); return; }
 
+    if (cmd === 'backlog' && (flags.enable || flags.disable)) {
+        const op = flags.disable ? { type: 'setBacklogFile', enabled: false } : { type: 'setBacklogFile', enabled: true, column: flags.column, file: flags.file };
+        console.log(JSON.stringify({ ok: true, ...(await mutate(dir, op, opt)) }));
+        return;
+    }
+
     if (cmd === 'housekeeping') {
         if (flags.set !== undefined) {
             const spec = String(flags.set).trim();
@@ -90,7 +98,7 @@ async function main() {
         return;
     }
 
-    const READS = ['board', 'list', 'task', 'show', 'config', 'archived', 'stats', 'changes'];
+    const READS = ['board', 'list', 'task', 'show', 'config', 'archived', 'backlog', 'stats', 'changes'];
     if (READS.includes(cmd)) {
         const ws = await readWorkspace(dir);
         const q = { status: flags.status, assignee: flags.assignee, tag: flags.tag, priority: flags.priority, category: flags.category,
@@ -101,6 +109,7 @@ async function main() {
         else if (cmd === 'task' || cmd === 'show') { need(1, 'task id'); out = { task: getTask(ws, a[0], q) }; }
         else if (cmd === 'config') out = getConfig(ws);
         else if (cmd === 'archived') out = listArchive(ws, q);
+        else if (cmd === 'backlog') out = getBoard(ws, { ...q, backlog: true });
         else if (cmd === 'stats') out = getStats(ws);
         else out = summarizeChanges(await readActivity(dir), { since: flags.since, rev: etagOf(ws.board) });
         console.log(JSON.stringify({ ok: true, ...out }));

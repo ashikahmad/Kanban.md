@@ -255,3 +255,30 @@ test('two servers writing to one project at once lose nothing', { skip }, async 
     assert.equal(new Set(ids).size, ids.length, 'unique ids');
   } finally { await a.close(); await b.close(); }
 });
+
+test('the backlog file over MCP: enable, list, promote and demote by status, archive from it', { skip }, async () => {
+  const dir = project();
+  const c = await connect(dir);
+  try {
+    assert.equal((await call(c, 'get_board', { backlog: true })).body.error.code, 'no_backlog_file');
+    const on = await call(c, 'update_config', { backlogFile: { enabled: true, column: 'backlog' } });
+    assert.equal(on.body.ok, true);
+    assert.deepEqual(on.body.files, ['backlog.md', 'kanban.md']);
+    const bl = (await call(c, 'get_board', { backlog: true })).body;
+    assert.ok(bl.total >= 3);
+    const first = bl.tasks[0].id;
+    assert.equal((await call(c, 'get_task', { id: first })).body.backlog, true);
+    assert.equal((await call(c, 'get_config', {})).body.backlogFile.column, 'backlog');
+    const promoted = await call(c, 'move_task', { id: first, status: 'in-progress' });
+    assert.equal(promoted.body.ok, true);
+    assert.deepEqual(promoted.body.files, ['kanban.md', 'backlog.md']);
+    assert.equal((await call(c, 'get_task', { id: first })).body.backlog, undefined);
+    assert.equal((await call(c, 'move_task', { id: first, status: 'backlog' })).body.ok, true, 'demoted again');
+    assert.equal((await call(c, 'get_task', { id: first })).body.backlog, true);
+    const arch = await call(c, 'archive_tasks', { ids: [first] });
+    assert.deepEqual(arch.body.files, ['archive.md', 'backlog.md']);
+    assert.equal((await call(c, 'get_board_stats', {})).body.backlog, bl.total - 1);
+    assert.equal((await call(c, 'update_config', { backlogFile: { enabled: false } })).body.ok, true);
+    assert.equal((await call(c, 'get_board', { backlog: true })).body.error.code, 'no_backlog_file');
+  } finally { await c.close(); }
+});

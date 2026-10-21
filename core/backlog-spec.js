@@ -38,3 +38,11 @@ export function resolveBacklogFile(config) {
     const column = (b.column && cols.some((c) => c.id === b.column) ? b.column : null) || (b.column ? null : resolveHousekeeping({ ...config, housekeeping: null }).backlog.column);
     return column ? { file: b.file, column } : null;
 }
+
+// The backlog file's name as the board text declares it (or the default), found without a full parse:
+// the I/O layer needs it to know which file to read.
+export function backlogFileNameOf(boardText) {
+    const m = /\*\*Backlog file\*\*:\s*(.+)/.exec(boardText);
+    const spec = m && parseBacklogFileSpec(m[1].trim());
+    return spec ? spec.file : BACKLOG_DEFAULT_FILE;
+}

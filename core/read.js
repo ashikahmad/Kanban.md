@@ -6,7 +6,8 @@
 //   - empty fields are omitted (an absent key means "empty")
 //   - filtering and paging happen here, not in the agent's context
 //   - the archive is only read when asked for
-import { parseBoard, parseArchive, orderedTasks } from './board.js';
+import { parseBoard, parseArchive, parseBacklog, orderedTasks } from './board.js';
+import { resolveBacklogFile } from './backlog-spec.js';
 import { BoardError, etagOf } from './text.js';
 import { Doc, blocksOf } from './patch.js';
 import { localToday, dayNumber } from './dates.js';
@@ -43,7 +44,10 @@ export function dueStatus(task, today) {
 function load(ws) {
     const bp = parseBoard(ws.board);
     const ap = typeof ws.archive === 'string' ? parseArchive(ws.archive, bp.config.columns) : { tasks: [], formatVersion: null };
-    return { bp, ap, ws };
+    // The backlog file's tasks, when one is configured. `live` is every task still in play (board + backlog).
+    const bf = resolveBacklogFile(bp.config);
+    const kp = bf && typeof ws.backlog === 'string' ? parseBacklog(ws.backlog, bp.config.columns, bf.column) : { tasks: [] };
+    return { bp, ap, kp, bf, live: [...bp.tasks, ...kp.tasks], ws };
 }
 
 function etags(text, kind) {
@@ -119,14 +123,15 @@ function page(rows, q) {
 
 // Board listing: summaries in display order, filtered and paged.
 export function getBoard(ws, q = {}, { today = localToday() } = {}) {
-    const { bp } = load(ws);
+    if (q.backlog) return listFile(ws, q, 'backlog', { today });
+    const { bp, kp } = load(ws);
     const { fields, given } = fieldList(q.fields, SUMMARY_FIELDS.concat('etag'));
     const match = makeFilter(q, bp.config, today);
     const tags = etags(ws.board, 'board');
     const all = orderedTasks(bp.tasks);
     const { slice, meta } = page(all.filter(match), q);
     const counts = Object.fromEntries(bp.config.columns.map((c) => [c.id, 0]));
-    for (const t of bp.tasks) counts[t.status] = (counts[t.status] || 0) + 1;
+    for (const t of [...bp.tasks, ...kp.tasks]) counts[t.status] = (counts[t.status] || 0) + 1; // the backlog file's tasks count too
     return {
         rev: etagOf(ws.board),
         ...meta,
@@ -142,18 +147,19 @@ const normId = (id) => {
 
 // One task in full (or just `fields`), from the board or the archive.
 export function getTask(ws, id, q = {}) {
-    const { bp, ap } = load(ws);
+    const { bp, ap, kp } = load(ws);
     const want = normId(id);
-    let task = bp.tasks.find((t) => t.id === want), archived = false;
-    if (!task) { task = ap.tasks.find((t) => t.id === want); archived = !!task; }
+    let task = bp.tasks.find((t) => t.id === want), kind = 'board';
+    if (!task) { task = kp.tasks.find((t) => t.id === want); kind = 'backlog'; }
+    if (!task) { task = ap.tasks.find((t) => t.id === want); kind = 'archive'; }
     if (!task) fail('unknown_task', `No task ${id}`, { hint: 'Ids look like TASK-014. Use get_board with filters to find one.' });
     const { fields } = fieldList(q.fields, TASK_VIEW_FIELDS.filter((f) => f !== 'progress'));
-    const tag = etags(archived ? ws.archive : ws.board, archived ? 'archive' : 'board').get(task.id);
-    return view(task, fields, tag, archived ? { archived: true } : {});
+    const tag = etags(kind === 'board' ? ws.board : kind === 'backlog' ? ws.backlog : ws.archive, kind).get(task.id);
+    return view(task, fields, tag, kind === 'archive' ? { archived: true } : kind === 'backlog' ? { backlog: true } : {});
 }
 
 export function getConfig(ws) {
-    const { bp, ap } = load(ws);
+    const { bp, ap, kp, bf } = load(ws);
     const c = bp.config;
     return {
         title: c.boardTitle,
@@ -169,32 +175,39 @@ export function getConfig(ws) {
         housekeeping: resolveHousekeeping(bp.config),
         manualOrder: bp.tasks.some((t) => t.order !== null),
         tasks: bp.tasks.length,
+        ...(bf && { backlogFile: { file: bf.file, column: bf.column, tasks: kp.tasks.length } }),
         archived: ap.tasks.length,
     };
 }
 
-export function listArchive(ws, q = {}, { today = localToday() } = {}) {
-    const { bp, ap } = load(ws);
+// A side file's tasks (the archive or the backlog file): summaries, filtered and paged like the board.
+function listFile(ws, q, kind, { today = localToday() } = {}) {
+    const { bp, ap, kp, bf } = load(ws);
+    if (kind === 'backlog' && !bf) fail('no_backlog_file', 'This board has no backlog file', { hint: 'Its backlog tasks are on the board: filter get_board by status. To split them off: update_config backlogFile { enabled: true }.' });
     const { fields } = fieldList(q.fields, SUMMARY_FIELDS.concat('etag'));
     const match = makeFilter(q, bp.config, today);
-    const tags = etags(ws.archive, 'archive');
-    let rows = ap.tasks.filter(match);
+    const tags = etags(kind === 'backlog' ? ws.backlog : ws.archive, kind);
+    let rows = (kind === 'backlog' ? kp.tasks : ap.tasks).filter(match);
     if (q.reverse) rows = [...rows].reverse();
     const { slice, meta } = page(rows, q);
     return { ...meta, tasks: slice.map((t) => view(t, fields, tags.get(t.id))) };
 }
 
+export function listArchive(ws, q = {}, { today = localToday() } = {}) {
+    return listFile(ws, q, 'archive', { today });
+}
+
 export function getStats(ws, { today = localToday() } = {}) {
-    const { bp, ap } = load(ws);
+    const { bp, ap, kp, bf, live } = load(ws);
     const tally = (keyOf) => {
         const out = {};
-        for (const t of bp.tasks) for (const k of [].concat(keyOf(t))) if (k) out[k] = (out[k] || 0) + 1;
+        for (const t of live) for (const k of [].concat(keyOf(t))) if (k) out[k] = (out[k] || 0) + 1;
         return out;
     };
     const byStatus = Object.fromEntries(bp.config.columns.map((c) => [c.id, 0]));
-    for (const t of bp.tasks) byStatus[t.status] = (byStatus[t.status] || 0) + 1;
+    for (const t of live) byStatus[t.status] = (byStatus[t.status] || 0) + 1;
     // The lists are capped so the call stays small on a big board; the count says how many exist.
-    const flagged = (kind) => orderedTasks(bp.tasks).filter((t) => dueStatus(t, today) === kind)
+    const flagged = (kind) => orderedTasks(live).filter((t) => dueStatus(t, today) === kind)
         .sort((a, b) => a.due.localeCompare(b.due));
     const row = (t) => ({ id: t.id, title: t.title, due: t.due, status: t.status });
     const overdue = flagged('overdue'), soon = flagged('soon');
@@ -202,11 +215,12 @@ export function getStats(ws, { today = localToday() } = {}) {
     return {
         rev: etagOf(ws.board),
         today,
-        total: bp.tasks.length,
+        total: live.length,
+        ...(bf && { backlog: kp.tasks.length }),
         archived: ap.tasks.length,
         byStatus,
         byAssignee: tally((t) => t.assignees.map((a) => '@' + userKey(a))),
-        unassigned: bp.tasks.filter((t) => !t.assignees.length).length,
+        unassigned: live.filter((t) => !t.assignees.length).length,
         byPriority: tally((t) => clean(t.priority)),
         overdue: overdue.slice(0, STATS_LIST_CAP).map(row),
         ...(overdue.length > STATS_LIST_CAP && { overdueTotal: overdue.length }),
