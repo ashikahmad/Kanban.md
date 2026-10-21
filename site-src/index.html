@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kanban.md: a Kanban board that lives in Markdown files</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%232F5BEA'/%3E%3Crect x='11' y='12' width='11' height='28' rx='3' fill='%23fff'/%3E%3Crect x='26.5' y='12' width='11' height='40' rx='3' fill='%23fff' fill-opacity='.85'/%3E%3Crect x='42' y='12' width='11' height='18' rx='3' fill='%23fff' fill-opacity='.7'/%3E%3C/svg%3E">
 <meta name="description" content="Kanban.md turns two Markdown files into an interactive board. One HTML file, no server, no account. Shared by you in the browser and by AI agents on the command line.">
 <style>
 :root {
@@ -44,8 +45,18 @@ nav.top a { margin-left: 20px; font-size: 14px; color: var(--c-muted); }
 nav.top a:hover { color: var(--c-text); text-decoration: none; }
 
 .hero { text-align: center; padding: 56px 0 40px; }
-.hero h1 { font-size: clamp(32px, 6vw, 56px); line-height: 1.08; letter-spacing: -0.03em; max-width: 18ch; margin: 0 auto 18px; }
-.hero h1 em { font-style: normal; color: var(--c-accent); }
+.logo { display: block; width: 84px; height: 84px; margin: 0 auto 20px; border-radius: 20px; box-shadow: 0 10px 28px rgba(47, 91, 234, 0.35); }
+.logo-sm { width: 26px; height: 26px; border-radius: 7px; vertical-align: -6px; margin-right: 8px; }
+.hero h1 { font-size: clamp(40px, 8vw, 68px); line-height: 1.05; letter-spacing: -0.035em; margin: 0 auto 10px; }
+.hero h1 span { color: var(--c-accent); }
+.hero p.tag { font-size: clamp(20px, 3.4vw, 28px); line-height: 1.25; letter-spacing: -0.02em; font-weight: 600; max-width: 22em; margin: 0 auto 18px; }
+.hero p.tag em { font-style: normal; color: var(--c-accent); }
+.pillars { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 40px; }
+.pillar { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 14px; padding: 22px; }
+.pillar .ico { width: 40px; height: 40px; border-radius: 11px; background: var(--c-accent-soft); color: var(--c-accent); display: grid; place-items: center; margin-bottom: 14px; }
+.pillar .ico svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pillar h3 { font-size: 17px; line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 6px; }
+.pillar p { color: var(--c-muted); font-size: 15px; }
 .hero p.lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--c-muted); max-width: 40em; margin: 0 auto 28px; }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 .btn { display: inline-block; padding: 11px 20px; border-radius: 10px; font-weight: 600; font-size: 15px; border: 1px solid var(--c-border-strong); background: var(--c-card); color: var(--c-text); }
@@ -90,9 +101,10 @@ footer p + p { margin-top: 8px; }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#2F5BEA"/><rect x="11" y="12" width="11" height="28" rx="3" fill="#fff"/><rect x="26.5" y="12" width="11" height="40" rx="3" fill="#fff" fill-opacity=".85"/><rect x="42" y="12" width="11" height="18" rx="3" fill="#fff" fill-opacity=".7"/></symbol></svg>
 <div class="wrap">
   <header class="top">
-    <a class="brand" href="./">Kanban<span>.md</span></a>
+    <a class="brand" href="./"><svg class="logo logo-sm" viewBox="0 0 64 64" aria-hidden="true" style="display:inline-block;margin:0 8px 0 0;box-shadow:none"><use href="#logo"/></svg>Kanban<span>.md</span></a>
     <nav class="top">
       <a href="#what-you-get">Features</a>
       <a href="#start">Start</a>
@@ -103,7 +115,9 @@ footer p + p { margin-top: 8px; }
 
   <main>
     <div class="hero">
-      <h1>A Kanban board that lives in <em>plain Markdown</em></h1>
+      <svg class="logo" viewBox="0 0 64 64" role="img" aria-label="Kanban.md logo"><use href="#logo"/></svg>
+      <h1>Kanban<span>.md</span></h1>
+      <p class="tag">A Kanban board that lives in <em>plain Markdown</em></p>
       <p class="lead">Kanban.md turns two Markdown files into an interactive board. The whole app is one HTML file that runs in your browser and reads and writes your folder directly. No server, no account, no database. Humans use the browser, AI agents use the command line, and both edit the same files.</p>
       <div class="cta">
         <a class="btn primary" id="open-app" href="app/">Open the app</a>
@@ -114,6 +128,29 @@ footer p + p { margin-top: 8px; }
     </div>
     <div class="shot"><img src="images/app-overview.jpg" alt="The Kanban.md board with sample tasks in several columns" width="1800" height="1125"></div>
     <p class="cap">The board, showing the sample data from <code>docs/demo</code>.</p>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="ico"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M14 14.3c.8-.3 1.5-.4 2.5-.4 2.2 0 4 1.5 5 4.1"/></svg></div>
+        <h3>You and your agent, building together</h3>
+        <p>One board, two kinds of teammate. You work in the browser, your AI assistant works from the command line, and both edit the same files without stepping on each other.</p>
+      </div>
+      <div class="pillar">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V5M4 5h12l-2 3.5L16 12H4"/><path d="M9 20h11"/></svg></div>
+        <h3>A real roadmap for your agent</h3>
+        <p>Columns, priorities and subtasks tell the agent what to do next. It reads a few hundred tokens instead of the whole board: about 1,000 instead of 20,000 for a 100-task board.</p>
+      </div>
+      <div class="pillar">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 12s3.7-6.5 10-6.5S22 12 22 12s-3.7 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <h3>Watch the work as it happens</h3>
+        <p>Cards move and subtasks tick off in front of you within a couple of seconds. Real progress, easy to guide, and every change is in git.</p>
+      </div>
+      <div class="pillar">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3.5 6.5a2 2 0 0 1 2-2H10l2 2.5h6.5a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></div>
+        <h3>You own everything</h3>
+        <p>Plain Markdown in your own folder. No proprietary format, no account, no server, nothing leaves your machine. Open it in any editor, any time.</p>
+      </div>
+    </div>
 
     <section id="what-you-get">
       <h2>What you get</h2>
