@@ -12,6 +12,8 @@ import { promises as fs } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
 import { join, basename, dirname } from 'node:path';
 import { applyOp } from '../core/ops.js';
+import { parseBoard } from '../core/board.js';
+import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
 import { BoardError, unifiedDiff } from '../core/text.js';
 
 const BOARD = 'kanban.md', ARCHIVE = 'archive.md', ACTIVITY = '.kanban-activity.jsonl', LOCK = '.kanban.lock';
@@ -125,4 +127,43 @@ export async function mutate(dir, op, { dryRun = false, retries = 8, actor = 'cl
         throw new BoardError('busy', 'The board kept changing underneath this edit; gave up after several retries', { hint: 'Retry the call.' });
     };
     return dryRun ? run() : withLock(dir, run, { timeoutMs: lockTimeoutMs, staleMs: lockStaleMs });
+}
+
+// Migrate a project folder to the current format. Every file that changes is backed up first
+// (kanban.v<N>-backup.md; an existing backup is never overwritten), and nothing is written unless
+// the core verified that the new text reads back identically. Returns { changed, files, backups, diff? }.
+export async function migrateProject(dir, { dryRun = false, actor = 'cli', lockTimeoutMs, lockStaleMs } = {}) {
+    const run = async () => {
+        const ws = await readWorkspace(dir);
+        const board = migrateBoardText(ws.board);
+        const columns = parseBoard(board.text).config.columns;
+        const archive = ws.archive === null ? { changed: false } : migrateArchiveText(ws.archive, columns);
+        const steps = [
+            board.changed && { name: BOARD, from: board.from, before: ws.board, text: board.text },
+            archive.changed && { name: ARCHIVE, from: archive.from, before: ws.archive, text: archive.text },
+        ].filter(Boolean);
+        if (!steps.length) return { changed: false, files: [], backups: [] };
+        const files = steps.map((x) => x.name);
+        if (dryRun) return { changed: true, files, from: Object.fromEntries(steps.map((x) => [x.name, x.from])), dryRun: true, diff: steps.map((x) => unifiedDiff(x.before, x.text, x.name)).join('') };
+
+        const backups = [];
+        for (const x of steps) {
+            let name = x.name.replace(/\.md$/, `.v${x.from}-backup.md`);
+            if (await readOptional(join(dir, name)) !== null) name = name.replace(/\.md$/, `.${Date.now()}.md`);
+            const st = await stage(join(dir, name), x.before);
+            await st.commit();
+            backups.push(name);
+        }
+        const staged = [];
+        try {
+            for (const x of steps) staged.push(await stage(join(dir, x.name), x.text));
+            for (const st of staged) await st.commit();
+        } catch (e) {
+            await Promise.all(staged.map((st) => st.abort()));
+            throw e;
+        }
+        await logActivity(dir, { ts: new Date().toISOString(), actor, op: 'migrate', id: null, files });
+        return { changed: true, files, backups, from: Object.fromEntries(steps.map((x) => [x.name, x.from])) };
+    };
+    return withLock(dir, run, { timeoutMs: lockTimeoutMs, staleMs: lockStaleMs });
 }

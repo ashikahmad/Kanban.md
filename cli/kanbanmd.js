@@ -6,7 +6,7 @@ import { resolve } from 'node:path';
 import { parseBoard, parseArchive, orderedTasks } from '../core/board.js';
 import { BoardError } from '../core/text.js';
 import { TASK_FIELDS } from '../core/ops.js';
-import { readWorkspace, mutate } from '../io/node-fs.js';
+import { readWorkspace, mutate, migrateProject } from '../io/node-fs.js';
 
 const BOOL = new Set(['dry-run', 'at-end']);
 function parseArgs(argv) {
@@ -24,6 +24,7 @@ function parseArgs(argv) {
 
 const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
 
+  migrate                                          rewrite kanban.md / archive.md in the current format (backups kept)
   list [--status ID] [--assignee @x] [--tag t]     summaries of board tasks
   show <id>                                        one task in full
   apply <json | ->                                 apply one op as JSON
@@ -51,6 +52,11 @@ async function main() {
     const need = (n, what) => { if (a.length < n) throw new BoardError('usage', `Missing ${what}`, { hint: 'Run kanbanmd --help' }); };
 
     if (!cmd || cmd === 'help' || flags.help !== undefined) { console.log(HELP); return; }
+
+    if (cmd === 'migrate') {
+        console.log(JSON.stringify({ ok: true, ...(await migrateProject(dir, { dryRun: opt.dryRun, actor: opt.actor })) }));
+        return;
+    }
 
     if (cmd === 'list' || cmd === 'show') {
         const ws = await readWorkspace(dir);

@@ -95,6 +95,28 @@ Two rules keep diffs small and predictable:
 - **Sorting has two meanings, both explicit** (`sortTasks`): `ids` assigns keys that reflect numeric id order, `positions` assigns keys that reflect the current order (also how ordering is switched on). `clear` removes every key (back to file position). `blocks`, the earlier behaviour, physically reorders blocks by id. The mode is always required: sorting is a file-wide change and is never guessed.
 - **Compatibility.** An older copy of the app does not know the field and would show `**Order**: n` as description text. The current core reads it as metadata. Everything else in the format is unchanged.
 
+**5.8 Format v3: one metadata field per line, and migration.** (Added in Phase 2.)
+
+```markdown
+### TASK-020 | Add rate limit dashboard
+**Status**: in-progress
+**Order**: 16000            (optional)
+**Priority**: High          (every field below is optional, and independent of the others)
+**Category**: Backend
+**Assigned**: @bob, @alice
+**Created**: 2026-10-21
+**Started** / **Due** / **Finished**: YYYY-MM-DD
+**Tags**: #api #perf
+
+description lines ...
+**Subtasks**: / **Links** / **Review** / **Dependencies** / **Notes**: as before
+```
+
+- **Why.** v2 joined priority, category and assignees on one line and the parser read them only as a group, so a priority without a category was silently dropped on save. With one field per line they are independent, a field change is a one-line diff, and the patcher needs one generic "set this labelled line" routine instead of special cases for the meta and dates lines.
+- **Reading is tolerant, writing is strict.** The parser reads the metadata lines before a task's first section, one field per line or several joined with ` | `, and gets the same values. The generator and the patcher write only v3. `<!-- Format: v3 -->` marks the file. Priority and category are free text now (`Very High`, `🔴 Critical` are fine).
+- **Edits need v3.** On a v1 or v2 file every op fails with `needs_migration`, pointing at `kanbanmd migrate`. Touching a task in a v2 archive does the same; an empty archive is simply stamped v3. A hand-edited joined line inside a v3 file is still handled: that one block is rewritten canonically.
+- **Migration** (`core/migrate.js`, `kanbanmd migrate [--dry-run]`, and the page on load). It accepts v1 and v2, rewrites the file canonically, and is refused unless re-parsing the result gives exactly the same tasks and configuration; a file where some `### TASK-` header could not be read is refused outright. Backups `kanban.v<N>-backup.md` / `archive.v<N>-backup.md` are written first and never overwrite an existing backup. The archive keeps its own heading lines verbatim. Line endings are preserved (a mixed-ending file becomes uniform). Hand formatting inside a task (extra blank lines, spacing) is normalized, since the rewrite is canonical.
+
 ## 6. Write protocol
 
 > Diagram: see **Write protocol** in [mcp-file-diagrams.md](mcp-file-diagrams.md#write-protocol).
@@ -200,6 +222,7 @@ Phases 1 and 4 are the only ones that change existing page behavior.
 ## 12. Decisions so far, and what is still open
 
 **Decided**
+- Format v3: one metadata field per line, tolerant reading of v1/v2, strict writing, explicit verified migration (5.8).
 - Ordering: edits and moves are in place, new tasks are appended last, and manual order is an optional `**Order**` key that the user opts into (5.7).
 - File-backed only; no hub, no browser storage.
 - Stdio MCP server plus CLI, both thin over one core.
@@ -217,16 +240,17 @@ Phases 1 and 4 are the only ones that change existing page behavior.
 
 ## 12a. What Phase 2 found
 
-- **The meta line is all or nothing.** `**Priority**` / `**Category**` / `**Assigned**` live on one line and the parser only reads them as a group. A task with a priority but no category (or the reverse) loses the value on save, in the page too. Ops reject that combination with `meta_incomplete` instead of losing data. Worth fixing in the parser separately (read each field independently).
+- **The meta line was all or nothing** (fixed by format v3, see 5.8). In v2, `**Priority**` / `**Category**` / `**Assigned**` shared one line and the parser only read them as a group, so a priority without a category was lost on save, in the page too. Ops used to reject that combination (`meta_incomplete`); with one field per line the restriction is gone.
 - **Mixed line endings exist in the wild.** `examples/kanban.md` (migrated by the app) has 152 CRLF lines among 505. The parser keeps CRLF inside notes and preserved sections but trims it in descriptions. Blocks therefore move verbatim, and are re-terminated only when the destination file is uniformly the other style.
 - **A hash check is not a lock.** See section 6: concurrent processes lost updates until writers were serialized.
 - **The fallback path is rare.** Across 2,400 random ops on four fixtures the one-block regeneration never fired; it exists for layouts like dates on separate lines, metadata inside a description, or two Subtasks sections, and has its own targeted tests.
-- **Priority values** are the cleaned config entries (`🔴 Critical` is stored as `Critical`) and must be a single word, because that is all the parser reads.
+- **Priority values** are the cleaned config entries (`🔴 Critical` is stored as `Critical`); with v3 they may be several words.
 
 ## 13. Risks
 
 | Risk | Impact | Mitigation |
 |---|---|---|
+| A migration changes meaning | Silent data change in someone's board | read-back equality required, unreadable blocks refuse the file, backups never overwritten, `--dry-run` diff |
 | Locator disagrees with the parser | wrong bytes patched | verify step aborts the write; shared regexes; property tests |
 | Core extraction changes output | reformatted boards for current users | golden + byte-diff vs current build; no logic edits while moving code |
 | Diff-to-ops in the page misses a change | UI edit not persisted | after write, re-parse and compare to in-memory state; surface a warning and fall back to reload |

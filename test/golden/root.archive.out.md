@@ -1,5 +1,5 @@
 [markdown.archiveTitle]
-<!-- Format: v2 -->
+<!-- Format: v3 -->
 
 [markdown.archiveDesc]
 

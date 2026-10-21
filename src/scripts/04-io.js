@@ -9,7 +9,7 @@
                 await loadArchive(); // Load archive for historical autocomplete data
                 updateAutocomplete();
                 renderKanban();
-                // Auto-migrate a legacy (V1) kanban.md to V2 on disk: nothing is lost and future
+                // Auto-migrate an older (V1/V2) kanban.md to the current format (v3) on disk: nothing is lost and future
                 // AI reads/edits stay cheap. One-time — V2 files carry the format marker.
                 // Guard against silent data loss: only migrate when the parse was TOTAL — every
                 // "### TASK-" header in the file produced exactly one parsed task. Count ALL task
@@ -21,16 +21,17 @@
                 // pathological slug collision where one task is parsed twice while another is missed
                 // (counts stay equal but the rewrite would drop the missed task). Provably 1:1.
                 const uniqueParsed = new Set(tasks.map(t => t.id)).size;
-                if (!loadedFormatV2 && tasks.length === blockCount && uniqueParsed === blockCount) {
+                if (loadedFormatVersion < 3 && tasks.length === blockCount && uniqueParsed === blockCount) {
                     // Only overwrite once the original is safely backed up — a failed backup must
                     // abort the migration, never leave the file rewritten without a recovery copy.
-                    if (await backupOriginal('kanban.md', currentKanbanContent) && await autoSave()) {
-                        console.log('Migrated kanban.md from V1 (sections) to V2 (status field)');
+                    const fromVersion = loadedFormatVersion;
+                    if (await backupOriginal('kanban.md', currentKanbanContent, fromVersion) && await autoSave()) {
+                        console.log(`Migrated kanban.md from v${fromVersion} to v3 (one metadata field per line)`);
                     } else {
-                        console.warn('Skipped V1→V2 migration: backup or save failed. File left unchanged.');
+                        console.warn('Skipped migration: backup or save failed. File left unchanged.');
                     }
-                } else if (!loadedFormatV2) {
-                    console.warn(`Skipped V1→V2 migration: incomplete parse (${tasks.length}/${blockCount} task blocks). File left unchanged.`);
+                } else if (loadedFormatVersion < 3) {
+                    console.warn(`Skipped migration: incomplete parse (${tasks.length}/${blockCount} task blocks). File left unchanged.`);
                 }
             } catch (error) {
                 // Only create default files if the file truly doesn't exist
@@ -70,13 +71,13 @@
             }
         }
 
-        // One-time backup of a file's original content before a destructive V1→V2 migration,
+        // One-time backup of a file's original content before a format migration (v1/v2 -> v3),
         // so the conversion can always be undone. Returns true when a usable backup exists
         // (freshly written OR already present), false on failure — callers MUST abort the
         // migration on false rather than overwrite the original with no recovery copy.
-        async function backupOriginal(name, content) {
+        async function backupOriginal(name, content, fromVersion = 1) {
             try {
-                const backupName = name.replace(/\.md$/, '.v1-backup.md');
+                const backupName = name.replace(/\.md$/, `.v${fromVersion}-backup.md`);
                 try { await directoryHandle.getFileHandle(backupName); return true; } catch (e) { /* none yet → create */ }
                 const fh = await directoryHandle.getFileHandle(backupName, { create: true });
                 const w = await fh.createWritable();
@@ -96,7 +97,7 @@
             const parsed = parseBoard(content);
             config = parsed.config;
             tasks = parsed.tasks;
-            loadedFormatV2 = parsed.formatV2;
+            loadedFormatVersion = parsed.formatVersion;
             console.log(`Parsed ${tasks.length} tasks:`, tasks.map(t => `${t.id} (${t.status})`).join(', '));
         }
 

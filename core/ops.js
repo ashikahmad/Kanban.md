@@ -9,6 +9,7 @@
 // computed separately on purpose: that is what makes the verify step meaningful.
 import { parseBoard, parseArchive, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks } from './board.js';
 import { BoardError, firstDifference, etagOf, stripEol, toEol } from './text.js';
+import { CURRENT_VERSION } from './migrate.js';
 import * as P from './patch.js';
 
 export const DEFAULT_ARCHIVE_STRINGS = { title: '# Task Archive', desc: '> Archived tasks', section: '## ✅ Archives' };
@@ -65,14 +66,14 @@ export function normalizeFields(input, config, { partial }) {
         out.priority = oneLine(input.priority, 'priority');
         if (out.priority) {
             const valid = (config.priorities || []).map(cleanPriority);
-            if (!/^\w+$/.test(out.priority) || (valid.length && !valid.includes(out.priority))) {
+            if (valid.length && !valid.includes(out.priority)) {
                 fail('unknown_priority', `Unknown priority "${out.priority}"`, { valid });
             }
         }
     }
     if (has('category')) {
         out.category = oneLine(input.category, 'category');
-        if (out.category.includes('|')) fail('invalid_field', 'category must not contain "|"');
+        if (/\|\s*\*\*\w+\*\*\s*:/.test(out.category)) fail('invalid_field', 'category must not look like another metadata field');
     }
     if (has('assignees')) {
         out.assignees = list(input.assignees, 'assignees');
@@ -118,29 +119,19 @@ function noteText(v) {
     return s.replace(/\r\n/g, '\n');
 }
 
-// The file format stores priority, category and assignees on ONE line and the parser only reads
-// them together, so a priority without a category (or the reverse) would be lost on save.
-function checkMeta(t) {
-    if (!!t.priority !== !!t.category || (t.assignees.length && !t.category)) {
-        fail('meta_incomplete', 'priority and category must be set together (assignees need both)', {
-            hint: 'The file format keeps them on one line and reads them only as a group. Set both, or clear all three.',
-        });
-    }
-}
-
 // ---- context ----------------------------------------------------------------------------------
 
 function open(ws) {
     const bp = parseBoard(ws.board);
-    if (!bp.formatV2) {
-        fail('needs_migration', 'kanban.md uses the legacy (V1) format', { hint: 'Open the board once in the app (it migrates to V2 with a backup), or run `kanbanmd migrate`.' });
+    if (bp.formatVersion < CURRENT_VERSION) {
+        fail('needs_migration', `kanban.md uses format v${bp.formatVersion}; edits need v${CURRENT_VERSION}`, { hint: 'Run `kanbanmd migrate` (it keeps a backup and refuses anything that would not read back identically), or open the board in the app.' });
     }
     const hasArchive = typeof ws.archive === 'string';
-    const ap = hasArchive ? parseArchive(ws.archive, bp.config.columns) : { tasks: [], formatV2: true };
+    const ap = hasArchive ? parseArchive(ws.archive, bp.config.columns) : { tasks: [], formatVersion: CURRENT_VERSION };
     return {
         board: new P.Doc(ws.board),
         archive: hasArchive ? new P.Doc(ws.archive) : null,
-        archiveV2: ap.formatV2,
+        archiveVersion: ap.formatVersion,
         state: { config: clone(bp.config), tasks: clone(bp.tasks), archive: clone(ap.tasks) },
         origin: ws,
     };
@@ -149,16 +140,19 @@ function open(ws) {
 function archiveDoc(ctx) {
     if (!ctx.archive) {
         ctx.archive = new P.Doc(toEol(generateArchive([], DEFAULT_ARCHIVE_STRINGS), ctx.board.eol)); // same line endings as the board
-        ctx.archiveV2 = true;
+        ctx.archiveVersion = CURRENT_VERSION;
         return ctx.archive;
     }
-    const hasTasks = P.findBlocks(ctx.archive.lines).length > 0;
-    if (!ctx.archiveV2) {
-        if (hasTasks) fail('needs_migration', 'archive.md uses the legacy format', { hint: 'Open the board once in the app (it migrates with a backup), or run `kanbanmd migrate`.' });
-        P.insertMarker(ctx.archive);
-        ctx.archiveV2 = true;
+    if (ctx.archiveVersion < CURRENT_VERSION) {
+        if (P.findBlocks(ctx.archive.lines).length > 0) needArchiveMigration(ctx);
+        P.setArchiveMarker(ctx.archive); // an empty archive can simply be stamped
+        ctx.archiveVersion = CURRENT_VERSION;
     }
     return ctx.archive;
+}
+
+function needArchiveMigration(ctx) {
+    fail('needs_migration', `archive.md uses format v${ctx.archiveVersion}; edits need v${CURRENT_VERSION}`, { hint: 'Run `kanbanmd migrate`, or open the board in the app.' });
 }
 
 function findTask(ctx, id) {
@@ -166,7 +160,10 @@ function findTask(ctx, id) {
     const inBoard = ctx.state.tasks.find((t) => t.id === norm);
     if (inBoard) return { task: inBoard, kind: 'board', doc: ctx.board };
     const inArchive = ctx.state.archive.find((t) => t.id === norm);
-    if (inArchive) return { task: inArchive, kind: 'archive', doc: ctx.archive };
+    if (inArchive) {
+        if (ctx.archiveVersion < CURRENT_VERSION) needArchiveMigration(ctx);
+        return { task: inArchive, kind: 'archive', doc: ctx.archive };
+    }
     fail('unknown_task', `No task ${id}`, { hint: 'Ids look like TASK-014.' });
 }
 
@@ -191,11 +188,9 @@ function patchFields(ctx, found, before, after) {
     const loc = () => locate(ctx, found);
     try {
         if (before.title !== after.title) P.setTitle(doc, loc(), after.title);
-        if (before.status !== after.status) P.setStatus(doc, loc(), after.status);
-        if (before.order !== after.order) P.setOrder(doc, loc(), after.order);
-        if (before.priority !== after.priority || before.category !== after.category || !same(before.assignees, after.assignees)) P.setMeta(doc, loc(), after);
-        if (['created', 'started', 'due', 'completed'].some((k) => before[k] !== after[k])) P.setDates(doc, loc(), after);
-        if (!same(before.tags, after.tags)) P.setTags(doc, loc(), after.tags);
+        for (const key of ['status', 'order', 'priority', 'category', 'assignees', 'created', 'started', 'due', 'completed', 'tags']) {
+            if (!same(before[key], after[key])) P.setField(doc, loc(), key, after[key]);
+        }
         if (before.description !== after.description) P.setDescription(doc, loc(), after.description);
         if (!same(before.subtasks, after.subtasks)) P.setSubtasks(doc, loc(), after.subtasks);
         if (before.notes !== after.notes) P.setNotes(doc, loc(), after.notes);
@@ -216,7 +211,7 @@ function setKey(ctx, task, key) {
     const loc = P.locateTask(ctx.board, 'board', task.id);
     if (!loc) fail('ambiguous_id', `${task.id} appears more than once in kanban.md`, { hint: 'Fix the duplicate id by hand first.' });
     task.order = key;
-    P.setOrder(ctx.board, loc, key);
+    P.setField(ctx.board, loc, 'order', key);
 }
 
 // Give every key-less task a key after the existing ones (in file order), so a new or hand-added
@@ -245,7 +240,6 @@ const OPS = {
             order: f.order === undefined ? null : f.order,
         };
         task.notes = task.notes.replace(/\n/g, ctx.board.eol); // the parser keeps the file's EOL inside notes
-        checkMeta(task);
         const n = Math.max(ctx.state.config.lastTaskId, maxId(ctx)) + 1;
         task.id = 'TASK-' + String(n).padStart(3, '0');
         if (f.order === undefined && orderActive(ctx.state.tasks)) { // keep "new tasks go last" under manual ordering
@@ -266,7 +260,6 @@ const OPS = {
         const before = clone(found.task);
         if (patch.notes !== undefined) patch.notes = patch.notes.replace(/\n/g, found.doc.eol);
         const after = Object.assign(found.task, patch);
-        checkMeta(after);
         patchFields(ctx, found, before, after);
         return { id: after.id, kind: found.kind };
     },
@@ -289,7 +282,7 @@ const OPS = {
         if (positional && orderActive(tasks)) {
             // Manual ordering is on: write a key, never relocate the block.
             ensureKeys(ctx);
-            if (statusChanged) { P.setStatus(ctx.board, locate(ctx, found), status); t.status = status; }
+            if (statusChanged) { P.setField(ctx.board, locate(ctx, found), 'status', status); t.status = status; }
             const col = orderedTasks(tasks).filter((x) => x.status === status);
             const ti = col.indexOf(t);
             const others = col.filter((x) => x !== t);
@@ -324,7 +317,7 @@ const OPS = {
         const reordered = idx < 0 ? tasks : [...rest.slice(0, idx), t, ...rest.slice(idx)];
         const orderChanged = reordered.some((x, i) => x !== tasks[i]);
 
-        if (statusChanged) P.setStatus(ctx.board, locate(ctx, found), status);
+        if (statusChanged) P.setField(ctx.board, locate(ctx, found), 'status', status);
         if (orderChanged) {
             const lines = P.cutBlock(ctx.board, locate(ctx, found));
             const anchor = idx < rest.length ? P.locateTask(ctx.board, 'board', rest[idx].id) : null;
@@ -410,7 +403,9 @@ const OPS = {
         if (!text) fail('invalid_field', 'note text must not be empty');
         const t = found.task;
         const expected = text.replace(/\n/g, found.doc.eol);
-        t.notes = t.notes ? `${t.notes}${found.doc.eol}${expected}` : expected;
+        // The appended text follows the block's last line, so the separator the parser sees is that line's own ending.
+        const sep = t.notes && P.lastContentEol(found.doc, locate(ctx, found));
+        t.notes = t.notes ? `${t.notes}${sep}${expected}` : expected;
         try { P.appendNote(found.doc, locate(ctx, found), text); }
         catch (e) { if (!(e instanceof P.Fallback)) throw e; P.replaceBlock(found.doc, locate(ctx, found), t); }
         return { id: t.id, kind: found.kind };
@@ -517,16 +512,14 @@ function carry(lines, task, from, to) {
 
 function statusEdit(ctx, kind, task, status) {
     const doc = kind === 'board' ? ctx.board : ctx.archive;
-    P.setStatus(doc, P.locateTask(doc, kind, task.id), status);
+    P.setField(doc, P.locateTask(doc, kind, task.id), 'status', status);
     task.status = status;
 }
 
 // Make the block's **Status** line say `status` (the line may be missing or name a removed column).
 function syncStatusLine(ctx, found, status) {
     const loc = locate(ctx, found);
-    const f = P.fieldsOf(found.doc, loc);
-    const text = f.status >= 0 ? stripEol(found.doc.lines[f.status]).replace(/^\s*\*\*Status\*\*:\s*/, '').trim() : null;
-    if (text !== status) P.setStatus(found.doc, loc, status);
+    if (P.getField(found.doc, loc, 'status') !== status) P.setField(found.doc, loc, 'status', status);
 }
 
 // ---- entry point ------------------------------------------------------------------------------
@@ -558,8 +551,8 @@ export function applyOp(ws, op, options = {}) {
 function verify(ctx, board, archive) {
     const bp = parseBoard(board);
     const diff = firstDifference({ config: ctx.state.config, tasks: ctx.state.tasks }, { config: bp.config, tasks: bp.tasks });
-    if (!bp.formatV2 || diff) {
-        fail('verify_failed', 'The change could not be written so that it reads back identically; nothing was written.', { details: diff || { path: 'formatV2' } });
+    if (bp.formatVersion < CURRENT_VERSION || diff) {
+        fail('verify_failed', 'The change could not be written so that it reads back identically; nothing was written.', { details: diff || { path: 'formatVersion' } });
     }
     if (archive !== null) {
         const ap = parseArchive(archive, bp.config.columns);

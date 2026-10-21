@@ -21,10 +21,13 @@ export class Doc {
 export class Fallback extends Error {}
 
 const HEADER_RE = /^###\s+TASK-(\d+)\s*\|\s*(.+?)\s*$/;
-const META_RE = /\*\*Priority\*\*:\s*(\w+)\s*\|\s*\*\*Category\*\*:\s*([^|]+?)(?:\s*\|\s*\*\*Assigned\*\*:\s*(.+?))?$/;
 const META_LINE_RE = /^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/;
 const STOP_RE = /^\*\*(Subtasks|Notes|Links|Review|Dependencies)\*\*/;
-const DATE_FIELDS = [['created', 'Created'], ['started', 'Started'], ['due', 'Due'], ['completed', 'Finished']];
+// One metadata field per line, in this fixed order. [task key, label in the file]
+const FIELDS = [['status', 'Status'], ['order', 'Order'], ['priority', 'Priority'], ['category', 'Category'], ['assignees', 'Assigned'],
+    ['created', 'Created'], ['started', 'Started'], ['due', 'Due'], ['completed', 'Finished'], ['tags', 'Tags']];
+const FIELD_LABELS = FIELDS.map(([, l]) => l).join('|');
+const FIELD_LINE = new RegExp(`^(\\s*\\*\\*(${FIELD_LABELS})\\*\\*\\s*:[ \\t]*)(.*)$`);
 const taskId = (digits) => 'TASK-' + digits.padStart(3, '0');
 const isBlank = (line) => stripEol(line).trim() === '';
 
@@ -64,7 +67,7 @@ export function fieldsOf(doc, loc) {
     const { start, end } = loc;
     const L = (i) => stripEol(doc.lines[i]);
     const f = {
-        header: start, status: -1, order: null, meta: null, dates: {}, tags: null,
+        header: start, fields: {},
         desc: null, descInterleaved: false,
         subHeaders: [], subItems: [], notes: -1, extraStart: -1, stop: end, lastContent: start,
     };
@@ -72,24 +75,6 @@ export function fieldsOf(doc, loc) {
     for (let i = start + 1; i < end; i++) {
         const line = L(i);
         if (line.trim()) f.lastContent = i;
-        if (f.status < 0 && /^\s*\*\*Status\*\*:\s*[^\r\n]+/.test(line)) f.status = i;
-        if (!f.order) {
-            const m = /^\s*\*\*Order\*\*:\s*(\d+)/.exec(line);
-            if (m) f.order = { line: i, valueStart: m[0].length - m[1].length, valueEnd: m[0].length };
-        }
-        if (!f.meta) {
-            const m = META_RE.exec(line);
-            if (m) f.meta = { line: i, index: m.index, length: m[0].length, priority: m[1].trim(), category: m[2].trim(), assigned: m[3] };
-        }
-        for (const [key, label] of DATE_FIELDS) {
-            if (f.dates[key]) continue;
-            const m = new RegExp(`\\*\\*${label}\\*\\*:\\s*([\\d-]+)`).exec(line);
-            if (m) f.dates[key] = { line: i, valueStart: m.index + m[0].length - m[1].length, valueEnd: m.index + m[0].length, value: m[1], atLineStart: m.index === 0 };
-        }
-        if (!f.tags) {
-            const m = /\*\*Tags\*\*:\s*(.+)/.exec(line);
-            if (m) f.tags = { line: i, labelStart: m.index, atLineStart: m.index === 0 };
-        }
         if (f.stop === end && STOP_RE.test(line)) f.stop = i;
         if (f.notes < 0 && /\*\*Notes\*\*:[ \t\r]*$/.test(line) && lineEol(doc.lines[i])) f.notes = i;
         if (f.extraStart < 0 && /^\s*\*\*(Links|Review|Dependencies)\*\*\s*:/i.test(line)) f.extraStart = i;
@@ -102,12 +87,25 @@ export function fieldsOf(doc, loc) {
             if (m) f.subItems.push({ line: i, box: m.index + 3, completed: m[1] === 'x', text: m[2].trim() });
         }
     }
+    // metadata fields: the first line per label before the first section, like the parser. A line
+    // that joins several fields with " | " (hand-edited, or older files) registers each of them,
+    // all marked joined, so an edit falls back to rewriting the block instead of mangling the line.
+    for (let i = start + 1; i < f.stop; i++) {
+        const line = L(i);
+        const m = FIELD_LINE.exec(line);
+        if (!m) continue;
+        const parts = line.split(new RegExp(`\\s*\\|\\s*(?=\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:)`));
+        parts.forEach((part, k) => {
+            const pm = new RegExp(`^\\s*\\*\\*(${FIELD_LABELS})\\*\\*\\s*:\\s*(.*?)\\s*$`).exec(part);
+            if (pm && !f.fields[pm[1]]) f.fields[pm[1]] = { line: i, valueStart: k === 0 ? m[1].length : -1, value: pm[2], joined: parts.length > 1 };
+        });
+    }
     // description: non-blank, non-metadata lines before the first stop line
     const dl = [];
     let interleaved = false;
     for (let i = start + 1; i < f.stop; i++) {
         const line = L(i);
-        if (META_LINE_RE.test(line)) { if (dl.length) interleaved = true; continue; }
+        if (META_LINE_RE.test(line) || FIELD_LINE.test(line)) { if (dl.length) interleaved = true; continue; }
         if (line.trim()) dl.push(i);
     }
     if (dl.length) f.desc = { first: dl[0], last: dl[dl.length - 1], count: dl.length };
@@ -144,103 +142,42 @@ export function setTitle(doc, loc, title) {
     replaceInLine(doc, loc.start, m[1].length, m[1].length + m[2].length, title);
 }
 
-// Insert a metadata line in canonical order (Status, meta, dates, tags) after the nearest
-// preceding field line that exists.
-function insertMetaLine(doc, loc, after, text) {
+// The text a task value takes on its line, or null when the field should be absent.
+export function fieldText(key, value) {
+    if (key === 'assignees') return value.length ? value.join(', ') : null;
+    if (key === 'tags') return value.length ? value.join(' ') : null;
+    if (key === 'order') return value === null || value === undefined ? null : String(value);
+    return value ? String(value) : null;
+}
+
+// Current text of a metadata line (the value after the label), or null when absent.
+export function getField(doc, loc, key) {
+    const label = FIELDS.find(([k]) => k === key)[1];
+    const e = fieldsOf(doc, loc).fields[label];
+    return e ? e.value : null;
+}
+
+// Set one metadata field to `value` (a task value; empty/null removes the line). Edits just that
+// line, or inserts it in canonical order after the nearest field above it that exists.
+export function setField(doc, loc, key, value) {
+    const idx = FIELDS.findIndex(([k]) => k === key);
+    const label = FIELDS[idx][1];
+    const text = fieldText(key, value);
     const f = fieldsOf(doc, loc);
-    const order = { status: f.status, order: f.order && f.order.line, meta: f.meta && f.meta.line, dates: lineOfDates(f), tags: f.tags && f.tags.line };
+    const e = f.fields[label];
+    if (e) {
+        if (e.joined) throw new Fallback('metadata fields joined on one line');
+        if (text === null) removeLines(doc, e.line, e.line + 1);
+        else replaceInLine(doc, e.line, e.valueStart, stripEol(doc.lines[e.line]).length, text);
+        return;
+    }
+    if (text === null) return;
     let at = loc.start + 1;
-    for (const key of after) if (order[key] != null && order[key] >= 0) { at = Math.max(at, order[key] + 1); }
-    insertLines(doc, at, [text]);
-}
-const lineOfDates = (f) => {
-    const ls = Object.values(f.dates).map((d) => d.line);
-    return ls.length ? Math.max(...ls) : -1;
-};
-
-export function setStatus(doc, loc, status) {
-    const f = fieldsOf(doc, loc);
-    if (f.status >= 0) {
-        const m = /^(\s*\*\*Status\*\*:\s*)([^\r\n]+)/.exec(stripEol(doc.lines[f.status]));
-        replaceInLine(doc, f.status, m[1].length, m[1].length + m[2].length, status);
-    } else {
-        insertLines(doc, loc.start + 1, [`**Status**: ${status}`]);
+    for (let i = 0; i < idx; i++) {
+        const above = f.fields[FIELDS[i][1]];
+        if (above) at = Math.max(at, above.line + 1);
     }
-}
-
-// Optional manual sort key: n (a non-negative integer) or null to remove the line.
-export function setOrder(doc, loc, n) {
-    const f = fieldsOf(doc, loc);
-    if (f.order) {
-        if (n === null) removeLines(doc, f.order.line, f.order.line + 1);
-        else replaceInLine(doc, f.order.line, f.order.valueStart, f.order.valueEnd, String(n));
-    } else if (n !== null) {
-        insertMetaLine(doc, loc, ['status'], `**Order**: ${n}`);
-    }
-}
-
-const metaText = ({ priority, category, assignees }) =>
-    `**Priority**: ${priority} | **Category**: ${category}` + (assignees.length ? ` | **Assigned**: ${assignees.join(', ')}` : '');
-
-export function setMeta(doc, loc, meta) {
-    const f = fieldsOf(doc, loc);
-    const empty = !meta.priority && !meta.category && !meta.assignees.length;
-    if (f.meta) {
-        if (empty) {
-            const line = stripEol(doc.lines[f.meta.line]);
-            if (f.meta.index === 0 && f.meta.length === line.length) removeLines(doc, f.meta.line, f.meta.line + 1);
-            else replaceInLine(doc, f.meta.line, f.meta.index, f.meta.index + f.meta.length, '');
-        } else {
-            replaceInLine(doc, f.meta.line, f.meta.index, f.meta.index + f.meta.length, metaText(meta));
-        }
-    } else if (!empty) {
-        insertMetaLine(doc, loc, ['status', 'order'], metaText(meta));
-    }
-}
-
-const datesText = (d) => DATE_FIELDS.filter(([k]) => d[k]).map(([k, label]) => `**${label}**: ${d[k]}`).join(' | ');
-
-export function setDates(doc, loc, next) {
-    const f = fieldsOf(doc, loc);
-    const cur = Object.fromEntries(DATE_FIELDS.map(([k]) => [k, f.dates[k] ? f.dates[k].value : '']));
-    const presenceChanged = DATE_FIELDS.some(([k]) => !!cur[k] !== !!next[k]);
-    const lines = [...new Set(Object.values(f.dates).map((d) => d.line))];
-    if (!presenceChanged) {
-        // values only: replace each in place, right to left so offsets stay valid within a line
-        const ds = DATE_FIELDS.filter(([k]) => cur[k] !== next[k]).map(([k]) => f.dates[k]).sort((a, b) => b.valueStart - a.valueStart);
-        for (const d of ds) {
-            const key = DATE_FIELDS.find(([k]) => f.dates[k] === d)[0];
-            replaceInLine(doc, d.line, d.valueStart, d.valueEnd, next[key]);
-        }
-        return;
-    }
-    if (lines.length > 1) throw new Fallback('dates on several lines');
-    if (lines.length === 1) {
-        const body = stripEol(doc.lines[lines[0]]);
-        // Only rebuild a line that is exactly a canonical dates line; otherwise leave it to the block fallback.
-        const canonical = datesText(cur);
-        if (body.trim() !== canonical) throw new Fallback('non-canonical dates line');
-        if (datesText(next)) replaceInLine(doc, lines[0], 0, body.length, datesText(next));
-        else removeLines(doc, lines[0], lines[0] + 1);
-        return;
-    }
-    if (datesText(next)) insertMetaLine(doc, loc, ['status', 'order', 'meta'], datesText(next));
-}
-
-export function setTags(doc, loc, tags) {
-    const f = fieldsOf(doc, loc);
-    const text = tags.join(' ');
-    if (f.tags) {
-        const line = stripEol(doc.lines[f.tags.line]);
-        if (!tags.length) {
-            if (f.tags.atLineStart) removeLines(doc, f.tags.line, f.tags.line + 1);
-            else replaceInLine(doc, f.tags.line, f.tags.labelStart, line.length, '');
-        } else {
-            replaceInLine(doc, f.tags.line, f.tags.labelStart, line.length, `**Tags**: ${text}`);
-        }
-    } else if (tags.length) {
-        insertMetaLine(doc, loc, ['status', 'order', 'meta', 'dates'], `**Tags**: ${text}`);
-    }
+    insertLines(doc, at, [`**${label}**: ${text}`]);
 }
 
 // Description: the non-blank lines between the metadata and the first section.
@@ -348,6 +285,12 @@ export function setNotes(doc, loc, notes) {
     if (newLines.length) insertLines(doc, f.lastContent + 1, ['', '**Notes**:', ...newLines]);
 }
 
+// The line ending that terminates a block's last non-blank line (what a newly appended line follows).
+export function lastContentEol(doc, loc) {
+    const f = fieldsOf(doc, loc);
+    return lineEol(doc.lines[f.lastContent]) || doc.eol;
+}
+
 export function appendNote(doc, loc, text) {
     const f = fieldsOf(doc, loc);
     const newLines = text.split(/\r?\n/);
@@ -409,9 +352,11 @@ export function appendBlockText(doc, text) {
     pasteBlock(doc, doc.lines.length, splitLines(toEol(text, doc.eol)));
 }
 
-// Mark an (empty) archive as v2 so the app does not "migrate" it later.
-export function insertMarker(doc) {
-    insertLines(doc, Math.min(1, doc.lines.length), ['<!-- Format: v2 -->']);
+// Mark an (empty) archive as v3 so the app does not "migrate" it later.
+export function setArchiveMarker(doc, version = 3) {
+    const i = doc.lines.findIndex((l) => /<!--\s*Format:/i.test(l));
+    if (i >= 0) replaceInLine(doc, i, 0, stripEol(doc.lines[i]).length, `<!-- Format: v${version} -->`);
+    else insertLines(doc, Math.min(1, doc.lines.length), [`<!-- Format: v${version} -->`]);
 }
 
 // ---- header comment and config ----------------------------------------------------------------

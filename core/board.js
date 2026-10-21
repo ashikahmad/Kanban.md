@@ -133,7 +133,8 @@ export function parseBoard(content) {
     // column section present (so a legacy column literally named "Tasks" is never
     // mis-detected and silently dropped).
     const reEscape = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const hasMarker = /<!--\s*Format:\s*v2\s*-->/i.test(content);
+    const marker = /<!--\s*Format:\s*v(\d+)\s*-->/i.exec(content);
+    const hasMarker = !!marker;
     const hasTasksHeading = /(^|\n)##\s+Tasks\s*(\n|$)/.test(content);
     // A legacy column section is detected by its exact name OR by the slug of any "## "
     // heading matching a column id. The slug arm lets an old/hand-edited file whose heading
@@ -162,7 +163,9 @@ export function parseBoard(content) {
         });
     }
 
-    return { config, tasks, formatV2: hasUnified };
+    // formatV2: tasks live in one "## Tasks" section with a **Status** field (v2 and later).
+    // formatVersion: 1 legacy sections, 2 joined metadata lines, 3 one field per line.
+    return { config, tasks, formatV2: hasUnified, formatVersion: marker ? parseInt(marker[1], 10) : (hasUnified ? 2 : 1) };
 }
 
 // Extract the "## <sectionName>" section, then parse its task blocks.
@@ -213,17 +216,41 @@ export function parseTaskBlocks(sectionContent, statusId, honorStatusField = fal
     return tasksFound;
 }
 
+const FIELD_LABELS = 'Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags';
+const FIELD_LINE_RE = new RegExp(`^\\s*\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:`);
+const FIELD_SPLIT_RE = new RegExp(`\\s*\\|\\s*(?=\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:)`);
+const FIELD_SEG_RE = new RegExp(`^\\s*\\*\\*(${FIELD_LABELS})\\*\\*\\s*:\\s*(.*?)\\s*$`);
+const SECTION_LINE_RE = /^\*\*(Subtasks|Notes|Links|Review|Dependencies)\*\*/;
+
+// First value of each metadata field, from the lines before the first section. A line may carry
+// several fields joined by " | " (the v1/v2 layout); each segment is read on its own.
+function scanFields(lines) {
+    const out = {};
+    for (const line of lines) {
+        if (SECTION_LINE_RE.test(line)) break;
+        if (!FIELD_LINE_RE.test(line)) continue;
+        for (const seg of line.split(FIELD_SPLIT_RE)) {
+            const m = FIELD_SEG_RE.exec(seg);
+            if (m && !(m[1] in out)) out[m[1]] = m[2];
+        }
+    }
+    return out;
+}
+
 // Parse individual task. `columns` is the board's column list, used to validate **Status**.
 function parseTask(id, title, content, fallbackStatus, honorStatusField = false, columns = []) {
-    // V2: the **Status** field is authoritative when present and a valid column id;
+    // Metadata lines (**Status**, **Priority**, ...) are read from the lines before the first
+    // section, one field per line (format v3) or several joined with " | " (v1/v2 wrote
+    // priority/category/assigned and the dates that way): both layouts parse to the same values.
+    const lines = content.split('\n');
+    const fields = scanFields(lines);
+
+    // V2+: the **Status** field is authoritative when present and a valid column id;
     // otherwise fall back to the section-derived status (legacy files / archive).
     let status = fallbackStatus;
-    if (honorStatusField) {
-        const statusMatch = content.match(/^\s*\*\*Status\*\*:\s*([^\r\n]+)/im);
-        if (statusMatch) {
-            const s = statusMatch[1].trim();
-            if (columns.some(c => c.id === s)) status = s;
-        }
+    if (honorStatusField && fields.Status !== undefined) {
+        const s = fields.Status.trim();
+        if (columns.some(c => c.id === s)) status = s;
     }
     const task = {
         id,
@@ -244,47 +271,23 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
         extra: '' // verbatim passthrough for unsupported sections (see below)
     };
 
-    // Optional manual sort key
-    const orderMatch = content.match(/^\s*\*\*Order\*\*:\s*(\d+)/m);
-    if (orderMatch) task.order = parseInt(orderMatch[1], 10);
-
-    // Parse metadata line
-    const metaMatch = content.match(/\*\*Priority\*\*:\s*(\w+)\s*\|\s*\*\*Category\*\*:\s*([^|]+?)(?:\s*\|\s*\*\*Assigned\*\*:\s*(.+?))?$/m);
-    if (metaMatch) {
-        task.priority = metaMatch[1].trim();
-        task.category = metaMatch[2].trim();
-        if (metaMatch[3]) {
-            task.assignees = metaMatch[3].split(',').map(a => a.trim());
-        }
+    if (fields.Order !== undefined && /^\d+$/.test(fields.Order)) task.order = parseInt(fields.Order, 10);
+    if (fields.Priority !== undefined) task.priority = fields.Priority;
+    if (fields.Category !== undefined) task.category = fields.Category;
+    if (fields.Assigned !== undefined) task.assignees = fields.Assigned.split(',').map(a => a.trim()).filter(Boolean);
+    for (const [label, key] of [['Created', 'created'], ['Started', 'started'], ['Due', 'due'], ['Finished', 'completed']]) {
+        const m = fields[label] !== undefined && fields[label].match(/^[\d-]+/);
+        if (m) task[key] = m[0];
     }
-
-    // Parse dates - support all date fields
-    const createdMatch = content.match(/\*\*Created\*\*:\s*([\d-]+)/);
-    if (createdMatch) task.created = createdMatch[1];
-
-    const startedMatch = content.match(/\*\*Started\*\*:\s*([\d-]+)/);
-    if (startedMatch) task.started = startedMatch[1];
-
-    const dueMatch = content.match(/\*\*Due\*\*:\s*([\d-]+)/);
-    if (dueMatch) task.due = dueMatch[1];
-
-    const completedMatch = content.match(/\*\*Finished\*\*:\s*([\d-]+)/);
-    if (completedMatch) task.completed = completedMatch[1];
-
-    // Parse tags
-    const tagsMatch = content.match(/\*\*Tags\*\*:\s*(.+)/);
-    if (tagsMatch) {
-        task.tags = tagsMatch[1].match(/#[\w-]+/g) || [];
-    }
+    if (fields.Tags !== undefined) task.tags = fields.Tags.match(/#[\w-]+/g) || [];
 
     // Parse description (text after dates/tags but before "**Sous-tâches**" or "**Notes**")
-    const lines = content.split('\n');
     let descriptionLines = [];
     let inDescription = false;
 
     for (let line of lines) {
         // Skip metadata lines
-        if (line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/)) {
+        if (FIELD_LINE_RE.test(line) || line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/)) {
             continue;
         }
         // Stop at subsections
@@ -352,9 +355,11 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
 // `columns` (the board's columns), so an archived task keeps the column it came from; otherwise
 // the status is 'archived'.
 export function parseArchive(content, columns = []) {
+    const marker = /<!--\s*Format:\s*v(\d+)\s*-->/i.exec(content);
     return {
         tasks: parseTaskBlocks(content, 'archived', true, columns),
-        formatV2: /<!--\s*Format:\s*v2\s*-->/i.test(content)
+        formatV2: !!marker && parseInt(marker[1], 10) >= 2,
+        formatVersion: marker ? parseInt(marker[1], 10) : 1
     };
 }
 
@@ -385,22 +390,15 @@ export function generateTaskBlock(task) {
     md += `**Status**: ${task.status}\n`;
     if (task.order != null) md += `**Order**: ${task.order}\n`;
 
-    let meta = '';
-    if (task.priority) meta += `**Priority**: ${task.priority}`;
-    if (task.category) meta += ` | **Category**: ${task.category}`;
-    if (task.assignees.length > 0) meta += ` | **Assigned**: ${task.assignees.join(', ')}`;
-    if (meta) md += meta + '\n';
-
-    let dates = '';
-    if (task.created) dates += `**Created**: ${task.created}`;
-    if (task.started) dates += (dates ? ' | ' : '') + `**Started**: ${task.started}`;
-    if (task.due) dates += (dates ? ' | ' : '') + `**Due**: ${task.due}`;
-    if (task.completed) dates += (dates ? ' | ' : '') + `**Finished**: ${task.completed}`;
-    if (dates) md += dates + '\n';
-
-    if (task.tags.length > 0) {
-        md += `**Tags**: ${task.tags.join(' ')}\n`;
-    }
+    // One field per line, fixed order; empty fields are omitted.
+    if (task.priority) md += `**Priority**: ${task.priority}\n`;
+    if (task.category) md += `**Category**: ${task.category}\n`;
+    if (task.assignees.length > 0) md += `**Assigned**: ${task.assignees.join(', ')}\n`;
+    if (task.created) md += `**Created**: ${task.created}\n`;
+    if (task.started) md += `**Started**: ${task.started}\n`;
+    if (task.due) md += `**Due**: ${task.due}\n`;
+    if (task.completed) md += `**Finished**: ${task.completed}\n`;
+    if (task.tags.length > 0) md += `**Tags**: ${task.tags.join(' ')}\n`;
 
     if (task.description) {
         md += `\n${task.description}\n`;
@@ -434,7 +432,7 @@ export function generateTaskBlock(task) {
 export function generateBoard({ config, tasks }) {
     const cfg = normalizeConfig(config);
     const boardTitle = (cfg.boardTitle && cfg.boardTitle.trim()) || 'Kanban Board';
-    let md = `# ${boardTitle}\n\n<!-- Config: Last Task ID: ${cfg.lastTaskId} -->\n<!-- Format: v2 -->\n\n`;
+    let md = `# ${boardTitle}\n\n<!-- Config: Last Task ID: ${cfg.lastTaskId} -->\n<!-- Format: v3 -->\n\n`;
 
     md += `## ⚙️ Configuration\n\n`;
     md += `**Columns**: ${cfg.columns.map(c => `${c.name} (${c.id})`).join(' | ')}\n\n`;
@@ -451,7 +449,7 @@ export function generateBoard({ config, tasks }) {
 
 // archive.md text. `strings` carries the localized heading lines: { title, desc, section }.
 export function generateArchive(tasks, strings) {
-    let md = `${strings.title}\n<!-- Format: v2 -->\n\n${strings.desc}\n\n${strings.section}\n\n`;
+    let md = `${strings.title}\n<!-- Format: v3 -->\n\n${strings.desc}\n\n${strings.section}\n\n`;
     tasks.forEach(task => { md += generateTaskBlock(task); });
     return md;
 }
@@ -461,7 +459,7 @@ export function createDefaultBoardContent() {
     return `# Kanban Board
 
 <!-- Config: Last Task ID: 0 -->
-<!-- Format: v2 -->
+<!-- Format: v3 -->
 
 ## ⚙️ Configuration
 

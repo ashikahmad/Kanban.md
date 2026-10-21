@@ -7,11 +7,33 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { applyOp } from '../core/ops.js';
+import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
 import { parseBoard, parseArchive, orderedTasks } from '../core/board.js';
 import { BoardError, diffStats, diffLines, splitLines } from '../core/text.js';
 import { Doc, blocksOf } from '../core/patch.js';
 
-const fx = (n) => readFileSync(new URL(`./fixtures/${n}.md`, import.meta.url), 'utf8');
+const raw = (n) => readFileSync(new URL(`./fixtures/${n}.md`, import.meta.url), 'utf8');
+const PAIRS = JSON.parse(readFileSync(new URL('./pairs.json', import.meta.url), 'utf8'));
+// Ops edit v3 files only, so every fixture is loaded migrated to v3 (edge-extras has a deliberately
+// malformed header the migration refuses, so a hand-written v3 copy stands in for it).
+const V3_COPY = { 'edge-extras': 'v3-extras' };
+function fx(n) {
+  const [name, kind] = n.split('.');
+  if (kind === 'kanban') return V3_COPY[name] ? raw(`${V3_COPY[name]}.kanban`) : migrateBoardText(raw(`${name}.kanban`)).text;
+  const boardName = PAIRS.archives[name];
+  const cols = parseBoard(raw(`${V3_COPY[boardName] || boardName}.kanban`)).config.columns;
+  return migrateArchiveText(raw(`${name}.archive`), cols).text;
+}
+// Convert the lines of every Notes section to CRLF: the mixed endings a migrated CRLF file ends up with.
+function mixEol(text) {
+  let inNotes = false;
+  return splitLines(text).map((l) => {
+    if (/^###\s+TASK-/.test(l)) inNotes = false;
+    const out = inNotes ? l.replace(/\r?\n$/, '\r\n') : l;
+    if (/^\*\*Notes\*\*:/.test(l)) inNotes = true;
+    return out;
+  }).join('');
+}
 const today = () => '2026-01-01';
 const apply = (ws, op) => applyOp(ws, op, { today });
 const demo = () => ({ board: fx('demo.kanban'), archive: fx('demo.archive') });
@@ -84,11 +106,12 @@ test('addSubtask adds exactly one line', () => {
 test('updateTask tags/priority/due change only their lines', () => {
   const ws = demo();
   const out = apply(ws, { type: 'updateTask', id: 'TASK-002', set: { priority: 'Low', due: '2026-12-01', tags: ['api', 'perf'] } });
-  assert.deepEqual(removedAdded(ws.board, out.board), [3, 3]);
+  assert.deepEqual(removedAdded(ws.board, out.board), [2, 3]); // priority replaced, due inserted, tags replaced
 });
 
 test('createTask appends one block and bumps Last Task ID in place', () => {
   const ws = demo();
+  ws.board = ws.board.replace('Last Task ID: 19', 'Last Task ID: 019'); // padded, as hand-written boards often are
   const out = apply(ws, { type: 'createTask', task: { title: 'Brand new', status: 'backlog', priority: 'High', category: 'Backend', tags: ['api'] } });
   assert.equal(out.result.id, 'TASK-020');
   const s = stats(ws.board, out.board);
@@ -119,15 +142,15 @@ test('archiveTask moves the block verbatim, restoreTask brings it back', () => {
   assert.ok(!blockMap(r.archive, 'archive').has('TASK-003'));
 });
 
-test('archiving with no archive.md creates one marked v2', () => {
+test('archiving with no archive.md creates one marked v3', () => {
   const out = apply({ board: fx('demo.kanban'), archive: null }, { type: 'archiveTask', id: 'TASK-003' });
-  assert.match(out.archive, /<!-- Format: v2 -->/);
+  assert.match(out.archive, /<!-- Format: v3 -->/);
   assert.equal(parseArchive(out.archive, parseBoard(out.board).config.columns).tasks[0].id, 'TASK-003');
 });
 
-test('an unmarked, empty legacy archive gets the v2 marker', () => {
-  const out = apply({ board: fx('demo.kanban'), archive: fx('root.archive') }, { type: 'archiveTask', id: 'TASK-003' });
-  assert.equal(parseArchive(out.archive, []).formatV2, true);
+test('an unmarked, empty legacy archive gets the v3 marker', () => {
+  const out = apply({ board: fx('demo.kanban'), archive: raw('root.archive') }, { type: 'archiveTask', id: 'TASK-003' });
+  assert.equal(parseArchive(out.archive, []).formatVersion, 3);
 });
 
 test('restoring a task whose column is gone falls back to the first column', () => {
@@ -233,7 +256,6 @@ test('validation errors carry stable codes and the valid choices', () => {
   assert.equal(e.code, 'unknown_status');
   assert.ok(e.valid.includes('backlog'));
   assert.equal(err({ type: 'updateTask', id: 'TASK-001', set: { priority: 'Banana' } }).code, 'unknown_priority');
-  assert.equal(err({ type: 'updateTask', id: 'TASK-001', set: { priority: 'High', category: '' } }).code, 'meta_incomplete');
   assert.equal(err({ type: 'updateTask', id: 'TASK-001', set: { due: '2026-13-45' } }).code, 'invalid_date');
   assert.equal(err({ type: 'updateTask', id: 'TASK-001', set: { description: '## heading' } }).code, 'invalid_description');
   assert.equal(err({ type: 'updateTask', id: 'TASK-001', set: { tags: ['bad tag!'] } }).code, 'invalid_tag');
@@ -256,8 +278,16 @@ test('ifMatch detects a task that changed since it was read', () => {
   assert.equal(parseBoard(ok.board).tasks.find((t) => t.id === 'TASK-001').title, 'Two');
 });
 
-test('legacy V1 boards must be migrated first', () => {
-  assert.equal(code(() => apply({ board: fx('examples-v1.kanban'), archive: null }, { type: 'createTask', task: { title: 'x' } })), 'needs_migration');
+test('v1 and v2 boards must be migrated first, and v2 archives too once a task in them is touched', () => {
+  for (const name of ['examples-v1', 'demo']) {
+    const e = (() => { try { apply({ board: raw(`${name}.kanban`), archive: null }, { type: 'createTask', task: { title: 'x' } }); } catch (x) { return x; } })();
+    assert.equal(e.code, 'needs_migration', name);
+    assert.match(e.hint, /kanbanmd migrate/);
+  }
+  const ws = { board: fx('demo.kanban'), archive: raw('demo.archive') }; // v3 board, v2 archive
+  const id = parseArchive(ws.archive, []).tasks[0].id;
+  assert.equal(code(() => apply(ws, { type: 'restoreTask', id })), 'needs_migration');
+  assert.ok(apply(ws, { type: 'createTask', task: { title: 'fine: the archive is only read for ids' } }).files.length);
 });
 
 test('a duplicate task id is refused rather than guessed at', () => {
@@ -326,6 +356,7 @@ function randomOp(R, ws) {
 
 const withKeys = (board, archive) => applyOp({ board, archive }, { type: 'sortTasks', mode: 'positions' }).board;
 const PROPERTY_FIXTURES = [
+  ['examples-mixed', mixEol(fx('examples-v2.kanban')), fx('examples-v2.archive')],
   ['demo-ordered', withKeys(fx('demo.kanban'), fx('demo.archive')), fx('demo.archive')],
   ['crlf-ordered', withKeys(fx('edge-crlf.kanban'), null), null],
   ['extras-ordered', withKeys(fx('edge-extras.kanban'), fx('edge-v2.archive')), fx('edge-v2.archive')],
@@ -391,8 +422,8 @@ for (const [name, board, archive] of PROPERTY_FIXTURES) {
 
 const WEIRD = `# Weird
 
-<!-- Config: Last Task ID: 5 -->
-<!-- Format: v2 -->
+<!-- Config: Last Task ID: 7 -->
+<!-- Format: v3 -->
 
 ## ⚙️ Configuration
 
@@ -410,15 +441,13 @@ const WEIRD = `# Weird
 
 ## Tasks
 
-### TASK-001 | Dates apart
+### TASK-001 | Joined priority and category (hand-edited)
 **Status**: todo
-**Created**: 2025-01-01
-Some text between
-**Due**: 2025-02-02
+**Priority**: High | **Category**: A | **Assigned**: @a
 
-### TASK-002 | Odd dates order
+### TASK-002 | Joined dates (hand-edited)
 **Status**: todo
-**Due**: 2025-03-03 | **Created**: 2025-03-01
+**Created**: 2025-03-01 | **Due**: 2025-03-03
 
 ### TASK-003 | Interleaved
 **Status**: todo
@@ -445,15 +474,22 @@ a stray remark
 
 ### TASK-006 | Untouched neighbour
 **Status**: done
-**Priority**: Low | **Category**: B
+**Priority**: Low
+**Category**: B
+
+### TASK-007 | One field per line
+**Status**: todo
+**Created**: 2025-02-01
+**Due**: 2025-02-02
 `;
 
 test('layouts the line patcher cannot express fall back to regenerating that one block', () => {
   const ws = { board: WEIRD, archive: null };
   const cases = [
-    ['TASK-001', { due: '' }],
-    ['TASK-001', { started: '2025-01-05' }],
+    ['TASK-001', { priority: 'Low' }],
+    ['TASK-001', { assignees: [] }],
     ['TASK-002', { started: '2025-03-02' }],
+    ['TASK-002', { due: '' }],
     ['TASK-003', { description: 'rewritten' }],
     ['TASK-004', { subtasks: [{ text: 'only' }] }],
     ['TASK-005', { subtasks: [{ text: 'x' }, { text: 'y', completed: true }] }],
@@ -467,13 +503,31 @@ test('layouts the line patcher cannot express fall back to regenerating that one
   }
   for (const op of [{ type: 'addSubtask', id: 'TASK-004', text: 'c' }, { type: 'toggleSubtask', id: 'TASK-005', index: 1 }]) {
     const out = apply(ws, op);
-    assert.equal(parseBoard(out.board).tasks.length, 6);
+    assert.equal(parseBoard(out.board).tasks.length, 7);
   }
 });
 
+test('a hand-edited joined line is regenerated one field per line when its block is rewritten', () => {
+  const out = apply({ board: WEIRD, archive: null }, { type: 'updateTask', id: 'TASK-001', set: { priority: 'Low' } });
+  assert.match(out.board, /### TASK-001[^\n]*\n\*\*Status\*\*: todo\n\*\*Priority\*\*: Low\n\*\*Category\*\*: A\n\*\*Assigned\*\*: @a\n/);
+});
+
 test('a layout the patcher handles in place stays surgical', () => {
-  const out = apply({ board: WEIRD, archive: null }, { type: 'updateTask', id: 'TASK-001', set: { due: '2026-02-02' } });
-  assert.deepEqual(removedAdded(WEIRD, out.board), [1, 1]); // the date is replaced where it sits
+  const out = apply({ board: WEIRD, archive: null }, { type: 'updateTask', id: 'TASK-007', set: { due: '2026-02-02' } });
+  assert.deepEqual(removedAdded(WEIRD, out.board), [1, 1]); // the date line is replaced where it sits
+});
+
+test('priority and category are independent fields now', () => {
+  const ws = demo();
+  const a = apply(ws, { type: 'updateTask', id: 'TASK-004', set: { category: '' } }); // had both
+  assert.deepEqual(removedAdded(ws.board, a.board), [1, 0]);
+  const t = parseBoard(a.board).tasks.find((x) => x.id === 'TASK-004');
+  assert.equal(t.category, '');
+  assert.equal(t.priority, 'Low');
+  const b = apply(ws, { type: 'createTask', task: { title: 'Just a priority', priority: 'High' } });
+  assert.equal(parseBoard(b.board).tasks.at(-1).priority, 'High');
+  const c = apply(ws, { type: 'createTask', task: { title: 'Just assignees', assignees: ['@a'] } });
+  assert.deepEqual(parseBoard(c.board).tasks.at(-1).assignees, ['@a']);
 });
 
 // ---- explicit sort -----------------------------------------------------------------------------

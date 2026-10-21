@@ -1,7 +1,7 @@
 # Minimal
 
 <!-- Config: Last Task ID: 0 -->
-<!-- Format: v2 -->
+<!-- Format: v3 -->
 
 ## ⚙️ Configuration
 

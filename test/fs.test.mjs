@@ -6,16 +6,21 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { mutate, readWorkspace } from '../io/node-fs.js';
+import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
 import { parseBoard } from '../core/board.js';
 
 const fixture = (n) => new URL(`./fixtures/${n}.md`, import.meta.url).pathname;
 const CLI = new URL('../cli/kanbanmd.js', import.meta.url).pathname;
 const WORKER = new URL('./tools/worker.mjs', import.meta.url).pathname;
 
-function project() {
+// A project folder holding the demo board, migrated to the current (v3) format.
+function project({ raw = false } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'kanbanmd-'));
-  copyFileSync(fixture('demo.kanban'), join(dir, 'kanban.md'));
-  copyFileSync(fixture('demo.archive'), join(dir, 'archive.md'));
+  const board = readFileSync(fixture('demo.kanban'), 'utf8'), archive = readFileSync(fixture('demo.archive'), 'utf8');
+  if (raw) { writeFileSync(join(dir, 'kanban.md'), board); writeFileSync(join(dir, 'archive.md'), archive); return dir; }
+  const b = migrateBoardText(board).text;
+  writeFileSync(join(dir, 'kanban.md'), b);
+  writeFileSync(join(dir, 'archive.md'), migrateArchiveText(archive, parseBoard(b).config.columns).text);
   return dir;
 }
 const read = (dir, f = 'kanban.md') => readFileSync(join(dir, f), 'utf8');

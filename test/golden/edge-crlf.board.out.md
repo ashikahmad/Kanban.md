@@ -1,7 +1,7 @@
 # CRLF Board
 
 <!-- Config: Last Task ID: 2 -->
-<!-- Format: v2 -->
+<!-- Format: v3 -->
 
 ## ⚙️ Configuration
 
@@ -21,7 +21,9 @@
 
 ### TASK-001 | First
 **Status**: todo
-**Priority**: High | **Category**: Backend | **Assigned**: @a
+**Priority**: High
+**Category**: Backend
+**Assigned**: @a
 **Created**: 2025-01-01
 **Tags**: #x
 
@@ -33,6 +35,8 @@ Some description.
 
 ### TASK-002 | Second
 **Status**: done
-**Priority**: Low | **Category**: Frontend
-**Created**: 2025-01-02 | **Finished**: 2025-01-03
+**Priority**: Low
+**Category**: Frontend
+**Created**: 2025-01-02
+**Finished**: 2025-01-03
 

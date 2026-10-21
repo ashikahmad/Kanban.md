@@ -1,5 +1,5 @@
 [markdown.archiveTitle]
-<!-- Format: v2 -->
+<!-- Format: v3 -->
 
 [markdown.archiveDesc]
 
@@ -7,11 +7,13 @@
 
 ### TASK-011 | V2 archived
 **Status**: done
-**Priority**: High | **Category**: Backend
+**Priority**: High
+**Category**: Backend
 **Created**: 2024-03-01
 
 ### TASK-012 | Archived, status not a column
 **Status**: archived
-**Priority**: High | **Category**: Backend
+**Priority**: High
+**Category**: Backend
 **Created**: 2024-03-02
 

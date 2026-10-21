@@ -16,6 +16,7 @@ const readJson = (dir, name) => JSON.parse(read(dir, name));
 // key (null) is the only difference, so drop it before comparing.
 const viaJson = (v) => {
   const j = JSON.parse(JSON.stringify(v));
+  delete j.formatVersion; // added after the golden files were captured
   for (const t of j.tasks || []) if (t.order === null) delete t.order;
   return j;
 };

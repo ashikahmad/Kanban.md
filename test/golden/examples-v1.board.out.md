@@ -1,7 +1,7 @@
 # Kanban - E-commerce Project
 
 <!-- Config: Last Task ID: 0 -->
-<!-- Format: v2 -->
+<!-- Format: v3 -->
 
 ## ⚙️ Configuration
 
@@ -21,7 +21,9 @@
 
 ### TASK-015 | Ajouter système de recommandations produits
 **Status**: backlog
-**Priority**: Low | **Category**: Backend | **Assigned**: @alice
+**Priority**: Low
+**Category**: Backend
+**Assigned**: @alice
 **Created**: 2025-11-02
 **Tags**: #feature #ai #recommandations
 
@@ -42,7 +44,9 @@ Possibilité d'utiliser un service tiers comme AWS Personalize ou implémenter u
 
 ### TASK-016 | Mode sombre complet
 **Status**: backlog
-**Priority**: Medium | **Category**: Frontend | **Assigned**: @diana
+**Priority**: Medium
+**Category**: Frontend
+**Assigned**: @diana
 **Created**: 2025-11-03
 **Tags**: #feature #ui #design
 
@@ -58,7 +62,9 @@ Ajouter un thème sombre pour toute l'application avec toggle de préférence ut
 
 ### TASK-017 | Export rapports analytics PDF
 **Status**: backlog
-**Priority**: Low | **Category**: Backend | **Assigned**: @bob
+**Priority**: Low
+**Category**: Backend
+**Assigned**: @bob
 **Created**: 2025-11-04
 **Tags**: #feature #reporting #pdf
 
@@ -74,8 +80,11 @@ Permettre aux admins d'exporter les statistiques de vente en PDF.
 
 ### TASK-012 | Corriger bug de calcul de taxes
 **Status**: todo
-**Priority**: Critical | **Category**: Backend | **Assigned**: @bob
-**Created**: 2025-11-05 | **Due**: 2025-11-08
+**Priority**: Critical
+**Category**: Backend
+**Assigned**: @bob
+**Created**: 2025-11-05
+**Due**: 2025-11-08
 **Tags**: #bug #urgent #taxes #payment
 
 Les taxes ne sont pas calculées correctement pour les livraisons internationales. Clients canadiens facturés avec TVA française.
@@ -95,8 +104,11 @@ Bug signalé par 12 clients. Impact financier potentiel. À corriger en priorit�
 
 ### TASK-013 | Optimiser temps de chargement page produit
 **Status**: todo
-**Priority**: High | **Category**: Performance | **Assigned**: @alice
-**Created**: 2025-11-06 | **Due**: 2025-11-12
+**Priority**: High
+**Category**: Performance
+**Assigned**: @alice
+**Created**: 2025-11-06
+**Due**: 2025-11-12
 **Tags**: #performance #optimization #frontend
 
 Page produit charge en 2.8s, objectif < 1s. Images trop lourdes, requêtes API multiples non optimisées.
@@ -119,7 +131,9 @@ Page produit charge en 2.8s, objectif < 1s. Images trop lourdes, requêtes API m
 
 ### TASK-014 | Ajouter filtres avancés catalogue
 **Status**: todo
-**Priority**: High | **Category**: Frontend | **Assigned**: @diana
+**Priority**: High
+**Category**: Frontend
+**Assigned**: @diana
 **Created**: 2025-11-07
 **Tags**: #feature #ui #catalogue
 
@@ -135,8 +149,12 @@ Permettre de filtrer les produits par prix, marque, couleur, taille, note, dispo
 
 ### TASK-009 | Implémenter paiement Stripe
 **Status**: in-progress
-**Priority**: Critical | **Category**: Backend | **Assigned**: @bob, @charlie
-**Created**: 2025-10-28 | **Started**: 2025-11-01 | **Due**: 2025-11-10
+**Priority**: Critical
+**Category**: Backend
+**Assigned**: @bob, @charlie
+**Created**: 2025-10-28
+**Started**: 2025-11-01
+**Due**: 2025-11-10
 **Tags**: #feature #payment #stripe #api
 
 Intégrer Stripe pour gérer les paiements CB, Apple Pay, Google Pay.
@@ -163,8 +181,11 @@ Intégrer Stripe pour gérer les paiements CB, Apple Pay, Google Pay.
 
 ### TASK-010 | Migration base de données PostgreSQL
 **Status**: in-progress
-**Priority**: High | **Category**: Database | **Assigned**: @alice
-**Created**: 2025-10-30 | **Started**: 2025-11-04
+**Priority**: High
+**Category**: Database
+**Assigned**: @alice
+**Created**: 2025-10-30
+**Started**: 2025-11-04
 **Tags**: #database #migration #postgresql
 
 Migrer de SQLite vers PostgreSQL pour supporter la montée en charge.
@@ -190,8 +211,11 @@ Prêt pour migration prod demain matin 6h (trafic faible).
 
 ### TASK-011 | Dashboard admin analytics
 **Status**: in-progress
-**Priority**: Medium | **Category**: Frontend | **Assigned**: @diana, @charlie
-**Created**: 2025-11-01 | **Started**: 2025-11-05
+**Priority**: Medium
+**Category**: Frontend
+**Assigned**: @diana, @charlie
+**Created**: 2025-11-01
+**Started**: 2025-11-05
 **Tags**: #feature #dashboard #admin #analytics
 
 Créer un dashboard pour les admins avec statistiques de vente, graphiques, KPIs.
@@ -220,8 +244,12 @@ Progression : 60% (4/7 sous-tâches).
 
 ### TASK-007 | Système de wishlist
 **Status**: in-review
-**Priority**: Medium | **Category**: Frontend | **Assigned**: @diana
-**Created**: 2025-10-25 | **Started**: 2025-10-28 | **Finished**: 2025-11-03
+**Priority**: Medium
+**Category**: Frontend
+**Assigned**: @diana
+**Created**: 2025-10-25
+**Started**: 2025-10-28
+**Finished**: 2025-11-03
 **Tags**: #feature #wishlist #ui
 
 Permettre aux utilisateurs de sauvegarder des produits favoris dans une wishlist.
@@ -254,8 +282,12 @@ Permettre aux utilisateurs de sauvegarder des produits favoris dans une wishlist
 
 ### TASK-008 | Système de reviews produits
 **Status**: in-review
-**Priority**: High | **Category**: Backend | **Assigned**: @bob, @alice
-**Created**: 2025-10-26 | **Started**: 2025-10-30 | **Finished**: 2025-11-04
+**Priority**: High
+**Category**: Backend
+**Assigned**: @bob, @alice
+**Created**: 2025-10-26
+**Started**: 2025-10-30
+**Finished**: 2025-11-04
 **Tags**: #feature #reviews #moderation
 
 Permettre aux clients de laisser des avis et notes sur les produits.
@@ -296,8 +328,12 @@ Permettre aux clients de laisser des avis et notes sur les produits.
 
 ### TASK-001 | Setup projet et architecture
 **Status**: done
-**Priority**: Critical | **Category**: DevOps | **Assigned**: @alice, @bob
-**Created**: 2025-10-15 | **Started**: 2025-10-15 | **Finished**: 2025-10-18
+**Priority**: Critical
+**Category**: DevOps
+**Assigned**: @alice, @bob
+**Created**: 2025-10-15
+**Started**: 2025-10-15
+**Finished**: 2025-10-18
 **Tags**: #setup #architecture #devops
 
 Initialiser le projet avec stack technique, CI/CD, et environnements dev/staging/prod.
@@ -331,8 +367,12 @@ Initialiser le projet avec stack technique, CI/CD, et environnements dev/staging
 
 ### TASK-002 | Authentification JWT
 **Status**: done
-**Priority**: Critical | **Category**: Backend | **Assigned**: @bob
-**Created**: 2025-10-18 | **Started**: 2025-10-19 | **Finished**: 2025-10-22
+**Priority**: Critical
+**Category**: Backend
+**Assigned**: @bob
+**Created**: 2025-10-18
+**Started**: 2025-10-19
+**Finished**: 2025-10-22
 **Tags**: #security #auth #jwt
 
 Implémenter système d'authentification avec JWT, refresh tokens, et sécurité renforcée.
@@ -366,8 +406,12 @@ Implémenter système d'authentification avec JWT, refresh tokens, et sécurité
 
 ### TASK-003 | Catalogue produits avec recherche
 **Status**: done
-**Priority**: High | **Category**: Backend | **Assigned**: @alice
-**Created**: 2025-10-20 | **Started**: 2025-10-23 | **Finished**: 2025-10-27
+**Priority**: High
+**Category**: Backend
+**Assigned**: @alice
+**Created**: 2025-10-20
+**Started**: 2025-10-23
+**Finished**: 2025-10-27
 **Tags**: #feature #catalogue #search
 
 Créer le catalogue produits avec recherche full-text et filtres de base.
@@ -399,8 +443,12 @@ Créer le catalogue produits avec recherche full-text et filtres de base.
 
 ### TASK-004 | Panier d'achat
 **Status**: done
-**Priority**: High | **Category**: Frontend | **Assigned**: @diana
-**Created**: 2025-10-22 | **Started**: 2025-10-25 | **Finished**: 2025-10-29
+**Priority**: High
+**Category**: Frontend
+**Assigned**: @diana
+**Created**: 2025-10-22
+**Started**: 2025-10-25
+**Finished**: 2025-10-29
 **Tags**: #feature #cart #ui
 
 Implémenter le panier d'achat avec ajout/suppression, quantités, calcul total.
@@ -433,8 +481,12 @@ Implémenter le panier d'achat avec ajout/suppression, quantités, calcul total.
 
 ### TASK-005 | Interface utilisateur responsive
 **Status**: done
-**Priority**: High | **Category**: Design | **Assigned**: @diana
-**Created**: 2025-10-24 | **Started**: 2025-10-27 | **Finished**: 2025-11-01
+**Priority**: High
+**Category**: Design
+**Assigned**: @diana
+**Created**: 2025-10-24
+**Started**: 2025-10-27
+**Finished**: 2025-11-01
 **Tags**: #design #responsive #ui #mobile
 
 Créer une interface moderne, responsive (mobile-first) avec TailwindCSS.
@@ -465,8 +517,12 @@ Créer une interface moderne, responsive (mobile-first) avec TailwindCSS.
 
 ### TASK-006 | Tests unitaires et e2e
 **Status**: done
-**Priority**: High | **Category**: Tests | **Assigned**: @charlie
-**Created**: 2025-10-26 | **Started**: 2025-10-30 | **Finished**: 2025-11-02
+**Priority**: High
+**Category**: Tests
+**Assigned**: @charlie
+**Created**: 2025-10-26
+**Started**: 2025-10-30
+**Finished**: 2025-11-02
 **Tags**: #tests #quality #ci
 
 Mettre en place suite de tests complète : unitaires (Jest), e2e (Playwright).
