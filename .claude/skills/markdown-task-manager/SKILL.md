@@ -3,7 +3,7 @@ name: markdown-task-manager
 description: Use when managing tasks. The system is a Kanban task manager on local Markdown files (`kanban.md`, `archive.md`, optionally `backlog.md`) that a human edits in the kanbanmd.html web app at the same time. Prefer the Kanban MCP tools or the `kanbanmd` CLI; fall back to the file format described here.
 ---
 
-# 📋 Markdown Task Manager Skill
+# 📋 Kanban.md Skill
 
 Full guide: `AI_WORKFLOW.md` in the project root. This skill is the short version.
 
