@@ -520,7 +520,7 @@ Measured on the example boards (`npm run measure`; tokens estimated as bytes / 4
 - **Minimal patches**: moving a card changes one line, so git diffs stay readable. Everything outside the change is byte-for-byte untouched.
 - **Verified**: every edit is re-parsed and must read back exactly as intended, or nothing is written.
 - **Concurrent-safe**: tools take turns with a lock, the browser re-reads before it writes, and ids are assigned atomically.
-- **Format**: tasks use one metadata field per line (format v3). Older files are migrated automatically (with a backup) when opened in the browser, or with `kanbanmd migrate`.
+- **Format**: tasks use one metadata field per line (format v3), each ending in two spaces (a Markdown hard break), so the files read correctly in any Markdown editor or viewer even without this app. Files without the two spaces still work. Older files are migrated automatically (with a backup) when opened in the browser, or with `kanbanmd migrate`.
 
 `AI_WORKFLOW.md` tells agents to use the tools first and falls back to the file rules.
 

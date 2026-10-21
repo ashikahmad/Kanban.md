@@ -227,6 +227,7 @@ export function parseTaskBlocks(sectionContent, statusId, honorStatusField = fal
     return tasksFound;
 }
 
+export const FIELD_BREAK = '  ';
 const FIELD_LABELS = 'Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags';
 const FIELD_LINE_RE = new RegExp(`^\\s*\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:`);
 const FIELD_SPLIT_RE = new RegExp(`\\s*\\|\\s*(?=\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:)`);
@@ -405,18 +406,19 @@ export function normalizeConfig(config) {
 // One task as a v2 block (kanban.md and archive.md share this format). Ends with a blank line.
 export function generateTaskBlock(task) {
     let md = `### ${task.id} | ${task.title}\n`;
-    md += `**Status**: ${task.status}\n`;
-    if (task.order != null) md += `**Order**: ${task.order}\n`;
-
-    // One field per line, fixed order; empty fields are omitted.
-    if (task.priority) md += `**Priority**: ${task.priority}\n`;
-    if (task.category) md += `**Category**: ${task.category}\n`;
-    if (task.assignees.length > 0) md += `**Assigned**: ${task.assignees.join(', ')}\n`;
-    if (task.created) md += `**Created**: ${task.created}\n`;
-    if (task.started) md += `**Started**: ${task.started}\n`;
-    if (task.due) md += `**Due**: ${task.due}\n`;
-    if (task.completed) md += `**Finished**: ${task.completed}\n`;
-    if (task.tags.length > 0) md += `**Tags**: ${task.tags.join(' ')}\n`;
+    // One field per line, fixed order; empty fields are omitted. Each line ends in two spaces (a Markdown
+    // hard break) so any Markdown viewer shows one field per line; the parser ignores trailing spaces.
+    const field = (label, value) => `**${label}**: ${value}${FIELD_BREAK}\n`;
+    md += field('Status', task.status);
+    if (task.order != null) md += field('Order', task.order);
+    if (task.priority) md += field('Priority', task.priority);
+    if (task.category) md += field('Category', task.category);
+    if (task.assignees.length > 0) md += field('Assigned', task.assignees.join(', '));
+    if (task.created) md += field('Created', task.created);
+    if (task.started) md += field('Started', task.started);
+    if (task.due) md += field('Due', task.due);
+    if (task.completed) md += field('Finished', task.completed);
+    if (task.tags.length > 0) md += field('Tags', task.tags.join(' '));
 
     if (task.description) {
         md += `\n${task.description}\n`;

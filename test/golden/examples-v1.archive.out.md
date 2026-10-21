@@ -6,14 +6,14 @@
 [markdown.archiveSection]
 
 ### TASK-018 | Audit sécurité complet
-**Status**: archived
-**Priority**: Critique
-**Category**: Security
-**Assigned**: @charlie, @bob
-**Created**: 2025-09-15
-**Started**: 2025-09-18
-**Finished**: 2025-09-25
-**Tags**: #security #audit #vulnerabilities
+**Status**: archived  
+**Priority**: Critique  
+**Category**: Security  
+**Assigned**: @charlie, @bob  
+**Created**: 2025-09-15  
+**Started**: 2025-09-18  
+**Finished**: 2025-09-25  
+**Tags**: #security #audit #vulnerabilities  
 
 Effectuer un audit de sécurité complet de l'application avant la mise en production.
 
@@ -58,14 +58,14 @@ Effectuer un audit de sécurité complet de l'application avant la mise en produ
 ---
 
 ### TASK-019 | Notifications email transactionnelles
-**Status**: archived
-**Priority**: Haute
-**Category**: Backend
-**Assigned**: @alice
-**Created**: 2025-09-10
-**Started**: 2025-09-12
-**Finished**: 2025-09-18
-**Tags**: #feature #email #notifications #sendgrid
+**Status**: archived  
+**Priority**: Haute  
+**Category**: Backend  
+**Assigned**: @alice  
+**Created**: 2025-09-10  
+**Started**: 2025-09-12  
+**Finished**: 2025-09-18  
+**Tags**: #feature #email #notifications #sendgrid  
 
 Implémenter système d'emails transactionnels : confirmation commande, tracking, password reset.
 
@@ -113,14 +113,14 @@ Implémenter système d'emails transactionnels : confirmation commande, tracking
 ---
 
 ### TASK-020 | Intégration Stripe Connect pour marketplace
-**Status**: archived
-**Priority**: Haute
-**Category**: Backend
-**Assigned**: @bob, @charlie
-**Created**: 2025-08-20
-**Started**: 2025-08-25
-**Finished**: 2025-09-05
-**Tags**: #feature #payment #stripe #marketplace
+**Status**: archived  
+**Priority**: Haute  
+**Category**: Backend  
+**Assigned**: @bob, @charlie  
+**Created**: 2025-08-20  
+**Started**: 2025-08-25  
+**Finished**: 2025-09-05  
+**Tags**: #feature #payment #stripe #marketplace  
 
 Implémenter Stripe Connect pour permettre aux vendeurs de recevoir paiements.
 
@@ -165,14 +165,14 @@ Implémenter Stripe Connect pour permettre aux vendeurs de recevoir paiements.
 ---
 
 ### TASK-021 | Système de coupons et promotions
-**Status**: archived
-**Priority**: Moyenne
-**Category**: Backend
-**Assigned**: @alice
-**Created**: 2025-08-15
-**Started**: 2025-08-18
-**Finished**: 2025-08-28
-**Tags**: #feature #promo #coupons #marketing
+**Status**: archived  
+**Priority**: Moyenne  
+**Category**: Backend  
+**Assigned**: @alice  
+**Created**: 2025-08-15  
+**Started**: 2025-08-18  
+**Finished**: 2025-08-28  
+**Tags**: #feature #promo #coupons #marketing  
 
 Créer système de coupons de réduction : pourcentage, montant fixe, shipping gratuit.
 
@@ -225,14 +225,14 @@ Créer système de coupons de réduction : pourcentage, montant fixe, shipping g
 ---
 
 ### TASK-022 | API publique REST avec rate limiting
-**Status**: archived
-**Priority**: Moyenne
-**Category**: Backend
-**Assigned**: @bob
-**Created**: 2025-08-05
-**Started**: 2025-08-10
-**Finished**: 2025-08-20
-**Tags**: #api #public #ratelimit #documentation
+**Status**: archived  
+**Priority**: Moyenne  
+**Category**: Backend  
+**Assigned**: @bob  
+**Created**: 2025-08-05  
+**Started**: 2025-08-10  
+**Finished**: 2025-08-20  
+**Tags**: #api #public #ratelimit #documentation  
 
 Créer une API publique REST pour partenaires avec documentation complète.
 
@@ -287,14 +287,14 @@ Créer une API publique REST pour partenaires avec documentation complète.
 ---
 
 ### TASK-023 | Migration images vers CDN Cloudflare
-**Status**: archived
-**Priority**: Haute
-**Category**: DevOps
-**Assigned**: @charlie
-**Created**: 2025-07-25
-**Started**: 2025-07-28
-**Finished**: 2025-08-05
-**Tags**: #devops #cdn #performance #images
+**Status**: archived  
+**Priority**: Haute  
+**Category**: DevOps  
+**Assigned**: @charlie  
+**Created**: 2025-07-25  
+**Started**: 2025-07-28  
+**Finished**: 2025-08-05  
+**Tags**: #devops #cdn #performance #images  
 
 Migrer toutes les images produits vers Cloudflare CDN pour meilleures performances.
 
@@ -343,14 +343,14 @@ Migrer toutes les images produits vers Cloudflare CDN pour meilleures performanc
 ---
 
 ### TASK-024 | Fonctionnalité social login (Google, Facebook)
-**Status**: archived
-**Priority**: Moyenne
-**Category**: Backend
-**Assigned**: @alice, @bob
-**Created**: 2025-07-18
-**Started**: 2025-07-22
-**Finished**: 2025-07-30
-**Tags**: #feature #auth #social #oauth
+**Status**: archived  
+**Priority**: Moyenne  
+**Category**: Backend  
+**Assigned**: @alice, @bob  
+**Created**: 2025-07-18  
+**Started**: 2025-07-22  
+**Finished**: 2025-07-30  
+**Tags**: #feature #auth #social #oauth  
 
 Permettre connexion via Google et Facebook OAuth pour faciliter l'inscription.
 
@@ -405,14 +405,14 @@ Permettre connexion via Google et Facebook OAuth pour faciliter l'inscription.
 ---
 
 ### TASK-025 | Système de logs centralisé
-**Status**: archived
-**Priority**: Haute
-**Category**: DevOps
-**Assigned**: @charlie
-**Created**: 2025-07-10
-**Started**: 2025-07-12
-**Finished**: 2025-07-20
-**Tags**: #devops #logging #monitoring #elk
+**Status**: archived  
+**Priority**: Haute  
+**Category**: DevOps  
+**Assigned**: @charlie  
+**Created**: 2025-07-10  
+**Started**: 2025-07-12  
+**Finished**: 2025-07-20  
+**Tags**: #devops #logging #monitoring #elk  
 
 Mettre en place un système de logs centralisé avec ELK stack pour debugging et monitoring.
 
@@ -469,14 +469,14 @@ Mettre en place un système de logs centralisé avec ELK stack pour debugging et
 ---
 
 ### TASK-026 | Tests de charge et optimisation
-**Status**: archived
-**Priority**: Critique
-**Category**: Performance
-**Assigned**: @alice, @charlie
-**Created**: 2025-07-01
-**Started**: 2025-07-05
-**Finished**: 2025-07-15
-**Tags**: #performance #loadtest #optimization #k6
+**Status**: archived  
+**Priority**: Critique  
+**Category**: Performance  
+**Assigned**: @alice, @charlie  
+**Created**: 2025-07-01  
+**Started**: 2025-07-05  
+**Finished**: 2025-07-15  
+**Tags**: #performance #loadtest #optimization #k6  
 
 Effectuer tests de charge pour identifier bottlenecks et optimiser avant lancement.
 

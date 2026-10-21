@@ -505,7 +505,7 @@ Mesuré sur les tableaux d'exemple (`npm run measure` ; jetons estimés à octet
 - **Correctifs minimaux** : déplacer une carte modifie une ligne, les diffs Git restent lisibles. Tout ce qui est hors modification reste identique à l'octet près.
 - **Vérifié** : chaque modification est relue et doit se relire exactement comme prévu, sinon rien n'est écrit.
 - **Sûr en concurrence** : les outils passent chacun leur tour (verrou), le navigateur relit avant d'écrire, les identifiants sont attribués atomiquement.
-- **Format** : les tâches utilisent un champ de métadonnées par ligne (format v3). Les anciens fichiers sont migrés automatiquement (avec sauvegarde) à l'ouverture dans le navigateur, ou avec `kanbanmd migrate`.
+- **Format** : les tâches utilisent un champ de métadonnées par ligne (format v3), chacune terminée par deux espaces (saut de ligne Markdown) : les fichiers s'affichent correctement dans n'importe quel éditeur ou lecteur Markdown, même sans cette application. Les fichiers sans ces deux espaces fonctionnent toujours. Les anciens fichiers sont migrés automatiquement (avec sauvegarde) à l'ouverture dans le navigateur, ou avec `kanbanmd migrate`.
 
 `AI_WORKFLOW.md` demande aux agents d'utiliser les outils d'abord et prévoit les règles de fichier en repli.
 

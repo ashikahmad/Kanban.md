@@ -41,7 +41,7 @@ If you have **no** tools, follow section 2.
 
 ## 📋 2. The task format (when you edit the files yourself)
 
-Format **v3**: one field per line. (Older boards used `**Priority**: … | **Category**: …` on one line; they still read correctly and are migrated automatically, but write the layout below.)
+Format **v3**: one field per line, each line ending in **two spaces** (a Markdown hard break, so any viewer shows the fields on separate lines; the parser accepts lines without them). (Older boards used `**Priority**: … | **Category**: …` on one line; they still read correctly and are migrated automatically, but write the layout below.)
 
 ```markdown
 ### TASK-XXX | Task title

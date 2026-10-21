@@ -192,8 +192,8 @@ test('dryRun previews the diff and writes nothing', { skip }, async () => {
   try {
     const r = await call(c, 'move_task', { id: 'TASK-004', status: 'done', dryRun: true });
     assert.equal(r.body.dryRun, true);
-    assert.match(r.body.diff, /^-\*\*Status\*\*: backlog$/m);
-    assert.match(r.body.diff, /^\+\*\*Status\*\*: done$/m);
+    assert.match(r.body.diff, /^-\*\*Status\*\*: backlog {2}$/m);
+    assert.match(r.body.diff, /^\+\*\*Status\*\*: done {2}$/m);
     assert.equal(readFileSync(join(dir, 'kanban.md'), 'utf8'), before);
     assert.deepEqual((await call(c, 'get_changes_since', {})).body.changes, []);
   } finally { await c.close(); }

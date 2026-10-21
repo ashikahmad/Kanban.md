@@ -33,7 +33,7 @@ Rules: pass the task's `etag` as `ifMatch` when changing something you read earl
 
 CLI equivalents: `kanbanmd board --status review`, `task TASK-014`, `move TASK-014 done`, `create --title … --status …`, `note`, `toggle`, `archive`, `stats`, `housekeeping`. Add `--dry-run` to preview.
 
-## 2. Task format (only if you edit files yourself): v3, one field per line
+## 2. Task format (only if you edit files yourself): v3, one field per line, each ending in two spaces (Markdown hard break; lines without them still parse)
 
 ```markdown
 ### TASK-XXX | Task title

@@ -6,7 +6,7 @@
 // sections). The locators reuse the same patterns as the parser in board.js, and ops.js verifies
 // every result by re-parsing it, so a disagreement between the two aborts the write.
 import { splitLines, stripEol, lineEol, detectEol, toEol } from './text.js';
-import { generateBoard, generateTaskBlock } from './board.js';
+import { generateBoard, generateTaskBlock, FIELD_BREAK } from './board.js';
 import { formatHousekeepingSpec } from './housekeeping-spec.js';
 import { formatBacklogFileSpec } from './backlog-spec.js';
 
@@ -170,7 +170,7 @@ export function setField(doc, loc, key, value) {
     if (e) {
         if (e.joined) throw new Fallback('metadata fields joined on one line');
         if (text === null) removeLines(doc, e.line, e.line + 1);
-        else replaceInLine(doc, e.line, e.valueStart, stripEol(doc.lines[e.line]).length, text);
+        else replaceInLine(doc, e.line, e.valueStart, stripEol(doc.lines[e.line]).trimEnd().length, text); // keeps the line's own trailing break
         return;
     }
     if (text === null) return;
@@ -179,7 +179,7 @@ export function setField(doc, loc, key, value) {
         const above = f.fields[FIELDS[i][1]];
         if (above) at = Math.max(at, above.line + 1);
     }
-    insertLines(doc, at, [`**${label}**: ${text}`]);
+    insertLines(doc, at, [`**${label}**: ${text}${FIELD_BREAK}`]);
 }
 
 // Description: the non-blank lines between the metadata and the first section.

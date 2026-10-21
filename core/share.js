@@ -28,16 +28,12 @@ export function taskToPlainText(task, columns = [], { notes = true, assignees = 
 }
 
 // The task as a board block (format v3), with the board-specific parts dropped: no manual order key.
-// Each field line but the last ends in two spaces (a Markdown hard break), so a viewer that does not know
-// the board format still shows one field per line instead of running them together.
 export function taskToMarkdown(task, { notes = true, assignees = true } = {}) {
-    const lines = lf(generateTaskBlock({
+    return lf(generateTaskBlock({
         ...task,
         assignees: assignees ? task.assignees : [],
         notes: notes ? task.notes : '',
         extra: notes ? task.extra : '',
         order: null,
-    })).trimEnd().split('\n');
-    for (let i = 1; i + 1 < lines.length && /^\*\*[^*:]+\*\*: ./.test(lines[i + 1]); i++) lines[i] += '  ';
-    return lines.join('\n') + '\n';
+    })).trimEnd() + '\n';
 }

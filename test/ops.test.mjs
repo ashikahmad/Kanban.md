@@ -509,7 +509,7 @@ test('layouts the line patcher cannot express fall back to regenerating that one
 
 test('a hand-edited joined line is regenerated one field per line when its block is rewritten', () => {
   const out = apply({ board: WEIRD, archive: null }, { type: 'updateTask', id: 'TASK-001', set: { priority: 'Low' } });
-  assert.match(out.board, /### TASK-001[^\n]*\n\*\*Status\*\*: todo\n\*\*Priority\*\*: Low\n\*\*Category\*\*: A\n\*\*Assigned\*\*: @a\n/);
+  assert.match(out.board, /### TASK-001[^\n]*\n\*\*Status\*\*: todo {2}\n\*\*Priority\*\*: Low {2}\n\*\*Category\*\*: A {2}\n\*\*Assigned\*\*: @a {2}\n/);
 });
 
 test('a layout the patcher handles in place stays surgical', () => {
@@ -679,7 +679,7 @@ test('order can be set and cleared by hand, and bad values are rejected', () => 
   const ws = demo();
   const a = apply(ws, { type: 'updateTask', id: 'TASK-002', set: { order: 4200 } });
   assert.deepEqual(removedAdded(ws.board, a.board), [0, 1]);
-  assert.match(a.board, /\*\*Status\*\*: backlog\n\*\*Order\*\*: 4200\n\*\*Priority\*\*: High/); // right after Status
+  assert.match(a.board, /\*\*Status\*\*: backlog {2}\n\*\*Order\*\*: 4200 {2}\n\*\*Priority\*\*: High/); // right after Status
   const b = apply({ board: a.board, archive: ws.archive }, { type: 'updateTask', id: 'TASK-002', set: { order: '' } });
   assert.equal(b.board, ws.board);
   assert.equal(code(() => apply(ws, { type: 'updateTask', id: 'TASK-002', set: { order: -3 } })), 'invalid_field');
@@ -699,4 +699,27 @@ test('an Order line is metadata, never part of the description', () => {
   const t = parseBoard(keyed().board).tasks[0];
   assert.equal(t.order, 1000);
   assert.ok(!t.description.includes('Order'));
+});
+
+// ---- hard breaks: field lines end in two spaces so any Markdown viewer shows one field per line ----
+
+const stripBreaks = (text) => text.replace(/^(\*\*(?:Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*:.*?) {2}$/gm, '$1');
+
+test('generated field lines end in two spaces; the parser reads them with or without', () => {
+  const board = demo().board;
+  const fields = board.slice(board.indexOf('## Tasks')).split('\n').filter((l) => /^\*\*(Status|Priority|Category|Assigned|Created|Due|Tags)\*\*:/.test(l));
+  assert.ok(fields.length > 10 && fields.every((l) => l.endsWith('  ') && !l.endsWith('   ')));
+  assert.deepEqual(parseBoard(stripBreaks(board)).tasks, parseBoard(board).tasks);
+});
+
+test('an edit keeps each line as it is: a board without breaks gains none, one with them keeps them', () => {
+  const withBreaks = demo(), plain = { ...withBreaks, board: stripBreaks(withBreaks.board) };
+  const op = { type: 'updateTask', id: 'TASK-002', set: { priority: 'Low', due: '2027-01-01' } };
+  const a = apply(withBreaks, op), b = apply(plain, op);
+  assert.deepEqual(removedAdded(withBreaks.board, a.board), [1, 2]); // the edited line and the new Due line
+  assert.match(a.board, /\*\*Priority\*\*: Low {2}\n/);
+  assert.deepEqual(removedAdded(plain.board, b.board), [1, 2]);
+  assert.match(b.board, /\*\*Priority\*\*: Low\n/);
+  assert.match(b.board, /\*\*Due\*\*: 2027-01-01 {2}\n/);
+  assert.equal(stripBreaks(b.board), stripBreaks(a.board));
 });

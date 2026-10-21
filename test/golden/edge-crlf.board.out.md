@@ -20,12 +20,12 @@
 ## Tasks
 
 ### TASK-001 | First
-**Status**: todo
-**Priority**: High
-**Category**: Backend
-**Assigned**: @a
-**Created**: 2025-01-01
-**Tags**: #x
+**Status**: todo  
+**Priority**: High  
+**Category**: Backend  
+**Assigned**: @a  
+**Created**: 2025-01-01  
+**Tags**: #x  
 
 Some description.
 
@@ -34,9 +34,9 @@ Some description.
 - [ ] two
 
 ### TASK-002 | Second
-**Status**: done
-**Priority**: Low
-**Category**: Frontend
-**Created**: 2025-01-02
-**Finished**: 2025-01-03
+**Status**: done  
+**Priority**: Low  
+**Category**: Frontend  
+**Created**: 2025-01-02  
+**Finished**: 2025-01-03  
 

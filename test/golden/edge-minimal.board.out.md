@@ -20,5 +20,5 @@
 ## Tasks
 
 ### TASK-007 | Only a title
-**Status**: todo
+**Status**: todo  
 

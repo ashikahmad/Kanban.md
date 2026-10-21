@@ -312,7 +312,7 @@
     [...bar().querySelectorAll('button')].find((b) => b.textContent === 'Dismiss').click();
     ok(!barVisible(), 'dismissed'); renderKanban(); ok(!barVisible(), 'stays dismissed');
     // another old finished task appears (an agent finishes one): the counts differ, so it returns
-    const text = proj.files['kanban.md'].replace(/(### TASK-001 \|[^\n]*\n\*\*Status\*\*: )backlog/, '$1done').replace(/(### TASK-001 \|[^\n]*\n\*\*Status\*\*: done\n)/, '$1**Finished**: 2020-01-01\n');
+    const text = proj.files['kanban.md'].replace(/(### TASK-001 \|[^\n]*\n\*\*Status\*\*: )backlog/, '$1done').replace(/(### TASK-001 \|[^\n]*\n\*\*Status\*\*: done *\n)/, '$1**Finished**: 2020-01-01\n');
     H.external(proj, 'kanban.md', text); await pollOnce();
     ok(barVisible(), 'returned because the situation changed');
     ok(/5 done task/.test(bar().textContent), bar().textContent);

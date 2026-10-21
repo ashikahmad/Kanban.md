@@ -384,3 +384,7 @@ Assumption behind the right-hand numbers: an agent editing the file itself reads
 6. **Size and quality of the link:** chat apps cut long URLs, so the dialog should show the link length and offer the file when it is too long. The fragment avoids server logs but not the clipboard or the chat app, so the privacy checkboxes stay.
 
 **Rough effort:** link format and the viewer/editor page about 1-2 days; reply link plus the review and import UI about 1-2 days; matching MCP tools (`export_task`, `import_task`) a few hours.
+
+### 16.x Hard breaks in the file format (added after v1 of sharing)
+
+Every metadata line is written with two trailing spaces, so the files render one field per line in any Markdown viewer (the product promise: they are plain Markdown files even without the app). Same format version (v3): the parser ignores trailing spaces, so existing files stay valid and are not rewritten. Edits keep each line as it is (a line without the break gains none; a replaced value keeps its own break); only newly inserted lines and whole-block rewrites emit the break. Migration of v1/v2 and the page's whole-file fallback produce it too. Goldens regenerated (only the field lines differ).
