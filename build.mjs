@@ -1,7 +1,7 @@
-// Build: concatenate src/ partials into a single self-contained task-manager.html.
+// Build: concatenate src/ partials into a single self-contained kanbanmd.html.
 // No runtime dependencies are produced — the output is one standalone HTML file.
-//   npm run build       -> minified task-manager.html
-//   npm run build:dev   -> readable (unminified) task-manager.html
+//   npm run build       -> minified kanbanmd.html
+//   npm run build:dev   -> readable (unminified) kanbanmd.html
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { minify } from 'html-minifier-terser';
@@ -42,5 +42,5 @@ if (!dev) {
   });
 }
 
-writeFileSync('task-manager.html', html);
-console.log(`Built task-manager.html (${dev ? 'dev/readable' : 'minified'}) — ${(html.length / 1024).toFixed(1)} KB`);
+writeFileSync('kanbanmd.html', html);
+console.log(`Built kanbanmd.html (${dev ? 'dev/readable' : 'minified'}) — ${(html.length / 1024).toFixed(1)} KB`);

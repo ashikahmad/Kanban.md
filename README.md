@@ -22,13 +22,13 @@ A complete task management system that transforms your Markdown files into an in
 
 ## 🎯 What is it?
 
-Markdown Task Manager is a **standalone web application** contained in a single HTML file (`task-manager.html`). It uses the browser's File System Access API to read and write directly to your local Markdown files.
+Markdown Task Manager is a **standalone web application** contained in a single HTML file (`kanbanmd.html`). It uses the browser's File System Access API to read and write directly to your local Markdown files.
 
 ### How it works
 
 ```
 ┌─────────────────────┐
-│  task-manager.html  │  ← Single HTML file
+│  kanbanmd.html  │  ← Single HTML file
 └──────────┬──────────┘
            │
            ▼
@@ -64,7 +64,7 @@ Markdown Task Manager is a **standalone web application** contained in a single 
 
 ### Installation in 3 steps
 
-1. **Download** `task-manager.html` from this repository
+1. **Download** `kanbanmd.html` from this repository
 2. **Open it** in your browser (double-click)
 3. **Select** a folder to store your tasks
 
@@ -127,7 +127,7 @@ my-project/
 ```
 
 Then:
-1. Open `task-manager.html` in your browser
+1. Open `kanbanmd.html` in your browser
 2. Select the `my-project/` folder
 3. Start creating tasks!
 
@@ -164,18 +164,18 @@ archive.md
 
 ## 🗂️ HTML File Management
 
-You have 2 options to manage `task-manager.html`:
+You have 2 options to manage `kanbanmd.html`:
 
 ### Option A: One copy per project
 
 ```bash
 project-1/
-├── task-manager.html  # ← Local copy
+├── kanbanmd.html  # ← Local copy
 ├── kanban.md
 └── archive.md
 
 project-2/
-├── task-manager.html  # ← Local copy
+├── kanbanmd.html  # ← Local copy
 ├── kanban.md
 └── archive.md
 ```
@@ -193,7 +193,7 @@ project-2/
 
 ```bash
 ~/tools/
-└── task-manager.html  # ← Single copy
+└── kanbanmd.html  # ← Single copy
 
 ~/projects/
 ├── project-1/
@@ -216,7 +216,7 @@ project-2/
 - ❌ Dependency on external file
 
 **How to use it:**
-1. Keep `task-manager.html` in an accessible folder (e.g., `~/tools/`)
+1. Keep `kanbanmd.html` in an accessible folder (e.g., `~/tools/`)
 2. Create a shortcut/bookmark in your browser
 3. Open it and select the desired project folder
 4. The application remembers the last 10 projects
@@ -225,9 +225,9 @@ project-2/
 
 ```bash
 # ~/.bashrc or ~/.zshrc
-alias tasks='open ~/tools/task-manager.html'  # macOS
-alias tasks='xdg-open ~/tools/task-manager.html'  # Linux
-alias tasks='start ~/tools/task-manager.html'  # Windows
+alias tasks='open ~/tools/kanbanmd.html'  # macOS
+alias tasks='xdg-open ~/tools/kanbanmd.html'  # Linux
+alias tasks='start ~/tools/kanbanmd.html'  # Windows
 ```
 
 ---
@@ -756,8 +756,8 @@ The application is built from `src/` into one self-contained file.
 
 ```bash
 npm install          # once (a single dev dependency to minify the output)
-npm run build        # minified task-manager.html
-npm run build:dev    # readable task-manager.html while you work
+npm run build        # minified kanbanmd.html
+npm run build:dev    # readable kanbanmd.html while you work
 ```
 
 - `src/styles/00-variables.css` holds the design tokens: spacing, radius, type scale and the light and dark colour ladders. Change a colour or a size there.
@@ -1038,13 +1038,13 @@ git clone https://github.com/your-username/markdown-task-manager.git
 cd markdown-task-manager
 
 # Open application
-open task-manager.html  # macOS
-xdg-open task-manager.html  # Linux
-start task-manager.html  # Windows
+open kanbanmd.html  # macOS
+xdg-open kanbanmd.html  # Linux
+start kanbanmd.html  # Windows
 
 # Or host locally (optional)
 python -m http.server 8000
-# Then open http://localhost:8000/task-manager.html
+# Then open http://localhost:8000/kanbanmd.html
 ```
 
 ### Installation on a new project
@@ -1066,7 +1066,7 @@ git add .
 git commit -m "chore: Initialize task management system"
 
 # Open application
-open /path/to/task-manager.html
+open /path/to/kanbanmd.html
 # Select my-project/ folder
 ```
 
@@ -1114,7 +1114,7 @@ Contributions welcome! Here's how to help:
 
 1. Fork the repository
 2. Create a branch (`git checkout -b feature/my-feature`)
-3. Modify `task-manager.html` (everything is in this file)
+3. Modify `kanbanmd.html` (everything is in this file)
 4. Test in Chrome, Edge and Opera
 5. Commit (`git commit -m "feat: Add feature"`)
 6. Push (`git push origin feature/my-feature`)
@@ -1151,7 +1151,7 @@ Contributions welcome! Here's how to help:
 - ✅ Mobile support: touch drag & drop, responsive layout, per-column "+" button — *1.3 (issue #12)*
 - ✅ XSS hardening: escaped rendering + Markdown link scheme validation — *1.3.1*
 - ✅ **Token-efficient status (status as a field)** — a task's column is a `**Status**:` field in a single `## Tasks` section, so moving a task between columns is a one-line edit; AIs read/update the board via cheap `grep` (no stored index). Backward-compatible parser + **automatic, safe V1→V2 migration on load** (creates a `.v1-backup.md`, no data loss); the archive is migrated too. — *2.0*
-- ✅ Source split into `src/` and compiled to the single `task-manager.html` by a dependency-free Node build (`npm run build`) — *2.0*
+- ✅ Source split into `src/` and compiled to the single `kanbanmd.html` by a dependency-free Node build (`npm run build`) — *2.0*
 - ✅ **Visible deadlines** — the **Due** date is shown on every card and highlighted (orange when due within 2 days, red once overdue); finished tasks are never flagged — *2.0*
 - ✅ Migration fidelity — a custom H1 title is preserved (no longer reset to "Kanban Board"), the config Categories/Users/Tags lines no longer grow unbounded on every save, and the autocomplete fields are escaped — *2.0*
 
@@ -1211,9 +1211,9 @@ Thanks to open-source community for:
 ### Scenario 1: Solo developer on personal project
 
 ```bash
-# 1. Download task-manager.html to ~/tools/
+# 1. Download kanbanmd.html to ~/tools/
 cd ~/tools
-# [Download task-manager.html]
+# [Download kanbanmd.html]
 
 # 2. Create a new project
 cd ~/projects
@@ -1245,7 +1245,7 @@ cat > archive.md << 'EOF'
 EOF
 
 # 4. Open application
-open ~/tools/task-manager.html
+open ~/tools/kanbanmd.html
 
 # 5. Select my-app/ folder
 
@@ -1267,9 +1267,9 @@ git commit -m "chore: Add task management system"
 git push
 
 # 3. Each team member:
-# - Downloads task-manager.html
+# - Downloads kanbanmd.html
 # - Clone/pull project
-# - Opens task-manager.html
+# - Opens kanbanmd.html
 # - Selects project/ folder
 
 # 4. Daily workflow:
@@ -1300,7 +1300,7 @@ cp ~/downloads/CLAUDE.md.exemple CLAUDE.md
 # - Document result
 
 # 4. You can visualize in app
-open ~/tools/task-manager.html
+open ~/tools/kanbanmd.html
 # [Select my-project/]
 # See TASK-001 with all subtasks checked!
 ```

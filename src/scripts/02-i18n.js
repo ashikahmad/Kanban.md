@@ -865,9 +865,38 @@
             return displayPriority(clean(priority || ''));
         }
 
-        // Dot + name, as HTML
+        // Shape per rank so priority never relies on color alone. Rank = position in the board's
+        // priority list (first = most urgent); color still comes from the config emoji.
+        const PRIO_SHAPES = {
+            'up2': '<path d="M4 7.5l4-4 4 4M4 12.5l4-4 4 4"/>',
+            'up': '<path d="M4 10l4-4 4 4"/>',
+            'eq': '<path d="M4 6.5h8M4 10.5h8"/>',
+            'down': '<path d="M4 6l4 4 4-4"/>',
+            'down2': '<path d="M4 3.5l4 4 4-4M4 8.5l4 4 4-4"/>',
+            'none': '<circle cx="8" cy="8" r="2.5"/>'
+        };
+        const PRIO_LADDERS = {
+            1: ['eq'], 2: ['up', 'down'], 3: ['up', 'eq', 'down'], 4: ['up2', 'up', 'eq', 'down'],
+            5: ['up2', 'up', 'eq', 'down', 'down2']
+        };
+
+        function prioShape(priority) {
+            const list = (config.priorities || []).map(clean);
+            const i = list.indexOf(clean(priority || ''));
+            if (i < 0) return 'none';
+            const n = list.length;
+            const ladder = PRIO_LADDERS[n] || PRIO_LADDERS[5];
+            return ladder[PRIO_LADDERS[n] ? i : Math.round(i * 4 / (n - 1))];
+        }
+
+        // Colored symbol, as HTML. Extra attributes (data-filter, title…) go on the wrapper span.
+        function priorityIcon(priority, attrs = '') {
+            return `<span class="prio ${priorityClass(priority)}" ${attrs}><svg viewBox="0 0 16 16" aria-hidden="true">${PRIO_SHAPES[prioShape(priority)]}</svg></span>`;
+        }
+
+        // Symbol + name, as HTML
         function priorityHtml(priority) {
-            return `<span class="prio-label"><span class="prio ${priorityClass(priority)}" aria-hidden="true"></span>${escapeHtml(priorityLabel(priority))}</span>`;
+            return `<span class="prio-label">${priorityIcon(priority, 'aria-hidden="true"')}${escapeHtml(priorityLabel(priority))}</span>`;
         }
 
         // Update all static text elements in the UI
@@ -995,18 +1024,6 @@
                     el.placeholder = config.placeholder;
                 }
             });
-
-            // Update priority options - use language-independent keys
-            const prioritySelect = document.getElementById('taskPriority');
-            if (prioritySelect) {
-                prioritySelect.innerHTML = `
-                    <option value="">${t('taskForm.priorityNone')}</option>
-                    <option value="Critical">${t('taskForm.priorityCritical')}</option>
-                    <option value="High">${t('taskForm.priorityHigh')}</option>
-                    <option value="Medium">${t('taskForm.priorityMedium')}</option>
-                    <option value="Low">${t('taskForm.priorityLow')}</option>
-                `;
-            }
 
             // Update form help texts
             const tagsHelp = document.querySelector('label[for="taskTags"] + input + small');

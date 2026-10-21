@@ -28,8 +28,92 @@
             }
         }
 
+        // Custom priority dropdown (a native <select> can't render colored symbols).
+        // #taskPriority is a hidden input holding the value; the button/menu are its UI.
+        function prioOptionHtml(value, label, icon) {
+            return `<div class="prio-opt" role="option" tabindex="-1" data-value="${escapeHtml(value)}">${icon}<span>${escapeHtml(label)}</span></div>`;
+        }
+
+        function buildPrioMenu() {
+            const none = prioOptionHtml('', t('taskForm.priorityNone'), '<span class="prio prio-none"></span>');
+            document.getElementById('taskPrioMenu').innerHTML = none + config.priorities.map(p =>
+                prioOptionHtml(clean(p), priorityLabel(p), priorityIcon(p, 'aria-hidden="true"'))
+            ).join('');
+        }
+
+        function setPriority(value) {
+            const entry = (config.priorities || []).find(p => clean(p) === value);
+            document.getElementById('taskPriority').value = entry ? value : '';
+            document.getElementById('taskPrioBtn').innerHTML = entry
+                ? priorityHtml(entry)
+                : `<span class="prio-label"><span class="prio prio-none"></span>${escapeHtml(t('taskForm.priorityNone'))}</span>`;
+            document.querySelectorAll('#taskPrioMenu .prio-opt').forEach(o =>
+                o.setAttribute('aria-selected', String(o.dataset.value === document.getElementById('taskPriority').value)));
+        }
+
+        function closePrioMenu() {
+            document.getElementById('prioSelect').classList.remove('open');
+            document.getElementById('taskPrioBtn').setAttribute('aria-expanded', 'false');
+        }
+
+        function openPrioMenu() {
+            const box = document.getElementById('prioSelect');
+            box.classList.add('open');
+            document.getElementById('taskPrioBtn').setAttribute('aria-expanded', 'true');
+            const cur = box.querySelector('.prio-opt[aria-selected="true"]') || box.querySelector('.prio-opt');
+            if (cur) cur.focus();
+        }
+
+        function togglePrioMenu(event) {
+            event.stopPropagation();
+            document.getElementById('prioSelect').classList.contains('open') ? closePrioMenu() : openPrioMenu();
+        }
+
+        function onPrioKey(event) {
+            const box = document.getElementById('prioSelect');
+            const open = box.classList.contains('open');
+            const opts = [...box.querySelectorAll('.prio-opt')];
+            const i = opts.indexOf(document.activeElement);
+            if (event.key === 'Escape' && open) {
+                event.stopPropagation(); closePrioMenu(); document.getElementById('taskPrioBtn').focus();
+            } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                if (!open) return openPrioMenu();
+                const next = event.key === 'ArrowDown' ? Math.min(i + 1, opts.length - 1) : Math.max(i - 1, 0);
+                opts[next].focus();
+            } else if ((event.key === 'Enter' || event.key === ' ') && open && i >= 0) {
+                event.preventDefault();
+                setPriority(opts[i].dataset.value); closePrioMenu(); document.getElementById('taskPrioBtn').focus();
+            } else if (event.key === 'Tab' && open) {
+                closePrioMenu();
+            }
+        }
+
+        function onPrioMenuClick(event) {
+            const opt = event.target.closest('.prio-opt');
+            if (!opt) return;
+            setPriority(opt.dataset.value);
+            closePrioMenu();
+            document.getElementById('taskPrioBtn').focus();
+        }
+
+        // Click anywhere else closes it (mousedown: modal content may swallow click events)
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('#prioSelect')) closePrioMenu();
+        });
+
         function updateColumn(idx, field, value) {
-            config.columns[idx][field] = value;
+            value = value.trim();
+            const col = config.columns[idx];
+            if (field === 'id') {
+                // IDs must be non-empty and unique; tasks follow their column to the new id.
+                if (!value || config.columns.some((c, i) => i !== idx && c.id === value)) {
+                    openColumnsModal();
+                    return;
+                }
+                [...tasks, ...archivedTasks].forEach(task => { if (task.status === col.id) task.status = value; });
+            }
+            col[field] = value;
             autoSave();
             renderKanban();
         }
@@ -71,19 +155,20 @@
                 `<option value="${escapeHtml(col.id)}">${escapeHtml(col.name)}</option>`
             ).join('');
 
-            // Populate priorities select
-            document.getElementById('taskPriority').innerHTML = config.priorities.map(priority =>
-                `<option value="${clean(priority)}">${escapeHtml(priorityLabel(priority))}</option>`
-            ).join('');
+            // Populate priorities dropdown
+            buildPrioMenu();
+            closePrioMenu();
 
             // Update autocomplete
             updateAutocomplete();
+
+            if (!isEditMode) setPriority('');
 
             if (isEditMode) {
                 document.getElementById('taskEditId').value = task.id;
                 document.getElementById('taskTitle').value = task.title;
                 document.getElementById('taskStatus').value = task.status;
-                document.getElementById('taskPriority').value = task.priority || '';
+                setPriority(clean(task.priority || ''));
                 document.getElementById('taskCategory').value = task.category || '';
                 document.getElementById('taskAssignee').value = task.assignees.join(', ');
                 document.getElementById('taskCreated').value = task.created || '';

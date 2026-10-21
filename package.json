@@ -1,9 +1,9 @@
 {
-  "name": "markdown-task-manager",
+  "name": "kanban-md",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Single-file Markdown Kanban task manager — built from src/ into one self-contained, dependency-free task-manager.html",
+  "description": "Single-file Markdown Kanban task manager — built from src/ into one self-contained, dependency-free kanbanmd.html",
   "scripts": {
     "build": "node build.mjs",
     "build:dev": "node build.mjs --dev"

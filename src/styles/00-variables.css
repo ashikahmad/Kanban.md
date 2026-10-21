@@ -45,10 +45,10 @@
 
             /* Priority dots */
             --priority-default: #8B93A1;
-            --priority-red: #E5484D;
-            --priority-orange: #F08A24;
-            --priority-yellow: #D9A400;
-            --priority-green: #3FA66A;
+            --priority-red: #D93A40;
+            --priority-orange: #E8590C;
+            --priority-yellow: #A87D00;
+            --priority-green: #2B8A57;
             --priority-blue: #3B82F6;
             --priority-purple: #8B6BD8;
             --priority-white: #CFD4DC;
@@ -89,8 +89,8 @@
             --c-code-text: #E8EAEE;
             --priority-default: #707988;
             --priority-red: #EF6B6B;
-            --priority-orange: #F59E4B;
-            --priority-yellow: #E5B13F;
+            --priority-orange: #FF8A3D;
+            --priority-yellow: #F2CC3A;
             --priority-green: #4CC983;
             --priority-blue: #6EA8FF;
             --priority-purple: #B197F0;

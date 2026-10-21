@@ -191,15 +191,15 @@
             console.log('✓ Rendering', filtered.length, 'tasks');
 
             list.innerHTML = filtered.map(task => `
-                <div class="archive-item" style="cursor: pointer;" onclick="showTaskDetail(archivedTasks.find(t => t.id === '${task.id}'))">
+                <div class="archive-item" style="cursor: pointer;" data-id="${escapeHtml(task.id)}">
                     <div class="top">
                         <div>
-                            <span class="task-id">${task.id}</span>
+                            <span class="task-id">${escapeHtml(task.id)}</span>
                             <strong style="margin-left: var(--s-2);">${escapeHtml(task.title)}</strong>
                         </div>
                         <div style="display: flex; gap: var(--s-2);">
-                            <button onclick="event.stopPropagation(); deleteTask('${task.id}', true)" class="btn btn-danger btn-sm" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
-                            <button onclick="event.stopPropagation(); unarchiveTask('${task.id}')" class="btn btn-secondary btn-sm">${t('action.restore')}</button>
+                            <button data-action="delete" class="btn btn-danger btn-sm" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
+                            <button data-action="restore" class="btn btn-secondary btn-sm">${t('action.restore')}</button>
                         </div>
                     </div>
                     ${task.description ? `<div class="desc">${markdownToHtml(task.description)}</div>` : ''}
@@ -210,6 +210,17 @@
                     </div>
                 </div>
             `).join('');
+        }
+
+        // One delegated handler: ids are read from data-id, never concatenated into inline JS.
+        function onArchiveListClick(e) {
+            const item = e.target.closest('.archive-item');
+            if (!item) return;
+            const id = item.dataset.id;
+            const action = e.target.closest('[data-action]')?.dataset.action;
+            if (action === 'delete') deleteTask(id, true);
+            else if (action === 'restore') unarchiveTask(id);
+            else showTaskDetail(archivedTasks.find(t => t.id === id));
         }
 
         function unarchiveTask(taskId) {

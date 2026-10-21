@@ -205,7 +205,9 @@
                 }
             } else {
                 // Create new task
-                config.lastTaskId++;
+                // lastTaskId may be missing/stale (e.g. hand-written boards): never reuse an existing id.
+                const maxUsed = [...tasks, ...archivedTasks].reduce((m, x) => Math.max(m, parseInt((x.id.match(/(\d+)$/) || [])[1]) || 0), 0);
+                config.lastTaskId = Math.max(config.lastTaskId, maxUsed) + 1;
                 const newTaskId = 'TASK-' + String(config.lastTaskId).padStart(3, '0');
                 tasks.push({
                     id: newTaskId,

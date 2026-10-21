@@ -116,13 +116,11 @@
                     </div>
                     <div class="field">
                         <label for="taskPriority">Priority</label>
-                        <select id="taskPriority">
-                            <option value="">None</option>
-                            <option value="Critical">Critical</option>
-                            <option value="High">High</option>
-                            <option value="Medium">Medium</option>
-                            <option value="Low">Low</option>
-                        </select>
+                        <div class="prio-select" id="prioSelect">
+                            <input type="hidden" id="taskPriority">
+                            <button type="button" class="prio-btn" id="taskPrioBtn" aria-haspopup="listbox" aria-expanded="false" onclick="togglePrioMenu(event)" onkeydown="onPrioKey(event)"></button>
+                            <div class="prio-menu" id="taskPrioMenu" role="listbox" tabindex="-1" onclick="onPrioMenuClick(event)" onkeydown="onPrioKey(event)"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="form-grid cols-2">
@@ -198,7 +196,7 @@
             </div>
             <div class="modal-body">
                 <input type="text" id="archiveSearch" placeholder="Search archives..." style="margin-bottom: var(--s-3);">
-                <div id="archiveList" class="list-rows" style="max-height: 500px; overflow-y: auto;"></div>
+                <div id="archiveList" class="list-rows" onclick="onArchiveListClick(event)" style="max-height: 500px; overflow-y: auto;"></div>
             </div>
         </div>
     </div>

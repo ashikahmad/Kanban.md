@@ -80,11 +80,25 @@
         .task-id { font-size: var(--fs-xs); color: var(--c-faint); font-family: var(--mono); }
         .prio-label { display: inline-flex; align-items: center; gap: 6px; }
         .prio-label .prio { cursor: inherit; }
-        .prio { width: 8px; height: 8px; border-radius: 50%; background: var(--priority-default); flex: none; cursor: pointer; }
-        .prio.Red { background: var(--priority-red); } .prio.Orange { background: var(--priority-orange); }
-        .prio.Yellow { background: var(--priority-yellow); } .prio.Green { background: var(--priority-green); }
-        .prio.Blue { background: var(--priority-blue); } .prio.Purple { background: var(--priority-purple); }
-        .prio.White { background: var(--priority-white); } .prio.Black { background: var(--priority-black); }
+        .prio { display: inline-flex; width: 16px; height: 16px; color: var(--priority-default); flex: none; cursor: pointer; }
+        .prio svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+        .prio.Red { color: var(--priority-red); } .prio.Orange { color: var(--priority-orange); }
+        .prio.Yellow { color: var(--priority-yellow); } .prio.Green { color: var(--priority-green); }
+        .prio.Blue { color: var(--priority-blue); } .prio.Purple { color: var(--priority-purple); }
+        .prio.White { color: var(--priority-white); } .prio.Black { color: var(--priority-black); }
+        .prio-none { width: 14px; height: 14px; border-radius: 50%; border: 1.5px dashed var(--c-faint); box-sizing: border-box; cursor: inherit; }
+        .prio-select { position: relative; }
+        .prio-btn { width: 100%; height: var(--control-h); padding: 0 32px 0 var(--s-3); display: flex; align-items: center; text-align: left;
+            border: 1px solid var(--c-border-strong); border-radius: var(--r-sm); background: var(--c-input) var(--chev) no-repeat right 12px center / 12px;
+            color: var(--c-text); font: inherit; font-size: var(--fs-md); cursor: pointer; }
+        .prio-btn:focus { outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--c-accent-soft); }
+        .prio-btn .prio, .prio-menu .prio { cursor: inherit; }
+        .prio-menu { display: none; position: absolute; top: calc(100% + var(--s-1)); left: 0; right: 0; z-index: 300; padding: var(--s-1);
+            background: var(--c-pop); border-radius: var(--r-md); box-shadow: var(--shadow-pop); }
+        .prio-select.open .prio-menu { display: block; }
+        .prio-opt { display: flex; align-items: center; gap: var(--s-2); height: 32px; padding: 0 var(--s-2); border-radius: var(--r-sm); font-size: var(--fs-md); color: var(--c-text); cursor: pointer; outline: none; }
+        .prio-opt:hover, .prio-opt:focus { background: var(--c-hover); }
+        .prio-opt[aria-selected="true"] { font-weight: 600; }
         .task-edit-btn {
             margin-left: auto;
             width: 24px; height: 24px;
