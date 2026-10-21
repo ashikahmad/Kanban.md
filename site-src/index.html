@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanban.md: a Kanban board that lives in Markdown files</title>
+<meta name="description" content="Kanban.md turns two Markdown files into an interactive board. One HTML file, no server, no account. Shared by you in the browser and by AI agents on the command line.">
+<style>
+:root {
+  --c-page: #E9ECF1; --c-column: #F4F6F9; --c-card: #FFFFFF; --c-fill: rgba(100, 116, 139, 0.13);
+  --c-border: #E1E5EB; --c-border-strong: #CDD3DC;
+  --c-text: #171A1F; --c-muted: #5F6875; --c-faint: #8B93A1;
+  --c-accent: #2F5BEA; --c-accent-hover: #2349C4; --c-accent-soft: rgba(47, 91, 234, 0.10); --c-on-accent: #FFFFFF;
+  --c-warn: #B7791F; --c-ok: #3FA66A;
+  --shadow: 0 18px 50px rgba(15, 23, 42, 0.14), 0 0 0 1px rgba(15, 23, 42, 0.06);
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-page: #0E1013; --c-column: #14171C; --c-card: #1B1F26; --c-fill: rgba(148, 163, 184, 0.16);
+    --c-border: #252A33; --c-border-strong: #343B47;
+    --c-text: #E8EAEE; --c-muted: #A0A8B5; --c-faint: #707988;
+    --c-accent: #7B9BFF; --c-accent-hover: #9BB3FF; --c-accent-soft: rgba(123, 155, 255, 0.16); --c-on-accent: #0E1013;
+    --c-warn: #E0A94A; --c-ok: #4CC983;
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.07);
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--c-page); color: var(--c-text); font: 16px/1.6 var(--font); -webkit-font-smoothing: antialiased; }
+a { color: var(--c-accent); text-decoration: none; }
+a:hover { color: var(--c-accent-hover); text-decoration: underline; }
+code { font: 0.9em var(--mono); background: var(--c-fill); padding: 0.1em 0.35em; border-radius: 6px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
+.brand { font-weight: 700; font-size: 18px; letter-spacing: -0.01em; color: var(--c-text); }
+.brand span { color: var(--c-accent); }
+.brand:hover { text-decoration: none; }
+nav.top a { margin-left: 20px; font-size: 14px; color: var(--c-muted); }
+nav.top a:hover { color: var(--c-text); text-decoration: none; }
+
+.hero { text-align: center; padding: 56px 0 40px; }
+.hero h1 { font-size: clamp(32px, 6vw, 56px); line-height: 1.08; letter-spacing: -0.03em; max-width: 18ch; margin: 0 auto 18px; }
+.hero h1 em { font-style: normal; color: var(--c-accent); }
+.hero p.lead { font-size: clamp(17px, 2.2vw, 20px); color: var(--c-muted); max-width: 40em; margin: 0 auto 28px; }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.btn { display: inline-block; padding: 11px 20px; border-radius: 10px; font-weight: 600; font-size: 15px; border: 1px solid var(--c-border-strong); background: var(--c-card); color: var(--c-text); }
+.btn:hover { text-decoration: none; border-color: var(--c-accent); color: var(--c-text); }
+.btn.primary { background: var(--c-accent); border-color: var(--c-accent); color: var(--c-on-accent); }
+.btn.primary:hover { background: var(--c-accent-hover); border-color: var(--c-accent-hover); color: var(--c-on-accent); }
+.note { margin-top: 16px; font-size: 14px; color: var(--c-muted); }
+.note.warn { color: var(--c-warn); font-weight: 600; }
+
+.shot { margin: 8px auto 0; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: var(--c-card); }
+.shot img { display: block; width: 100%; height: auto; }
+.cap { text-align: center; font-size: 13px; color: var(--c-faint); margin-top: 12px; }
+
+section { padding: 56px 0 8px; }
+h2 { font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 8px; }
+.sub { color: var(--c-muted); margin-bottom: 28px; max-width: 46em; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.card { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 20px; }
+.card h3 { font-size: 16px; margin-bottom: 6px; }
+.card p { color: var(--c-muted); font-size: 15px; }
+.card .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c-accent); margin-right: 8px; vertical-align: 1px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+ul.plain { list-style: none; }
+ul.plain li { padding: 10px 0 10px 28px; position: relative; border-bottom: 1px solid var(--c-border); color: var(--c-muted); }
+ul.plain li:last-child { border-bottom: 0; }
+ul.plain li strong { color: var(--c-text); }
+ul.plain.yes li::before { content: "✓"; position: absolute; left: 4px; color: var(--c-ok); font-weight: 700; }
+ul.plain.no li::before { content: "–"; position: absolute; left: 6px; color: var(--c-faint); font-weight: 700; }
+
+ol.steps { list-style: none; counter-reset: s; display: grid; gap: 12px; margin-bottom: 20px; }
+ol.steps li { counter-increment: s; background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 14px 18px 14px 56px; position: relative; }
+ol.steps li::before { content: counter(s); position: absolute; left: 16px; top: 13px; width: 26px; height: 26px; border-radius: 50%; background: var(--c-accent-soft); color: var(--c-accent); font-weight: 700; text-align: center; line-height: 26px; font-size: 14px; }
+pre { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 16px 18px; overflow-x: auto; font: 13.5px/1.6 var(--mono); }
+
+.links { display: flex; flex-wrap: wrap; gap: 10px; }
+.links a { padding: 8px 14px; border: 1px solid var(--c-border-strong); border-radius: 999px; background: var(--c-card); font-size: 14px; color: var(--c-text); }
+.links a:hover { border-color: var(--c-accent); text-decoration: none; }
+
+footer { margin-top: 64px; border-top: 1px solid var(--c-border); padding: 28px 0 40px; color: var(--c-muted); font-size: 14px; }
+footer p + p { margin-top: 8px; }
+@media (max-width: 560px) { nav.top a:not(.keep) { display: none; } .hero { padding-top: 32px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./">Kanban<span>.md</span></a>
+    <nav class="top">
+      <a href="#what-you-get">Features</a>
+      <a href="#start">Start</a>
+      <a href="@REPO@/tree/master/docs">Docs</a>
+      <a href="@REPO@" class="keep">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>A Kanban board that lives in <em>plain Markdown</em></h1>
+      <p class="lead">Kanban.md turns two Markdown files into an interactive board. The whole app is one HTML file that runs in your browser and reads and writes your folder directly. No server, no account, no database. Humans use the browser, AI agents use the command line, and both edit the same files.</p>
+      <div class="cta">
+        <a class="btn primary" id="open-app" href="app/">Open the app</a>
+        <a class="btn" href="@REPO@/tree/master/docs/demo">Get the demo board</a>
+        <a class="btn" href="@REPO@/blob/master/board/kanban.md">See our own board</a>
+      </div>
+      <p class="note" id="browser-note">Works in Chrome, Edge, Opera and Brave on desktop. Your files stay on your machine.</p>
+    </div>
+    <div class="shot"><img src="images/app-overview.jpg" alt="The Kanban.md board with sample tasks in several columns" width="1800" height="1125"></div>
+    <p class="cap">The board, showing the sample data from <code>docs/demo</code>.</p>
+
+    <section id="what-you-get">
+      <h2>What you get</h2>
+      <p class="sub">Everything is a file you can read, edit, diff and commit.</p>
+      <div class="grid">
+        <div class="card"><h3><span class="dot"></span>Your tasks, as files</h3><p>Plain Markdown that works in any editor and displays properly in any Markdown viewer, including GitHub.</p></div>
+        <div class="card"><h3><span class="dot"></span>Fits in git</h3><p>Edits are small line-level patches, so moving a card changes one line and diffs stay readable.</p></div>
+        <div class="card"><h3><span class="dot"></span>A real board</h3><p>Drag-and-drop columns you define, subtasks with progress bars, priorities, tags, categories, assignees, due dates, search, filters, an archive, several projects, light and dark themes, and four interface languages.</p></div>
+        <div class="card"><h3><span class="dot"></span>Humans and AI together</h3><p>A CLI and an MCP server let agents read and change the board safely while you use the browser. Changes show up on both sides within a couple of seconds, and concurrent edits are merged, not overwritten.</p></div>
+        <div class="card"><h3><span class="dot"></span>Cheap for AI</h3><p>An agent reads a few hundred tokens instead of the whole board. A "what is in this column?" question on a 100-task board costs about 1,000 tokens instead of about 20,000.</p></div>
+        <div class="card"><h3><span class="dot"></span>Private by construction</h3><p>Nothing leaves your machine. No telemetry, no CDN, works offline. This page loads no scripts or fonts from anywhere else either.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Where it fits</h2>
+      <div class="two">
+        <div>
+          <h3 style="margin-bottom:6px">Where it shines</h3>
+          <ul class="plain yes">
+            <li><strong>Developers</strong> who want tasks next to their code, in the same repository and the same pull requests.</li>
+            <li><strong>Small teams</strong> who share a board through git.</li>
+            <li><strong>Anyone working with AI coding assistants</strong> who wants a clear, traceable record of what was asked and done.</li>
+            <li><strong>People who like owning their data</strong> and being able to open it in a text editor.</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="margin-bottom:6px">What it is not for</h3>
+          <ul class="plain no">
+            <li><strong>Not a hosted service.</strong> No accounts, permissions, notifications or live co-editing. Teams share a board through git or a synced folder.</li>
+            <li><strong>Not a server or an API.</strong> Agents use the CLI and the MCP server; there is no HTTP API.</li>
+            <li><strong>Not for every browser.</strong> It needs a Chromium-based desktop browser. Firefox, Safari and iOS are not supported.</li>
+            <li><strong>Not a reporting tool.</strong> There are no charts or time tracking yet.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="start">
+      <h2>Try it</h2>
+      <p class="sub">Nothing to install and nothing uploaded. The app reads and writes the folder you pick, on your machine.</p>
+      <ol class="steps">
+        <li><a href="app/">Open the app</a> in Chrome, Edge, Opera or Brave.</li>
+        <li>Pick a folder. If it is empty, the app creates <code>kanban.md</code> and <code>archive.md</code> for you.</li>
+        <li>Want to look around first? Download the <a href="@REPO@/tree/master/docs/demo"><code>docs/demo</code></a> folder and pick that for a sample board with dummy tasks.</li>
+      </ol>
+      <p class="note">Prefer a local copy? Download <a href="@REPO@/blob/master/kanbanmd.html"><code>kanbanmd.html</code></a> and open it in your browser. More options are in <a href="@REPO@/blob/master/docs/getting-started.md">Getting started</a>. Your browser may ask again for folder permission each session.</p>
+    </section>
+
+    <section>
+      <h2>Use it with AI agents</h2>
+      <p class="sub">The same operations are available from the shell as the <code>kanbanmd</code> CLI and through an MCP server.</p>
+<pre>npm run mcp:install      # once, inside this repository
+claude mcp add kanban -- node /path/to/Kanban.md/mcp/server.js --dir /path/to/your/project</pre>
+      <p class="note">Copy <a href="@REPO@/blob/master/AI_WORKFLOW.md"><code>AI_WORKFLOW.md</code></a> into your project so your assistant knows the rules, and see <a href="@REPO@/blob/master/docs/ai-agents.md">Working with AI agents</a> for the tools and per-assistant templates.</p>
+    </section>
+
+    <section>
+      <h2>Read more</h2>
+      <div class="links">
+        <a href="@REPO@/blob/master/docs/getting-started.md">Getting started</a>
+        <a href="@REPO@/blob/master/docs/using-the-board.md">Using the board</a>
+        <a href="@REPO@/blob/master/docs/ai-agents.md">Working with AI agents</a>
+        <a href="@REPO@/blob/master/docs/file-format.md">File format</a>
+        <a href="@REPO@/blob/master/docs/git-and-teams.md">Git and teams</a>
+        <a href="@REPO@/blob/master/docs/development.md">Development</a>
+        <a href="@REPO@/blob/master/docs/about-this-fork.md">About this fork</a>
+        <a href="@REPO@/blob/master/board/kanban.md">Project board</a>
+        <a href="@REPO@">Repository</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Kanban.md is released under the <a href="@REPO@/blob/master/LICENSE">Mozilla Public License 2.0</a>.</p>
+    <p>It started as a fork of <a href="https://github.com/ioniks/MarkdownTaskManager">ioniks/MarkdownTaskManager</a> and keeps its licence and copyright notices. Thanks to the original author and contributors, and to the File System Access API work in Chromium, on which the app relies.</p>
+  </footer>
+</div>
+<script>
+  if (!('showDirectoryPicker' in window)) {
+    var n = document.getElementById('browser-note');
+    n.className = 'note warn';
+    n.textContent = 'This browser cannot open local folders. Kanban.md needs Chrome, Edge, Opera or Brave on a desktop computer.';
+  }
+</script>
+</body>
+</html>
