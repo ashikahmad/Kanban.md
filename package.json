@@ -13,7 +13,9 @@
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
-    "html-minifier-terser": "^7.2.0"
+    "html-minifier-terser": "^7.2.0",
+    "marked": "^18.1.1",
+    "terser": "^5.51.2"
   },
   "bin": {
     "kanbanmd": "cli/kanbanmd.js"

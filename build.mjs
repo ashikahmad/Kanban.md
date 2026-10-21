@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { minify } from 'html-minifier-terser';
+import { minify as terser } from 'terser';
 import { buildSync } from 'esbuild';
 
 const dev = process.argv.includes('--dev');
@@ -45,12 +46,21 @@ const bundled = buildSync({
   bundle: true, format: 'iife', globalName: 'KanbanCore', target: 'es2020', write: false, legalComments: 'none',
 }).outputFiles[0].text;
 const core = `/* ===== core (bundled) ===== */\n${bundled.trim()}\nconst { ${PAGE_CORE_EXPORTS.join(', ')} } = KanbanCore;`;
-const js = `${core}\n\n${concatDir('src/scripts', '.js')}`;
+// GFM renderer for the share preview (marked, dev dependency, bundled the same way).
+const gfm = buildSync({
+  entryPoints: ['src/vendor/gfm.js'], bundle: true, format: 'iife', globalName: 'GfmRender', target: 'es2020', write: false, legalComments: 'none', minify: !dev,
+}).outputFiles[0].text;
+const js = `/* ===== gfm (bundled) ===== */\n${gfm.trim()}\nconst { renderGfm } = GfmRender;\n\n${core}\n\n${concatDir('src/scripts', '.js')}`;
+
+// Minify the script here: html-minifier-terser silently leaves a script unminified when it cannot parse the
+// page around it, which is what happened once the bundled GFM renderer was in it. Classic script (not a
+// module): keep top-level names so inline on* handlers and cross-file global calls keep working.
+const scriptJs = dev ? js : (await terser(js, { compress: true, mangle: { toplevel: false }, format: { comments: false } })).code;
 
 // Function replacers so $ / ${...} inside css/js are inserted literally.
 let html = readFileSync('src/index.html', 'utf8')
   .replace('/* build:css */', () => css)
-  .replace('/* build:js */', () => js);
+  .replace('/* build:js */', () => scriptJs);
 
 if (!dev) {
   html = await minify(html, {
@@ -58,13 +68,7 @@ if (!dev) {
     conservativeCollapse: false,
     removeComments: true,
     minifyCSS: true,
-    // Classic script (not a module): keep top-level names so inline on* handlers
-    // and cross-file global calls keep working.
-    minifyJS: {
-      compress: true,
-      mangle: { toplevel: false },
-      format: { comments: false },
-    },
+    minifyJS: false,
   });
 }
 

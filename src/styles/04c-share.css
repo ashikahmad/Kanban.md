@@ -10,8 +10,15 @@
 .share-view .btn:last-child { border-top-right-radius: var(--r-md); border-bottom-right-radius: var(--r-md); }
 .share-view .btn.btn-primary { position: relative; z-index: 1; }
 .share-rendered { max-height: 22rem; overflow: auto; padding: var(--s-3); border: 1px solid var(--c-border-strong); border-radius: var(--r-md); background: var(--c-input); color: var(--c-text); font-size: var(--fs-sm); line-height: 1.5; }
-.share-h { margin: 0 0 var(--s-2); font-size: var(--fs-md, 1rem); }
-.share-h span { color: var(--c-muted); font-weight: 500; margin-right: var(--s-1); }
-.share-fields { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--s-3); margin: 0 0 var(--s-3); }
-.share-fields dt { color: var(--c-muted); }
-.share-fields dd { margin: 0; }
+/* GitHub-like rendering of the shared Markdown */
+.share-rendered h1, .share-rendered h2, .share-rendered h3 { margin: 0 0 var(--s-2); padding-bottom: var(--s-1); border-bottom: 1px solid var(--c-border-strong); font-size: 1.15em; }
+.share-rendered p { margin: 0 0 var(--s-3); }
+.share-rendered ul, .share-rendered ol { margin: 0 0 var(--s-3); padding-left: 1.5em; }
+.share-rendered li.task-list-item, .share-rendered li:has(> input[type=checkbox]) { list-style: none; margin-left: -1.2em; }
+.share-rendered input[type=checkbox] { margin-right: var(--s-2); }
+.share-rendered code { font-family: var(--mono); font-size: .9em; padding: .1em .35em; border-radius: 4px; background: var(--c-border); }
+.share-rendered pre { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-border); overflow: auto; }
+.share-rendered pre code { padding: 0; background: none; }
+.share-rendered hr { border: 0; border-top: 1px solid var(--c-border-strong); margin: var(--s-3) 0; }
+.share-rendered a { color: var(--primary); text-decoration: underline; }
+.share-rendered blockquote { margin: 0 0 var(--s-3); padding-left: var(--s-3); border-left: 3px solid var(--c-border-strong); color: var(--c-muted); }

@@ -12,22 +12,6 @@
                 : taskToPlainText(task, config.columns, { notes, assignees });
         }
 
-        // The task block as a reader would want it: title as a heading, the one-per-line fields as a compact
-        // label/value list, then the description, subtasks and notes through the app's own Markdown renderer.
-        function renderShareMarkdown(text) {
-            const lines = text.replace(/\n---\s*$/, '').split('\n');
-            const head = /^### (.+?) \| (.*)$/.exec(lines[0] || '');
-            let i = head ? 1 : 0, fields = '';
-            for (; i < lines.length; i++) {
-                const m = /^\*\*([^*:]+)\*\*: (.*)$/.exec(lines[i]);
-                if (!m) break;
-                fields += `<dt>${escapeHtml(m[1])}</dt><dd>${escapeHtml(m[2])}</dd>`;
-            }
-            return (head ? `<h3 class="share-h"><span>${escapeHtml(head[1])}</span> ${escapeHtml(head[2])}</h3>` : '')
-                + (fields ? `<dl class="share-fields">${fields}</dl>` : '')
-                + markdownToHtml(lines.slice(i).join('\n').trim()).replace(/\[ \]/g, '\u2610').replace(/\[[xX]\]/g, '\u2611');
-        }
-
         function openShareDialog() {
             if (!currentDetailTask) return;
             shareState = { task: currentDetailTask, format: shareState.format, view: shareState.view, notes: true, assignees: true };
@@ -68,7 +52,7 @@
             box.value = text;
             box.style.display = showRendered ? 'none' : '';
             rendered.style.display = showRendered ? '' : 'none';
-            if (showRendered) rendered.innerHTML = renderShareMarkdown(text);
+            if (showRendered) rendered.innerHTML = renderGfm(text);
             document.getElementById('shareView').style.display = format === 'markdown' ? '' : 'none';
             for (const [id, on] of [['shareViewRendered', view === 'rendered'], ['shareViewRaw', view === 'raw']]) {
                 const b = document.getElementById(id);
