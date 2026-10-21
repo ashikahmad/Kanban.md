@@ -23,7 +23,7 @@ const tmpLeft = (dir) => readdirSync(dir).filter((f) => f.endsWith('.tmp'));
 
 test('mutate writes the change, leaves no temp file, and logs the activity', async () => {
   const dir = project();
-  const out = await mutate(dir, { type: 'moveTask', id: 'TASK-004', status: 'done', keepPosition: true }, { actor: 'tester' });
+  const out = await mutate(dir, { type: 'moveTask', id: 'TASK-004', status: 'done' }, { actor: 'tester' });
   assert.deepEqual(out.files, ['kanban.md']);
   assert.equal(parseBoard(read(dir)).tasks.find((t) => t.id === 'TASK-004').status, 'done');
   assert.deepEqual(tmpLeft(dir), []);
@@ -135,6 +135,16 @@ test('cli: list and show', () => {
   const s = cli(dir, ['show', 'TASK-001']);
   assert.equal(s.json.task.id, 'TASK-001');
   assert.equal(cli(dir, ['show', 'TASK-999']).json.error.code, 'unknown_task');
+});
+
+test('cli: sort reorders by id on request', () => {
+  const dir = project();
+  cli(dir, ['move', 'TASK-001', 'done', '--at-end']);
+  const before = parseBoard(read(dir)).tasks.map((t) => t.id);
+  assert.notDeepEqual(before, [...before].sort());
+  assert.equal(cli(dir, ['sort']).json.ok, true);
+  const after = parseBoard(read(dir)).tasks.map((t) => t.id);
+  assert.deepEqual(after, [...after].sort());
 });
 
 test('cli: create, move, update, note, archive', () => {

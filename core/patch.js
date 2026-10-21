@@ -363,6 +363,16 @@ export function hasUniformEol(doc) {
     return ends.size <= 1;
 }
 
+// Reorder the task blocks of a file: the block now at position i is the one that was at order[i].
+// Everything before the first block is untouched, and every block moves verbatim.
+export function reorderBlocks(doc, kind, order) {
+    const blocks = blocksOf(doc, kind);
+    const pieces = blocks.map((b) => doc.lines.slice(b.start, b.end));
+    const head = doc.lines.slice(0, blocks[0].start);
+    const body = order.flatMap((from, i) => (i === order.length - 1 ? pieces[from] : normalizeBlockLines(doc, pieces[from])));
+    doc.lines = [...head, ...body];
+}
+
 // Re-terminate every line of a block with `eol` (only when moving between files that differ).
 export const convertBlockEol = (lines, eol) => lines.map((l) => toEol(l, eol));
 

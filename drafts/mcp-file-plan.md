@@ -56,7 +56,7 @@ How it is built: `core/` is plain ES module code. `build.mjs` inlines it into `k
 
 **5.2 Validate.** `validateTask` / `validateOp` check status against column ids, priority/category/user/tag against config where the app already restricts them, `YYYY-MM-DD` dates, no `##`/`###` in descriptions, unique ids. These replace most of the prose rules in `AI_WORKFLOW.md`. Errors are `{code, message, hint, valid?}`, e.g. `unknown_status` with the list of valid ids.
 
-**5.3 Ops.** A closed set of small operations, each pure: `(state, op) -> {state', changes}`. The same set is what the page emits, what the CLI parses and what MCP tools map to. Rules the UI applies today are extracted into ops so no front end can differ: `Created` defaults to today on create, a move with no anchor lands after the last task of the target column, restoring into a column that no longer exists falls back to the first column. (Phase 2 check: the UI sets `Started` / `Finished` only from the edit form, never on a move, so ops do not invent date rules either.)
+**5.3 Ops.** A closed set of small operations, each pure: `(state, op) -> {state', changes}`. The same set is what the page emits, what the CLI parses and what MCP tools map to. Rules the UI applies today are extracted into ops so no front end can differ: `Created` defaults to today on create, restoring into a column that no longer exists falls back to the first column. (Phase 2 check: the UI sets `Started` / `Finished` only from the edit form, never on a move, so ops do not invent date rules either.)
 
 **5.4 Patch.** Each op maps to the smallest text edit:
 
@@ -119,7 +119,8 @@ CLI and MCP expose the same operations. `kanbanmd get-board --status in-progress
 | `get_config` | column ids + names, categories, users, priorities, tags |
 | `create_task` | id assigned; `created` defaults to today |
 | `update_task` | partial patch; optional `ifMatch` |
-| `move_task` | `status`, optional `before` id, optional `atEnd` / `keepPosition`; same column and no anchor is a no-op |
+| `move_task` | `status`; edits the **Status** line in place (one-line diff). Optional `before` id or `atEnd` relocates the block on request; same column and no position is a no-op |
+| `sort_tasks` | the only op that reorders blocks wholesale: by numeric task id, `order` asc/desc, `scope` board/archive/both; blocks move verbatim; no-op if already sorted |
 | `toggle_subtask`, `add_subtask`, `append_note` | tiny writes |
 | `archive_task`, `restore_task`, `list_archive` | archive lifecycle |
 | `update_config` | add / rename / remove column (explicit target for orphans), categories, users, tags |
@@ -200,7 +201,7 @@ Phases 1 and 4 are the only ones that change existing page behavior.
 1. **Tool granularity** (about ten fine-grained tools vs fewer broad ones): start fine-grained, measure, merge if heavy?
 2. **Distribution:** script in this repo only, or also an npm package?
 3. **Multi-project:** one server per project folder (matches stdio, simplest), or one server over several?
-4. **Position semantics (Phase 2 default, please confirm):** `move_task` follows the page: a move into another column lands after the last task of that column, which usually relocates the block (a larger diff than one line). `keepPosition: true` changes only the `**Status**` line (a one-line diff), and the card then takes the rank its position in the file implies. Which should be the default for agents?
+4. **Ordering model (decided in Phase 2):** file order is the order cards show within a column. Edits and moves change a task in place; new tasks are appended last; the only thing that reorders blocks wholesale is the explicit `sort_tasks`. Still open: should the **page's** drag and drop follow the same rule? A drop with no target card would then leave the card at its file position instead of the bottom of the column, which feels wrong for dragging. Suggested: a drop onto a specific card passes `before`, a drop at the bottom of a column passes `atEnd` (both relocate on purpose), and only agent and CLI moves default to in place.
 5. **Dependencies:** the MCP server needs `@modelcontextprotocol/sdk`; the CLI and core can stay dependency-free. OK to depend on the SDK?
 6. **Activity log location and format:** `.kanban-activity.jsonl` beside the board, or inside a `.kanban/` folder?
 

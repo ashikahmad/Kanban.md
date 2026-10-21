@@ -29,10 +29,12 @@ test('updateTask status touches exactly one line', () => {
   assert.deepEqual(out.files.map((f) => f.name), ['kanban.md']);
 });
 
-test('moveTask with keepPosition is a one-line status edit', () => {
+test('moveTask edits the status in place: one line, file order unchanged', () => {
   const ws = demo();
-  const out = apply(ws, { type: 'moveTask', id: 'TASK-004', status: 'done', keepPosition: true });
+  const out = apply(ws, { type: 'moveTask', id: 'TASK-004', status: 'done' });
   assert.deepEqual(removedAdded(ws.board, out.board), [1, 1]);
+  assert.deepEqual(parseBoard(out.board).tasks.map((t) => t.id), parseBoard(ws.board).tasks.map((t) => t.id));
+  assert.equal(parseBoard(out.board).tasks.find((t) => t.id === 'TASK-004').status, 'done');
 });
 
 test('moveTask into the same column with no anchor is a no-op', () => {
@@ -43,15 +45,19 @@ test('moveTask into the same column with no anchor is a no-op', () => {
   assert.deepEqual(out.files, []);
 });
 
-test('moveTask follows the page rule: after the last task of the target column', () => {
+test('moveTask atEnd relocates the block after the last task of the target column', () => {
   const ws = demo();
-  const out = apply(ws, { type: 'moveTask', id: 'TASK-001', status: 'review' });
+  const out = apply(ws, { type: 'moveTask', id: 'TASK-001', status: 'review', atEnd: true });
   const tasks = parseBoard(out.board).tasks;
   const col = tasks.filter((t) => t.status === 'review').map((t) => t.id);
   assert.equal(col[col.length - 1], 'TASK-001');
   // only the moved block changes: every other block is byte-identical
   const before = blockMap(ws.board), after = blockMap(out.board);
   for (const [id, text] of before) if (id !== 'TASK-001') assert.equal(after.get(id).trimEnd(), text.trimEnd(), id);
+});
+
+test('moveTask rejects before and atEnd together', () => {
+  assert.equal(code(() => apply(demo(), { type: 'moveTask', id: 'TASK-001', status: 'review', before: 'TASK-010', atEnd: true })), 'invalid_field');
 });
 
 test('moveTask with before places the task right before the anchor', () => {
@@ -301,10 +307,11 @@ function randomOp(R, ws) {
     if (chance(0.3)) f.notes = chance(0.25) ? '' : text();
     return f;
   };
+  if (chance(0.03)) return { type: 'sortTasks', scope: pick(['board', 'archive', 'both']), order: pick(['asc', 'desc']) };
   const r = R();
   if (r < 0.14) return { type: 'createTask', task: { title: text(1), ...fields() } };
   if (r < 0.38) return { type: 'updateTask', id, set: fields() };
-  if (r < 0.52) return { type: 'moveTask', id, status: pick(cols), ...(chance(0.4) ? { before: pick(ids) } : {}), ...(chance(0.15) ? { keepPosition: true } : {}), ...(chance(0.1) ? { atEnd: true } : {}) };
+  if (r < 0.52) return { type: 'moveTask', id, status: pick(cols), ...(chance(0.3) ? { before: pick(ids) } : chance(0.15) ? { atEnd: true } : {}) };
   if (r < 0.60) return { type: 'toggleSubtask', id, index: Math.floor(R() * 4) };
   if (r < 0.66) return { type: 'addSubtask', id, text: text(1) };
   if (r < 0.74) return { type: 'appendNote', id, text: text() };
@@ -457,4 +464,43 @@ test('layouts the line patcher cannot express fall back to regenerating that one
 test('a layout the patcher handles in place stays surgical', () => {
   const out = apply({ board: WEIRD, archive: null }, { type: 'updateTask', id: 'TASK-001', set: { due: '2026-02-02' } });
   assert.deepEqual(removedAdded(WEIRD, out.board), [1, 1]); // the date is replaced where it sits
+});
+
+// ---- explicit sort -----------------------------------------------------------------------------
+
+test('sortTasks orders blocks by numeric id and moves them verbatim', () => {
+  let ws = demo();
+  // shuffle first: move the highest id to the front, and one in the middle to the end
+  ws = { ...ws, board: apply(ws, { type: 'moveTask', id: 'TASK-015', status: 'backlog', before: 'TASK-001' }).board };
+  ws = { ...ws, board: apply(ws, { type: 'moveTask', id: 'TASK-007', status: 'in-progress', atEnd: true }).board };
+  assert.notDeepEqual(parseBoard(ws.board).tasks.map((t) => t.id), parseBoard(ws.board).tasks.map((t) => t.id).sort());
+  const out = apply(ws, { type: 'sortTasks' });
+  const ids = parseBoard(out.board).tasks.map((t) => t.id);
+  assert.deepEqual(ids, [...ids].sort());
+  const before = blockMap(ws.board), after = blockMap(out.board);
+  for (const [id, text] of before) assert.equal(after.get(id).trimEnd(), text.trimEnd(), id);
+  assert.equal(headerOf(out.board), headerOf(ws.board));
+  assert.equal(out.archive, ws.archive);
+});
+
+test('sortTasks compares ids numerically, supports desc, and is a no-op when already sorted', () => {
+  const board = fx('edge-extras.kanban').replace('### TASK-004 | Bare task', '### TASK-1000 | Big\n\n### TASK-004 | Bare task');
+  const asc = apply({ board, archive: null }, { type: 'sortTasks' });
+  const ids = parseBoard(asc.board).tasks.map((t) => t.id);
+  assert.equal(ids[ids.length - 1], 'TASK-1000', 'TASK-1000 sorts after TASK-004 numerically (alphabetically it would come first)');
+  assert.deepEqual(apply({ board: asc.board, archive: null }, { type: 'sortTasks' }).files, []);
+  const desc = apply({ board: asc.board, archive: null }, { type: 'sortTasks', order: 'desc' });
+  assert.deepEqual(parseBoard(desc.board).tasks.map((t) => t.id), [...ids].reverse());
+  assert.equal(parseBoard(desc.board).tasks[0].id, 'TASK-1000');
+});
+
+test('sortTasks can sort the archive, and both files', () => {
+  const ws = { board: fx('demo.kanban'), archive: fx('demo.archive') };
+  const rev = apply(ws, { type: 'sortTasks', scope: 'archive', order: 'desc' });
+  assert.equal(rev.board, ws.board);
+  assert.deepEqual(rev.files.map((f) => f.name), ['archive.md']);
+  const both = apply({ board: ws.board, archive: rev.archive }, { type: 'sortTasks', scope: 'both' });
+  const ids = parseArchive(both.archive, []).tasks.map((t) => t.id);
+  assert.deepEqual(ids, [...ids].sort());
+  assert.equal(code(() => apply(ws, { type: 'sortTasks', by: 'title' })), 'invalid_field');
 });

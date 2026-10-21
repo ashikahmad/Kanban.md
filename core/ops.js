@@ -13,7 +13,7 @@ import * as P from './patch.js';
 
 export const DEFAULT_ARCHIVE_STRINGS = { title: '# Task Archive', desc: '> Archived tasks', section: '## ✅ Archives' };
 export const TASK_FIELDS = ['title', 'status', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
-export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
+export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'sortTasks', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
 const CONFIG_LISTS = ['categories', 'users', 'priorities', 'tags'];
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -245,18 +245,20 @@ const OPS = {
             if (!b || b.id === t.id) fail('unknown_task', `No task ${op.before} to place it before`);
             if (b.status !== status) fail('before_not_in_column', `${b.id} is not in column "${status}"`);
         }
+        if (op.before && op.atEnd) fail('invalid_field', 'give either before or atEnd, not both');
         const statusChanged = t.status !== status;
-        // Moving a task into the column it is already in, with no anchor, changes nothing.
-        if (!statusChanged && !op.before && !op.atEnd) return { id: t.id, kind: 'board' };
-        // Same rule as the page: before the anchor, else right after the last task of the column, else last.
+        // By default a move edits the **Status** line in place and the block stays where it is in the
+        // file (so the diff is one line). The block is relocated only when a position is asked for:
+        // `before` (ahead of that task) or `atEnd` (after the last task of the column, as a drag to
+        // the bottom of a column does in the page).
         const rest = tasks.filter((x) => x !== t);
-        let idx;
+        let idx = -1;
         if (op.before) idx = rest.findIndex((x) => x.id === op.before);
-        else {
+        else if (op.atEnd) {
             idx = rest.length;
             for (let i = rest.length - 1; i >= 0; i--) if (rest[i].status === status) { idx = i + 1; break; }
         }
-        const reordered = op.keepPosition && !op.before ? tasks : [...rest.slice(0, idx), t, ...rest.slice(idx)];
+        const reordered = idx < 0 ? tasks : [...rest.slice(0, idx), t, ...rest.slice(idx)];
         const orderChanged = reordered.some((x, i) => x !== tasks[i]);
 
         if (statusChanged) P.setStatus(ctx.board, locate(ctx, found), status);
@@ -268,6 +270,30 @@ const OPS = {
         t.status = status;
         ctx.state.tasks = reordered;
         return { id: t.id, kind: 'board' };
+    },
+
+    // Explicit sort: the only op that reorders blocks wholesale. Blocks move verbatim; by default by
+    // numeric task id, ascending, ties keep their file order.
+    sortTasks(ctx, op) {
+        const by = op.by || 'id';
+        if (by !== 'id') fail('invalid_field', `Cannot sort by "${by}"`, { valid: ['id'] });
+        const dir = op.order === 'desc' ? -1 : 1;
+        const scope = op.scope || 'board';
+        if (!['board', 'archive', 'both'].includes(scope)) fail('invalid_field', `Unknown scope "${scope}"`, { valid: ['board', 'archive', 'both'] });
+        const num = (t) => parseInt((t.id.match(/(\d+)$/) || [])[1], 10) || 0;
+        for (const kind of ['board', 'archive']) {
+            if (scope !== 'both' && scope !== kind) continue;
+            const doc = kind === 'board' ? ctx.board : ctx.archive;
+            const list = kind === 'board' ? ctx.state.tasks : ctx.state.archive;
+            if (!doc || list.length < 2) continue;
+            const order = list.map((_, i) => i).sort((a, b) => dir * (num(list[a]) - num(list[b])) || a - b);
+            if (order.every((v, i) => v === i)) continue;
+            if (P.blocksOf(doc, kind).length !== list.length) fail('ambiguous_id', 'Could not match every task block in the file', { hint: 'Fix duplicate or malformed task headers first.' });
+            P.reorderBlocks(doc, kind, order);
+            const sorted = order.map((i) => list[i]);
+            if (kind === 'board') ctx.state.tasks = sorted; else ctx.state.archive = sorted;
+        }
+        return { scope };
     },
 
     toggleSubtask(ctx, op) {

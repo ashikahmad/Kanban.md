@@ -8,7 +8,7 @@ import { BoardError } from '../core/text.js';
 import { TASK_FIELDS } from '../core/ops.js';
 import { readWorkspace, mutate } from '../io/node-fs.js';
 
-const BOOL = new Set(['dry-run', 'before-null']);
+const BOOL = new Set(['dry-run', 'at-end']);
 function parseArgs(argv) {
     const flags = {}, pos = [];
     for (let i = 0; i < argv.length; i++) {
@@ -30,7 +30,8 @@ const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
   create --title T [--status ID] [--priority P] [--category C] [--assignees a,b] [--tags x,y]
          [--due YYYY-MM-DD] [--description D]
   update <id> --<field> <value> ...                fields: ${TASK_FIELDS.join(', ')}
-  move <id> <status> [--before ID]
+  move <id> <status> [--before ID | --at-end]       in place by default; a position relocates the block
+  sort [--scope board|archive|both] [--order asc|desc]   reorder blocks by task id (explicit only)
   toggle <id> <index|text>        subtask <id> <text>        note <id> <text>
   archive <id>   restore <id>   delete <id>
   config <categories|users|priorities|tags> a,b,c
@@ -81,7 +82,9 @@ async function main() {
         op = { type: 'updateTask', id: a[0], set, ifMatch: flags['if-match'] };
     } else if (cmd === 'move') {
         need(2, 'task id and status');
-        op = { type: 'moveTask', id: a[0], status: a[1], before: flags.before, ifMatch: flags['if-match'] };
+        op = { type: 'moveTask', id: a[0], status: a[1], before: flags.before, atEnd: flags['at-end'], ifMatch: flags['if-match'] };
+    } else if (cmd === 'sort') {
+        op = { type: 'sortTasks', scope: flags.scope, order: flags.order };
     } else if (cmd === 'toggle') {
         need(2, 'task id and subtask index or text');
         op = /^\d+$/.test(a[1]) ? { type: 'toggleSubtask', id: a[0], index: +a[1] } : { type: 'toggleSubtask', id: a[0], text: a[1] };
