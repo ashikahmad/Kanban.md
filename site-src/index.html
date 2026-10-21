@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kanban.md: a Kanban board that lives in Markdown files</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%231B1F26'/%3E%3Crect x='.75' y='.75' width='62.5' height='62.5' rx='14.25' fill='none' stroke='%23343B47' stroke-width='1.5'/%3E%3Cg stroke='%237B9BFF' stroke-width='2.6' stroke-linecap='round' fill='none'%3E%3Cpath d='M15.6 12.5 14 39.5M20.2 12.5 18.6 39.5M11.3 21h11M10.8 31h11'/%3E%3C/g%3E%3Crect x='26.5' y='12' width='11' height='40' rx='3' fill='%23E8EAEE'/%3E%3Crect x='42' y='12' width='11' height='28' rx='3' fill='%23A0A8B5'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%232B1F5C'/%3E%3Cg stroke='%23D0A8FF' stroke-width='2.2' stroke-linecap='round' fill='none'%3E%3Cpath d='M15.4 12.8 14.4 26.4M20 12.8 19 26.4M12 17.2h9.4M11.6 22.4h9.4'/%3E%3C/g%3E%3Crect x='26.5' y='12' width='11' height='40' rx='3' fill='%23F1E8FF'/%3E%3Crect x='42' y='12' width='11' height='28' rx='3' fill='%23A98BE0'/%3E%3C/svg%3E">
 <meta name="description" content="Kanban.md turns two Markdown files into an interactive board. One HTML file, no server, no account. Shared by you in the browser and by AI agents on the command line.">
 <style>
 :root {
@@ -45,7 +45,7 @@ nav.top a { margin-left: 20px; font-size: 14px; color: var(--c-muted); }
 nav.top a:hover { color: var(--c-text); text-decoration: none; }
 
 .hero { text-align: center; padding: 56px 0 40px; }
-.logo { display: block; width: 84px; height: 84px; margin: 0 auto 20px; border-radius: 20px; box-shadow: 0 10px 28px rgba(47, 91, 234, 0.35); }
+.logo { display: block; width: 84px; height: 84px; margin: 0 auto 20px; border-radius: 20px; box-shadow: 0 10px 28px rgba(43, 31, 92, 0.45); }
 .logo-sm { width: 26px; height: 26px; border-radius: 7px; vertical-align: -6px; margin-right: 8px; }
 .hero h1 { font-size: clamp(40px, 8vw, 68px); line-height: 1.05; letter-spacing: -0.035em; margin: 0 auto 10px; }
 .hero h1 span { color: var(--c-accent); }
@@ -101,7 +101,7 @@ footer p + p { margin-top: 8px; }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#1B1F26"/><rect x=".75" y=".75" width="62.5" height="62.5" rx="14.25" fill="none" stroke="#343B47" stroke-width="1.5"/><g stroke="#7B9BFF" stroke-width="2.6" stroke-linecap="round" fill="none"><path d="M15.6 12.5 14 39.5M20.2 12.5 18.6 39.5M11.3 21h11M10.8 31h11"/></g><rect x="26.5" y="12" width="11" height="40" rx="3" fill="#E8EAEE"/><rect x="42" y="12" width="11" height="28" rx="3" fill="#A0A8B5"/></symbol></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="logo" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#2B1F5C"/><g stroke="#D0A8FF" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M15.4 12.8 14.4 26.4M20 12.8 19 26.4M12 17.2h9.4M11.6 22.4h9.4"/></g><rect x="26.5" y="12" width="11" height="40" rx="3" fill="#F1E8FF"/><rect x="42" y="12" width="11" height="28" rx="3" fill="#A98BE0"/></symbol></svg>
 <div class="wrap">
   <header class="top">
     <a class="brand" href="./"><svg class="logo logo-sm" viewBox="0 0 64 64" aria-hidden="true" style="display:inline-block;margin:0 8px 0 0;box-shadow:none"><use href="#logo"/></svg>Kanban<span>.md</span></a>
