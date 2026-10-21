@@ -19,7 +19,10 @@ function concatDir(dir, ext) {
 }
 
 const css = concatDir('src/styles', '.css');
-const js = concatDir('src/scripts', '.js');
+// core/board.js is an ES module so Node (CLI, MCP server, tests) can import it. The page uses
+// classic scripts, so it is inlined first with the `export` keywords dropped.
+const core = `/* ===== core/board.js ===== */\n${readFileSync('core/board.js', 'utf8').replace(/^export /gm, '').trim()}`;
+const js = `${core}\n\n${concatDir('src/scripts', '.js')}`;
 
 // Function replacers so $ / ${...} inside css/js are inserted literally.
 let html = readFileSync('src/index.html', 'utf8')

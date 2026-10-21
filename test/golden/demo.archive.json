@@ -1,0 +1,90 @@
+{
+  "tasks": [
+    {
+      "id": "TASK-016",
+      "title": "Launch the public changelog",
+      "status": "done",
+      "priority": "Medium",
+      "category": "Docs",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#docs"
+      ],
+      "created": "2026-08-10",
+      "started": "",
+      "due": "",
+      "completed": "2026-08-24",
+      "description": "A public page listing every release with notes.",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-017",
+      "title": "Fix duplicate notifications",
+      "status": "done",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [
+        "@bob"
+      ],
+      "tags": [
+        "#bug"
+      ],
+      "created": "2026-08-12",
+      "started": "",
+      "due": "",
+      "completed": "2026-08-19",
+      "description": "Users received the same notification twice after a retry.",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-018",
+      "title": "Compress the marketing images",
+      "status": "done",
+      "priority": "Low",
+      "category": "Design",
+      "assignees": [
+        "@dana"
+      ],
+      "tags": [
+        "#perf"
+      ],
+      "created": "2026-08-15",
+      "started": "",
+      "due": "",
+      "completed": "2026-08-26",
+      "description": "Cut the home page weight by about 40 percent.",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-019",
+      "title": "Add CSV export",
+      "status": "done",
+      "priority": "Medium",
+      "category": "Backend",
+      "assignees": [
+        "@chen"
+      ],
+      "tags": [
+        "#feature",
+        "#api"
+      ],
+      "created": "2026-08-01",
+      "started": "",
+      "due": "",
+      "completed": "2026-08-21",
+      "description": "Export any table view as a CSV file.",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    }
+  ],
+  "formatV2": true
+}

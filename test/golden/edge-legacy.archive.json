@@ -1,0 +1,22 @@
+{
+  "tasks": [
+    {
+      "id": "TASK-010",
+      "title": "Old archived",
+      "status": "archived",
+      "priority": "Low",
+      "category": "Backend",
+      "assignees": [],
+      "tags": [],
+      "created": "2024-01-01",
+      "started": "",
+      "due": "",
+      "completed": "2024-02-01",
+      "description": "Archived text.",
+      "subtasks": [],
+      "notes": "note",
+      "extra": ""
+    }
+  ],
+  "formatV2": false
+}

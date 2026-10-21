@@ -1,0 +1,14 @@
+{
+  "boards": [
+    "demo", "root", "examples-v2", "examples-v1",
+    "edge-crlf", "edge-extras", "edge-legacy-nosep", "edge-minimal", "edge-empty"
+  ],
+  "archives": {
+    "demo": "demo",
+    "root": "root",
+    "examples-v2": "examples-v2",
+    "examples-v1": "examples-v1",
+    "edge-legacy": "edge-minimal",
+    "edge-v2": "edge-extras"
+  }
+}

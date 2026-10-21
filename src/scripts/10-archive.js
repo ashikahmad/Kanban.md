@@ -14,8 +14,9 @@
                 // "## ✅ Archiv" vs hardcoded "✅ Archives" mismatch). honorStatusField=true so
                 // an archived task keeps the original column it was in (stored in **Status**),
                 // making restore exact; old archives with no **Status** fall back to 'archived'.
-                loadedArchiveV2 = /<!--\s*Format:\s*v2\s*-->/i.test(content);
-                archivedTasks = parseTaskBlocks(content, 'archived', true);
+                const parsedArchive = parseArchive(content, config.columns);
+                loadedArchiveV2 = parsedArchive.formatV2;
+                archivedTasks = parsedArchive.tasks;
 
                 console.log('✓ Archive parsed. Total archived tasks:', archivedTasks.length);
 
@@ -53,37 +54,7 @@
                 archiveFileHandle = await directoryHandle.getFileHandle('archive.md', { create: true });
             }
 
-            let md = `${t('markdown.archiveTitle')}\n<!-- Format: v2 -->\n\n${t('markdown.archiveDesc')}\n\n${t('markdown.archiveSection')}\n\n`;
-            archivedTasks.forEach(task => {
-                md += `### ${task.id} | ${task.title}\n`;
-                md += `**Status**: ${task.status}\n`;
-                let meta = '';
-                if (task.priority) meta += `**Priority**: ${task.priority}`;
-                if (task.category) meta += ` | **Category**: ${task.category}`;
-                if (task.assignees.length > 0) meta += ` | **Assigned**: ${task.assignees.join(', ')}`;
-                if (meta) md += `${meta}\n`;
-
-                // Write dates line
-                let dates = '';
-                if (task.created) dates += `**Created**: ${task.created}`;
-                if (task.started) dates += (dates ? ' | ' : '') + `**Started**: ${task.started}`;
-                if (task.due) dates += (dates ? ' | ' : '') + `**Due**: ${task.due}`;
-                if (task.completed) dates += (dates ? ' | ' : '') + `**Finished**: ${task.completed}`;
-                if (dates) md += `${dates}\n`;
-                if (task.tags.length > 0) md += `**Tags**: ${task.tags.join(' ')}\n`;
-                if (task.description) md += `\n${task.description}\n`;
-                if (task.subtasks.length > 0) {
-                    md += `\n**Subtasks**:\n`;
-                    task.subtasks.forEach(st => md += `- [${st.completed ? 'x' : ' '}] ${st.text}\n`);
-                }
-                if (task.extra) {
-                    md += `\n${task.extra}\n`;
-                }
-                if (task.notes) {
-                    md += `\n**Notes**:\n${task.notes}\n`;
-                }
-                md += `\n`;
-            });
+            const md = generateArchive(archivedTasks, archiveStrings());
 
             const writable = await archiveFileHandle.createWritable();
             await writable.write(md);

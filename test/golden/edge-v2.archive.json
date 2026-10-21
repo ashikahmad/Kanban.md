@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "id": "TASK-011",
+      "title": "V2 archived",
+      "status": "done",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [],
+      "tags": [],
+      "created": "2024-03-01",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-012",
+      "title": "Archived, status not a column",
+      "status": "archived",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [],
+      "tags": [],
+      "created": "2024-03-02",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    }
+  ],
+  "formatV2": true
+}
