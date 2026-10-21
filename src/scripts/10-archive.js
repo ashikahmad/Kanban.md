@@ -1,5 +1,6 @@
         async function loadArchive() {
             console.log('🗃️ === LOADING ARCHIVE ===');
+            archiveFileHandle = null;
             try {
                 archiveFileHandle = await directoryHandle.getFileHandle('archive.md');
                 console.log('✓ Archive file handle obtained');
@@ -32,7 +33,7 @@
                     try {
                         // Same rule as kanban.md: never overwrite without a confirmed backup.
                         if (await backupOriginal('archive.md', content, loadedArchiveVersion)) {
-                            await saveArchive();
+                            await writeWholeArchive();
                             console.log('Migrated archive.md to v3 format');
                         } else {
                             console.warn('Skipped archive.md migration: backup failed. File left unchanged.');
@@ -49,16 +50,10 @@
             }
         }
 
-        async function saveArchive() {
-            if (!archiveFileHandle) {
-                archiveFileHandle = await directoryHandle.getFileHandle('archive.md', { create: true });
-            }
-
-            const md = generateArchive(archivedTasks, archiveStrings());
-
-            const writable = await archiveFileHandle.createWritable();
-            await writable.write(md);
-            await writable.close();
+        // The archive is saved together with the board: the difference between the page's state and the
+        // last saved state decides which file(s) change (see 04a-persist.js).
+        function saveArchive() {
+            return autoSave();
         }
 
         function archiveCurrentTask() {
@@ -121,7 +116,7 @@
 
         async function openArchiveModal() {
             console.log('\n📂 === OPENING ARCHIVE MODAL ===');
-            await loadArchive();
+            await reloadFromDisk({ quiet: true }); // the archive may have changed outside
             renderArchiveList();
             document.getElementById('archiveModal').classList.add('active');
             console.log('✓ Archive modal opened');

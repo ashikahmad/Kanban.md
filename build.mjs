@@ -27,6 +27,7 @@ const css = concatDir('src/styles', '.css');
 const PAGE_CORE_EXPORTS = [
   'parseBoard', 'parseArchive', 'generateBoard', 'generateArchive', 'generateTaskBlock', 'normalizeConfig',
   'createDefaultBoardContent', 'createDefaultArchiveContent', 'orderedTasks',
+  'diffToOps', 'applyOps', 'deepEqual',
 ];
 const coreModule = await import('./core/index.js');
 for (const name of PAGE_CORE_EXPORTS) {

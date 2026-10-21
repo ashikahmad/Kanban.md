@@ -15,7 +15,7 @@
             // debugInfo.style.display = 'block'; // Uncomment to show debug info
 
             config.columns.forEach(column => {
-                const columnTasks = tasks.filter(t => t.status === column.id && matchesFilters(t));
+                const columnTasks = orderedTasks(tasks).filter(t => t.status === column.id && matchesFilters(t));
                 console.log(`Column ${column.id}: ${columnTasks.length} tasks`);
 
                 const columnEl = document.createElement('div');
@@ -158,32 +158,20 @@
             return null;
         }
 
-        // Move a task within tasks[] (the canonical display/file order): set its status
-        // and reposition it before beforeTaskId (or at the end). The block's position in
-        // tasks[] = its rank within its column. Returns true if status or order changed.
-        function moveTask(taskId, newStatus, beforeTaskId = null) {
-            const oldIdx = tasks.findIndex(t => t.id === taskId);
-            if (oldIdx < 0) return false;
-            const task = tasks[oldIdx];
-            const statusChanged = newStatus && task.status !== newStatus;
-            const targetStatus = newStatus || task.status;
-            tasks.splice(oldIdx, 1);
-            let insertIdx;
-            if (beforeTaskId) {
-                insertIdx = tasks.findIndex(t => t.id === beforeTaskId);
-                if (insertIdx < 0) insertIdx = tasks.length;
-            } else {
-                // No explicit anchor (dropped at the bottom of a column): append right after
-                // the last task already in that column, so the .md stays grouped by column.
-                insertIdx = tasks.length;
-                for (let i = tasks.length - 1; i >= 0; i--) {
-                    if (tasks[i].status === targetStatus) { insertIdx = i + 1; break; }
-                }
-            }
-            tasks.splice(insertIdx, 0, task);
-            const posChanged = tasks.indexOf(task) !== oldIdx;
-            if (newStatus) task.status = newStatus;
-            return statusChanged || posChanged;
+        // Move a task: set its status and, when a position is given, place it before `beforeTaskId` (or
+        // at the end of the column). This is an explicit op applied to the file as it is now (see
+        // 04a-persist.js); with manual ordering on it writes an Order key instead of relocating a block.
+        // Resolves true if the files changed.
+        async function moveTask(taskId, newStatus, beforeTaskId = null) {
+            await autoSave(); // flush pending edits first
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return false;
+            const status = newStatus || task.status;
+            const op = beforeTaskId
+                ? { type: 'moveTask', id: taskId, status, before: beforeTaskId }
+                : { type: 'moveTask', id: taskId, status, atEnd: true };
+            const result = await commit([op], { explicit: true });
+            return result.ok && result.changed;
         }
 
         function drop(event) {
@@ -204,11 +192,9 @@
             if (draggedEl) draggedEl.classList.remove('dragging');
 
             // moveTask handles both cross-column moves and within-column reordering
-            if (moveTask(taskId, newStatus, beforeId)) {
-                renderKanban();
-                autoSave();
-                showNotification(t('notif.taskMoved'), 'success');
-            }
+            moveTask(taskId, newStatus, beforeId).then((moved) => {
+                if (moved) showNotification(t('notif.taskMoved'), 'success');
+            });
         }
 
         // ===== Touch drag & drop (mobile) — HTML5 DnD does not fire on touch devices (issue #12) =====
@@ -266,11 +252,9 @@
                         const newStatus = col.dataset.columnId;
                         const taskList = col.querySelector('.task-list');
                         const beforeId = getDropBeforeId(taskList, tch.clientY, touchDrag.taskId);
-                        if (moveTask(touchDrag.taskId, newStatus, beforeId)) {
-                            renderKanban();
-                            autoSave();
-                            showNotification(t('notif.taskMoved'), 'success');
-                        }
+                        moveTask(touchDrag.taskId, newStatus, beforeId).then((moved) => {
+                            if (moved) showNotification(t('notif.taskMoved'), 'success');
+                        });
                     }
                 }
                 touchDrag = null;

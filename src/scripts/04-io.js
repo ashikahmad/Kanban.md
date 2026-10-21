@@ -1,4 +1,6 @@
         async function loadKanbanFile() {
+            archiveFileHandle = null; // never keep another project's handle
+            persistBase = null;
             try {
                 kanbanFileHandle = await directoryHandle.getFileHandle('kanban.md');
                 const file = await kanbanFileHandle.getFile();
@@ -25,7 +27,7 @@
                     // Only overwrite once the original is safely backed up — a failed backup must
                     // abort the migration, never leave the file rewritten without a recovery copy.
                     const fromVersion = loadedFormatVersion;
-                    if (await backupOriginal('kanban.md', currentKanbanContent, fromVersion) && await autoSave()) {
+                    if (await backupOriginal('kanban.md', currentKanbanContent, fromVersion) && await writeWholeBoard()) {
                         console.log(`Migrated kanban.md from v${fromVersion} to v3 (one metadata field per line)`);
                     } else {
                         console.warn('Skipped migration: backup or save failed. File left unchanged.');
@@ -33,6 +35,7 @@
                 } else if (loadedFormatVersion < 3) {
                     console.warn(`Skipped migration: incomplete parse (${tasks.length}/${blockCount} task blocks). File left unchanged.`);
                 }
+                await snapshotFromDisk(); // the base every later save is a difference against
             } catch (error) {
                 // Only create default files if the file truly doesn't exist
                 if (error.name === 'NotFoundError') {
@@ -59,6 +62,8 @@
                         parseMarkdown(currentKanbanContent);
                         updateAutocomplete();
                         renderKanban();
+                        archiveFileHandle = null;
+                        await snapshotFromDisk();
                     } catch (createError) {
                         showNotification(t('notif.filesError'), 'error');
                         console.error(createError);
