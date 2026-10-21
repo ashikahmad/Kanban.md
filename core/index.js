@@ -5,3 +5,4 @@ export * from './board.js';
 export * from './migrate.js';
 export * from './ops.js';
 export * from './read.js';
+export * from './changes.js';

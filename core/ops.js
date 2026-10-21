@@ -481,14 +481,10 @@ const OPS = {
             ids.add(c.id);
         }
         const reassign = op.reassign || {};
-        const orphans = [];
-        for (const t of [...ctx.state.tasks, ...ctx.state.archive]) {
-            if (current.has(t.status) && !ids.has(t.status)) {
-                const to = reassign[t.status];
-                if (!to) orphans.push({ id: t.id, status: t.status });
-                else if (!ids.has(to)) fail('invalid_column', `reassign target "${to}" is not a column`);
-            }
-        }
+        for (const to of Object.values(reassign)) if (!ids.has(to)) fail('invalid_column', `reassign target "${to}" is not a column`);
+        // A board task must have a column to live in. An archived task in a removed column may keep its
+        // old id (it reads back as "archived" and restores into the first column), unless a reassign says otherwise.
+        const orphans = ctx.state.tasks.filter((t) => current.has(t.status) && !ids.has(t.status) && !reassign[t.status]).map((t) => ({ id: t.id, status: t.status }));
         if (orphans.length) fail('orphaned_tasks', `${orphans.length} task(s) are in columns being removed`, { details: { orphans }, hint: 'Pass reassign: { oldColumnId: newColumnId }.' });
         for (const t of ctx.state.tasks) if (reassign[t.status] && !ids.has(t.status)) { statusEdit(ctx, 'board', t, reassign[t.status]); }
         for (const t of ctx.state.archive) if (reassign[t.status] && !ids.has(t.status)) { statusEdit(ctx, 'archive', t, reassign[t.status]); }
