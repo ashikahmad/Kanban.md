@@ -1,6 +1,6 @@
 # 📚 Format Markdown et Exemples
 
-Ce dossier contient des fichiers exemples complets pour le Markdown Task Manager, ainsi que la documentation détaillée du format Markdown utilisé.
+Ce dossier contient des fichiers exemples complets pour Kanban.md, ainsi que la documentation détaillée du format Markdown utilisé.
 
 ## 📁 Fichiers d'exemple
 
@@ -13,7 +13,7 @@ examples/
 
 ## 🎯 Vue d'ensemble
 
-Le Markdown Task Manager utilise **deux fichiers Markdown** pour organiser vos tâches :
+Kanban.md utilise **deux fichiers Markdown** pour organiser vos tâches :
 
 | Fichier | Rôle | Chargement |
 |---------|------|------------|

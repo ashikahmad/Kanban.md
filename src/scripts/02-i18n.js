@@ -4,16 +4,22 @@
         const translations = {
             en: {
                 // Page title
-                'page.title': 'Markdown Task Manager',
+                'page.title': 'Kanban.md',
 
                 // Header
-                'header.title': '📋 Task Manager',
+                'header.title': 'Kanban.md',
                 'header.renameProject': 'Rename project',
                 'header.deleteProject': 'Remove project from list',
-                'header.folder': '📁 Folder',
-                'header.newTask': '➕ Task',
-                'header.archives': '📦 Archives',
-                'header.columns': '⚙️ Columns',
+                'header.folder': 'Folder',
+                'header.newTask': 'Task',
+                'header.archives': 'Archives',
+                'header.columns': 'Columns',
+                'menu.language': 'Language',
+                'menu.theme': 'Theme',
+                'menu.themeAuto': 'Auto',
+                'menu.themeLight': 'Light',
+                'menu.themeDark': 'Dark',
+                'filters.title': 'Filters',
 
                 // Filters
                 'filters.tags': 'Tags:',
@@ -22,28 +28,28 @@
                 'filters.priority': 'Priority:',
                 'filters.select': 'Select...',
                 'filters.add': '+',
-                'filters.clearAll': '✕ Clear all',
+                'filters.clearAll': 'Clear all',
                 'filters.search': 'Search in tasks...',
-                'filters.searchClear': '✕',
+                'filters.searchClear': '',
 
                 // Welcome screen
-                'welcome.title': 'Welcome! 👋',
+                'welcome.title': 'Welcome!',
                 'welcome.description': 'Select the folder containing your Markdown files (kanban.md and archive.md)',
-                'welcome.start': '📁 Get Started',
-                'welcome.howItWorks': '💡 How does it work?',
+                'welcome.start': 'Get Started',
+                'welcome.howItWorks': 'How does it work?',
                 'welcome.step1': 'Click "Get Started" above',
                 'welcome.step2': 'Select the folder containing your Markdown files',
                 'welcome.step3': 'The app automatically loads kanban.md',
                 'welcome.step4': 'Manage your tasks visually with Kanban',
                 'welcome.step5': 'Changes are saved to Markdown files',
-                'welcome.browserWarning': '⚠️ Supported browsers: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Supported browsers: Chrome 86+, Edge 86+, Opera 72+',
 
                 // Task detail modal
                 'taskDetail.title': 'Task Details',
                 'taskDetail.close': 'Close',
-                'taskDetail.delete': '🗑️ Delete',
-                'taskDetail.archive': '📦 Archive',
-                'taskDetail.edit': '✏️ Edit',
+                'taskDetail.delete': 'Delete',
+                'taskDetail.archive': 'Archive',
+                'taskDetail.edit': 'Edit',
 
                 // Task form modal
                 'taskForm.newTask': 'New Task',
@@ -83,7 +89,7 @@
                 'columns.add': '+ Add Column',
 
                 // Archives modal
-                'archives.title': '📦 Archives',
+                'archives.title': 'Archives',
                 'archives.search': 'Search in archives...',
                 'archives.empty': 'No archived tasks',
 
@@ -108,9 +114,9 @@
                 'empty.noTasks': 'No tasks',
 
                 // Buttons and actions
-                'action.restore': '↩️ Restore',
-                'action.delete': '🗑️',
-                'action.edit': '✏️',
+                'action.restore': 'Restore',
+                'action.delete': '',
+                'action.edit': '',
                 'action.moveUp': 'Move up',
                 'action.moveDown': 'Move down',
 
@@ -138,6 +144,61 @@
                 'notif.renameError': 'Error renaming',
                 'notif.projectRestored': 'Project restored automatically',
                 'notif.taskMoved': 'Task moved!',
+                'notif.reloaded': 'Board updated from disk',
+                'share.button': 'Share',
+                'share.title': 'Share task',
+                'share.text': 'Plain text',
+                'share.markdown': 'Markdown',
+                'share.includeNotes': 'Include notes',
+                'share.includeAssignees': 'Include assignees',
+                'share.copy': 'Copy',
+                'share.share': 'Share…',
+                'share.copied': 'Copied to the clipboard',
+                'share.copyFailed': 'Could not copy: select the text and copy it yourself',
+                'share.hint': 'Only what you see above is shared, and nothing leaves your browser until you send it. Markdown is the board file format, so another board can import it.',
+                'hk.menu': 'Housekeeping',
+                'hk.backlog_large': '{count} tasks in the backlog (limit {max})',
+                'hk.splitBtn': 'Move backlog to its own file',
+                'backlog.title': 'Backlog',
+                'backlog.search': 'Search backlog...',
+                'backlog.empty': 'Nothing in the backlog',
+                'backlog.open': 'Open backlog',
+                'backlog.stub': 'Kept in {file}',
+                'backlog.moveTo': 'Move to {name}',
+                'backlog.archive': 'Archive',
+                'backlog.old': 'old',
+                'backlog.menuOn': 'Backlog file: on',
+                'backlog.menuOff': 'Backlog file: off',
+                'backlog.openMenu': 'Open backlog',
+                'backlog.confirmOn': 'Move the {count} task(s) in "{column}" into backlog.md?\n\nThey stay one click away in the Backlog panel, and kanban.md gets smaller.',
+                'backlog.confirmOff': 'Bring the {count} backlog task(s) back into kanban.md?',
+                'backlog.askColumn': 'Which column is the backlog? ({ids})',
+                'backlog.onDone': 'The backlog is now in its own file',
+                'backlog.offDone': 'The backlog is back in kanban.md',
+                'hk.archive_done': '{count} done task(s) finished {days}+ days ago',
+                'hk.stale_backlog': '{count} backlog task(s) older than {days} days (outlined)',
+                'hk.board_large': '{count} tasks on the board (limit {max})',
+                'hk.archiveBtn': 'Archive done ({count})',
+                'hk.snooze': 'Snooze 7 days',
+                'hk.dismiss': 'Dismiss',
+                'hk.confirmArchive': 'Archive {count} finished task(s)?\n\nThey move to archive.md in one step and can be restored from Archives.',
+                'hk.archived': '{count} task(s) archived',
+                'hk.staleCard': 'Old backlog task: review, archive or delete it',
+                'hk.settingsPrompt': 'Housekeeping policy. Example: done=done after=30d | backlog=backlog after=90d | max=200\n"off" turns the reminders off, "reset" restores the defaults.',
+                'hk.saved': 'Housekeeping settings saved',
+                'menu.manualOrderOn': 'Manual order: on',
+                'menu.manualOrderOff': 'Manual order: off',
+                'menu.resetOrderById': 'Reset order by task id',
+                'confirm.rememberOrder': 'Remember the order of your cards?\n\nOK: store a number on each task so this order is kept exactly (one-time change to every task, then each move changes two lines).\nCancel: just move the card in the file.',
+                'confirm.orderOff': 'Turn manual order off?\n\nThe Order line is removed from every task and cards follow their position in the file.',
+                'confirm.resetOrder': 'Reset the order of all cards to task id order?',
+                'notif.orderOn': 'Manual order is on',
+                'notif.orderOff': 'Manual order is off',
+                'notif.orderReset': 'Order reset to task id',
+                'notif.saveFailed': 'Could not save the change',
+                'notif.mergeFailed': 'The board changed on disk and your change could not be merged ({reason}). The latest version was loaded.',
+                'notif.taskRemovedElsewhere': 'Task {id} was removed outside this window.',
+                'confirm.taskChangedElsewhere': 'Task {id} was changed outside this window.\n\nOK: load the new values into the form.\nCancel: keep what you typed (it will replace the other change).',
                 'notif.taskEdited': 'Task {id} updated!',
                 'notif.taskCreated': 'Task {id} created!',
                 'notif.taskArchived': 'Task archived!',
@@ -183,16 +244,22 @@
             },
             fr: {
                 // Page title
-                'page.title': 'Gestionnaire de Tâches Markdown',
+                'page.title': 'Kanban.md',
 
                 // Header
-                'header.title': '📋 Task Manager',
+                'header.title': 'Kanban.md',
                 'header.renameProject': 'Renommer le projet',
                 'header.deleteProject': 'Retirer le projet de la liste',
-                'header.folder': '📁 Dossier',
-                'header.newTask': '➕ Tâche',
-                'header.archives': '📦 Archives',
-                'header.columns': '⚙️ Colonnes',
+                'header.folder': 'Dossier',
+                'header.newTask': 'Tâche',
+                'header.archives': 'Archives',
+                'header.columns': 'Colonnes',
+                'menu.language': 'Langue',
+                'menu.theme': 'Thème',
+                'menu.themeAuto': 'Auto',
+                'menu.themeLight': 'Clair',
+                'menu.themeDark': 'Sombre',
+                'filters.title': 'Filtres',
 
                 // Filters
                 'filters.tags': 'Tags:',
@@ -201,28 +268,28 @@
                 'filters.priority': 'Priorité:',
                 'filters.select': 'Sélectionner...',
                 'filters.add': '+',
-                'filters.clearAll': '✕ Tout effacer',
+                'filters.clearAll': 'Tout effacer',
                 'filters.search': 'Rechercher dans les tâches...',
-                'filters.searchClear': '✕',
+                'filters.searchClear': '',
 
                 // Welcome screen
-                'welcome.title': 'Bienvenue ! 👋',
+                'welcome.title': 'Bienvenue !',
                 'welcome.description': 'Sélectionnez le dossier contenant vos fichiers Markdown (kanban.md et archive.md)',
-                'welcome.start': '📁 Commencer',
-                'welcome.howItWorks': '💡 Comment ça marche ?',
+                'welcome.start': 'Commencer',
+                'welcome.howItWorks': 'Comment ça marche ?',
                 'welcome.step1': 'Cliquez sur "Commencer" ci-dessus',
                 'welcome.step2': 'Sélectionnez le dossier contenant vos fichiers Markdown',
                 'welcome.step3': 'L\'application charge automatiquement kanban.md',
                 'welcome.step4': 'Gérez vos tâches visuellement avec le Kanban',
                 'welcome.step5': 'Les modifications sont sauvegardées dans les fichiers Markdown',
-                'welcome.browserWarning': '⚠️ Navigateurs supportés : Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Navigateurs supportés : Chrome 86+, Edge 86+, Opera 72+',
 
                 // Task detail modal
                 'taskDetail.title': 'Détails de la tâche',
                 'taskDetail.close': 'Fermer',
-                'taskDetail.delete': '🗑️ Supprimer',
-                'taskDetail.archive': '📦 Archiver',
-                'taskDetail.edit': '✏️ Modifier',
+                'taskDetail.delete': 'Supprimer',
+                'taskDetail.archive': 'Archiver',
+                'taskDetail.edit': 'Modifier',
 
                 // Task form modal
                 'taskForm.newTask': 'Nouvelle tâche',
@@ -262,7 +329,7 @@
                 'columns.add': '+ Ajouter une colonne',
 
                 // Archives modal
-                'archives.title': '📦 Archives',
+                'archives.title': 'Archives',
                 'archives.search': 'Rechercher dans les archives...',
                 'archives.empty': 'Aucune tâche archivée',
 
@@ -287,9 +354,9 @@
                 'empty.noTasks': 'Aucune tâche',
 
                 // Buttons and actions
-                'action.restore': '↩️ Restaurer',
-                'action.delete': '🗑️',
-                'action.edit': '✏️',
+                'action.restore': 'Restaurer',
+                'action.delete': '',
+                'action.edit': '',
                 'action.moveUp': 'Déplacer vers le haut',
                 'action.moveDown': 'Déplacer vers le bas',
 
@@ -317,6 +384,61 @@
                 'notif.renameError': 'Erreur lors du renommage',
                 'notif.projectRestored': 'Projet restauré automatiquement',
                 'notif.taskMoved': 'Tâche déplacée !',
+                'notif.reloaded': 'Tableau mis à jour depuis le disque',
+                'share.button': 'Partager',
+                'share.title': 'Partager la tâche',
+                'share.text': 'Texte brut',
+                'share.markdown': 'Markdown',
+                'share.includeNotes': 'Inclure les notes',
+                'share.includeAssignees': 'Inclure les assignés',
+                'share.copy': 'Copier',
+                'share.share': 'Partager…',
+                'share.copied': 'Copié dans le presse-papiers',
+                'share.copyFailed': 'Copie impossible : sélectionnez le texte et copiez-le vous-même',
+                'share.hint': 'Seul ce que vous voyez ci-dessus est partagé, et rien ne quitte votre navigateur avant que vous l\'envoyiez. Le Markdown est le format de fichier du tableau : un autre tableau peut l\'importer.',
+                'hk.menu': 'Ménage',
+                'hk.backlog_large': '{count} tâches dans le backlog (limite {max})',
+                'hk.splitBtn': 'Déplacer le backlog dans son propre fichier',
+                'backlog.title': 'Backlog',
+                'backlog.search': 'Rechercher dans le backlog...',
+                'backlog.empty': 'Le backlog est vide',
+                'backlog.open': 'Ouvrir le backlog',
+                'backlog.stub': 'Stocké dans {file}',
+                'backlog.moveTo': 'Déplacer vers {name}',
+                'backlog.archive': 'Archiver',
+                'backlog.old': 'ancienne',
+                'backlog.menuOn': 'Fichier backlog : activé',
+                'backlog.menuOff': 'Fichier backlog : désactivé',
+                'backlog.openMenu': 'Ouvrir le backlog',
+                'backlog.confirmOn': 'Déplacer les {count} tâche(s) de « {column} » dans backlog.md ?\n\nElles restent à un clic dans le panneau Backlog, et kanban.md devient plus léger.',
+                'backlog.confirmOff': 'Remettre les {count} tâche(s) du backlog dans kanban.md ?',
+                'backlog.askColumn': 'Quelle colonne est le backlog ? ({ids})',
+                'backlog.onDone': 'Le backlog est maintenant dans son propre fichier',
+                'backlog.offDone': 'Le backlog est de retour dans kanban.md',
+                'hk.archive_done': '{count} tâche(s) terminée(s) depuis plus de {days} jours',
+                'hk.stale_backlog': '{count} tâche(s) du backlog de plus de {days} jours (contour pointillé)',
+                'hk.board_large': '{count} tâches sur le tableau (limite {max})',
+                'hk.archiveBtn': 'Archiver les terminées ({count})',
+                'hk.snooze': 'Reporter 7 jours',
+                'hk.dismiss': 'Ignorer',
+                'hk.confirmArchive': 'Archiver {count} tâche(s) terminée(s) ?\n\nElles passent dans archive.md en une seule étape et peuvent être restaurées depuis les Archives.',
+                'hk.archived': '{count} tâche(s) archivée(s)',
+                'hk.staleCard': 'Ancienne tâche du backlog : à revoir, archiver ou supprimer',
+                'hk.settingsPrompt': 'Règles de ménage. Exemple : done=done after=30d | backlog=backlog after=90d | max=200\n« off » désactive les rappels, « reset » rétablit les valeurs par défaut.',
+                'hk.saved': 'Réglages enregistrés',
+                'menu.manualOrderOn': 'Ordre manuel : activé',
+                'menu.manualOrderOff': 'Ordre manuel : désactivé',
+                'menu.resetOrderById': 'Réinitialiser l\'ordre par identifiant',
+                'confirm.rememberOrder': 'Mémoriser l\'ordre de vos cartes ?\n\nOK : un numéro est stocké sur chaque tâche pour conserver cet ordre (changement unique, puis chaque déplacement modifie deux lignes).\nAnnuler : déplacer simplement la carte dans le fichier.',
+                'confirm.orderOff': 'Désactiver l\'ordre manuel ?\n\nLa ligne Order est retirée de chaque tâche et les cartes suivent leur position dans le fichier.',
+                'confirm.resetOrder': 'Réinitialiser l\'ordre de toutes les cartes selon l\'identifiant ?',
+                'notif.orderOn': 'Ordre manuel activé',
+                'notif.orderOff': 'Ordre manuel désactivé',
+                'notif.orderReset': 'Ordre réinitialisé par identifiant',
+                'notif.saveFailed': 'Impossible d\'enregistrer la modification',
+                'notif.mergeFailed': 'Le tableau a changé sur le disque et votre modification n\'a pas pu être fusionnée ({reason}). La dernière version a été chargée.',
+                'notif.taskRemovedElsewhere': 'La tâche {id} a été supprimée en dehors de cette fenêtre.',
+                'confirm.taskChangedElsewhere': 'La tâche {id} a été modifiée en dehors de cette fenêtre.\n\nOK : charger les nouvelles valeurs dans le formulaire.\nAnnuler : garder votre saisie (elle remplacera l\'autre modification).',
                 'notif.taskEdited': 'Tâche {id} modifiée !',
                 'notif.taskCreated': 'Tâche {id} créée !',
                 'notif.taskArchived': 'Tâche archivée !',
@@ -362,16 +484,22 @@
             },
             de: {
                 // Page title
-                'page.title': 'Markdown Task Manager',
+                'page.title': 'Kanban.md',
 
                 // Header
-                'header.title': '📋 Task Manager',
+                'header.title': 'Kanban.md',
                 'header.renameProject': 'Projekt umbenennen',
                 'header.deleteProject': 'Projekt aus Liste entfernen',
-                'header.folder': '📁 Ordner',
-                'header.newTask': '➕ Aufgabe',
-                'header.archives': '📦 Archiv',
-                'header.columns': '⚙️ Spalten',
+                'header.folder': 'Ordner',
+                'header.newTask': 'Aufgabe',
+                'header.archives': 'Archiv',
+                'header.columns': 'Spalten',
+                'menu.language': 'Sprache',
+                'menu.theme': 'Design',
+                'menu.themeAuto': 'Automatisch',
+                'menu.themeLight': 'Hell',
+                'menu.themeDark': 'Dunkel',
+                'filters.title': 'Filter',
 
                 // Filters
                 'filters.tags': 'Tags:',
@@ -380,28 +508,28 @@
                 'filters.priority': 'Priorität:',
                 'filters.select': 'Auswählen...',
                 'filters.add': '+',
-                'filters.clearAll': '✕ Alles löschen',
+                'filters.clearAll': 'Alles löschen',
                 'filters.search': 'In Aufgaben suchen...',
-                'filters.searchClear': '✕',
+                'filters.searchClear': '',
 
                 // Welcome screen
-                'welcome.title': 'Willkommen! 👋',
+                'welcome.title': 'Willkommen!',
                 'welcome.description': 'Wählen Sie den Ordner aus, der die Markdown-Dateien beinhaltet (kanban.md and archive.md)',
-                'welcome.start': '📁 Loslegen',
-                'welcome.howItWorks': '💡 Wie funktioniert es?',
+                'welcome.start': 'Loslegen',
+                'welcome.howItWorks': 'Wie funktioniert es?',
                 'welcome.step1': 'Klicken Sie oben auf "Loslegen"',
                 'welcome.step2': 'Wählen Sie den Ordner aus, der die Markdown-Dateien beinhaltet',
                 'welcome.step3': 'Die App lädt automatisch kanban.md',
                 'welcome.step4': 'Verwalten Sie Ihre Aufgaben grafisch mit Kanban',
                 'welcome.step5': 'Änderungen werden als Markdown-Datei gespeichert',
-                'welcome.browserWarning': '⚠️ Unterstützte Browser: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Unterstützte Browser: Chrome 86+, Edge 86+, Opera 72+',
 
                 // Task detail modal
                 'taskDetail.title': 'Aufgabendetails',
                 'taskDetail.close': 'Schließen',
-                'taskDetail.delete': '🗑️ Löschen',
-                'taskDetail.archive': '📦 Archivieren',
-                'taskDetail.edit': '✏️ Bearbeiten',
+                'taskDetail.delete': 'Löschen',
+                'taskDetail.archive': 'Archivieren',
+                'taskDetail.edit': 'Bearbeiten',
 
                 // Task form modal
                 'taskForm.newTask': 'Neue Aufgabe',
@@ -441,7 +569,7 @@
                 'columns.add': '+ Spalte hinzufügen',
 
                 // Archives modal
-                'archives.title': '📦 Archiv',
+                'archives.title': 'Archiv',
                 'archives.search': 'Suche im Archiv...',
                 'archives.empty': 'Keine archivierten Aufgaben',
 
@@ -466,9 +594,9 @@
                 'empty.noTasks': 'Keine Aufgaben',
 
                 // Buttons and actions
-                'action.restore': '↩️ Wiederherstellen',
-                'action.delete': '🗑️',
-                'action.edit': '✏️',
+                'action.restore': 'Wiederherstellen',
+                'action.delete': '',
+                'action.edit': '',
                 'action.moveUp': 'Nach oben',
                 'action.moveDown': 'Nach unten',
 
@@ -540,16 +668,22 @@
             },
             zh_cn: {
                 // Page title
-                'page.title': 'Markdown 任务管理器',
+                'page.title': 'Kanban.md',
 
                 // Header
-                'header.title': '📋 任务管理器',
+                'header.title': 'Kanban.md',
                 'header.renameProject': '重命名项目',
                 'header.deleteProject': '从列表中移除项目',
-                'header.folder': '📁 文件夹',
-                'header.newTask': '➕ 任务',
-                'header.archives': '📦 归档',
-                'header.columns': '⚙️ 列设置',
+                'header.folder': '文件夹',
+                'header.newTask': '任务',
+                'header.archives': '归档',
+                'header.columns': '列设置',
+                'menu.language': '语言',
+                'menu.theme': '主题',
+                'menu.themeAuto': '自动',
+                'menu.themeLight': '浅色',
+                'menu.themeDark': '深色',
+                'filters.title': '筛选',
 
                 // Filters
                 'filters.tags': '标签:',
@@ -558,28 +692,28 @@
                 'filters.priority': '优先级:',
                 'filters.select': '选择...',
                 'filters.add': '+',
-                'filters.clearAll': '✕ 清空全部',
+                'filters.clearAll': '清空全部',
                 'filters.search': '在任务中搜索...',
-                'filters.searchClear': '✕',
+                'filters.searchClear': '',
 
                 // Welcome screen
-                'welcome.title': '欢迎! 👋',
+                'welcome.title': '欢迎!',
                 'welcome.description': '选择包含您 Markdown 文件的文件夹 (kanban.md 和 archive.md)',
-                'welcome.start': '📁 开始使用',
-                'welcome.howItWorks': '💡 工作原理?',
+                'welcome.start': '开始使用',
+                'welcome.howItWorks': '工作原理?',
                 'welcome.step1': '点击上方的"开始使用"',
                 'welcome.step2': '选择包含您 Markdown 文件的文件夹',
                 'welcome.step3': '应用将自动加载 kanban.md',
                 'welcome.step4': '通过看板可视化地管理任务',
                 'welcome.step5': '更改将保存到 Markdown 文件中',
-                'welcome.browserWarning': '⚠️ 支持的浏览器: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': '支持的浏览器: Chrome 86+, Edge 86+, Opera 72+',
 
                 // Task detail modal
                 'taskDetail.title': '任务详情',
                 'taskDetail.close': '关闭',
-                'taskDetail.delete': '🗑️ 删除',
-                'taskDetail.archive': '📦 归档',
-                'taskDetail.edit': '✏️ 编辑',
+                'taskDetail.delete': '删除',
+                'taskDetail.archive': '归档',
+                'taskDetail.edit': '编辑',
 
                 // Task form modal
                 'taskForm.newTask': '新建任务',
@@ -619,7 +753,7 @@
                 'columns.add': '+ 添加列',
 
                 // Archives modal
-                'archives.title': '📦 归档',
+                'archives.title': '归档',
                 'archives.search': '在归档中搜索...',
                 'archives.empty': '无已归档任务',
 
@@ -644,9 +778,9 @@
                 'empty.noTasks': '暂无任务',
 
                 // Buttons and actions
-                'action.restore': '↩️ 恢复',
-                'action.delete': '🗑️',
-                'action.edit': '✏️',
+                'action.restore': '恢复',
+                'action.delete': '',
+                'action.edit': '',
                 'action.moveUp': '上移',
                 'action.moveDown': '下移',
 
@@ -827,6 +961,54 @@
             return priority;
         }
 
+        // Priorities are shown as a colored dot plus their name; the emoji in the board config only picks the dot's color
+        function priorityConfigEntry(priority) {
+            return (config.priorities || []).find(p => clean(p) === clean(priority || ''));
+        }
+
+        function priorityClass(priority) {
+            const emoji = getFirstEmoji(priorityConfigEntry(priority) || priority || '');
+            return priorityIconClasses[emoji] || 'Default';
+        }
+
+        function priorityLabel(priority) {
+            return displayPriority(clean(priority || ''));
+        }
+
+        // Shape per rank so priority never relies on color alone. Rank = position in the board's
+        // priority list (first = most urgent); color still comes from the config emoji.
+        const PRIO_SHAPES = {
+            'up2': '<path d="M4 7.5l4-4 4 4M4 12.5l4-4 4 4"/>',
+            'up': '<path d="M4 10l4-4 4 4"/>',
+            'eq': '<path d="M4 6.5h8M4 10.5h8"/>',
+            'down': '<path d="M4 6l4 4 4-4"/>',
+            'down2': '<path d="M4 3.5l4 4 4-4M4 8.5l4 4 4-4"/>',
+            'none': '<circle cx="8" cy="8" r="2.5"/>'
+        };
+        const PRIO_LADDERS = {
+            1: ['eq'], 2: ['up', 'down'], 3: ['up', 'eq', 'down'], 4: ['up2', 'up', 'eq', 'down'],
+            5: ['up2', 'up', 'eq', 'down', 'down2']
+        };
+
+        function prioShape(priority) {
+            const list = (config.priorities || []).map(clean);
+            const i = list.indexOf(clean(priority || ''));
+            if (i < 0) return 'none';
+            const n = list.length;
+            const ladder = PRIO_LADDERS[n] || PRIO_LADDERS[5];
+            return ladder[PRIO_LADDERS[n] ? i : Math.round(i * 4 / (n - 1))];
+        }
+
+        // Colored symbol, as HTML. Extra attributes (data-filter, title…) go on the wrapper span.
+        function priorityIcon(priority, attrs = '') {
+            return `<span class="prio ${priorityClass(priority)}" ${attrs}><svg viewBox="0 0 16 16" aria-hidden="true">${PRIO_SHAPES[prioShape(priority)]}</svg></span>`;
+        }
+
+        // Symbol + name, as HTML
+        function priorityHtml(priority) {
+            return `<span class="prio-label">${priorityIcon(priority, 'aria-hidden="true"')}${escapeHtml(priorityLabel(priority))}</span>`;
+        }
+
         // Update all static text elements in the UI
         function updateStaticTexts() {
             // Update page title
@@ -835,14 +1017,25 @@
             // Update header
             document.getElementById('headerTitle').textContent = t('header.title');
             document.getElementById('renameProjectBtn').title = t('header.renameProject');
+            document.querySelector('#renameProjectBtn .mi-label').textContent = t('header.renameProject');
             document.getElementById('deleteProjectBtn').title = t('header.deleteProject');
-            document.getElementById('selectFolderBtn').innerHTML = t('header.folder');
-            document.getElementById('newTaskBtn').innerHTML = t('header.newTask');
-            document.getElementById('archiveBtn').innerHTML = t('header.archives');
-            document.getElementById('manageColsBtn').innerHTML = t('header.columns');
+            document.querySelector('#deleteProjectBtn .mi-label').textContent = t('header.deleteProject');
+            document.querySelector('#selectFolderBtn .mi-label').textContent = t('header.folder');
+            document.getElementById('newTaskBtn').textContent = t('header.newTask');
+            document.querySelector('#archiveBtn .mi-label').textContent = t('header.archives');
+            document.querySelector('#manageColsBtn .mi-label').textContent = t('header.columns');
+            document.getElementById('languageLabel').textContent = t('menu.language');
+            document.getElementById('filterToggleLabel').textContent = t('filters.title');
+            if (typeof updateThemeUi === 'function') updateThemeUi();
 
             // Update language selector to match current language
-            document.getElementById('languageSelector').value = currentLanguage;
+            if (!ddRoot('languageSelector')._ddOptions) {
+                ddSetOptions('languageSelector', [
+                    { value: 'en', label: 'English' }, { value: 'fr', label: 'Français' },
+                    { value: 'de', label: 'Deutsch' }, { value: 'zh_cn', label: '简体中文' }
+                ]);
+            }
+            ddSetValue('languageSelector', currentLanguage, true);
 
             // Update welcome screen
             renderWelcomeScreen();
@@ -864,21 +1057,19 @@
                 welcomeScreen.innerHTML = `
             <h2>${t('welcome.title')}</h2>
             <p>${t('welcome.description')}</p>
-            <button onclick="document.getElementById('selectFolderBtn').click()" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.8rem 2rem;">
+            <button onclick="document.getElementById('selectFolderBtn').click()" class="btn btn-primary" style="height: 40px; padding: 0 var(--s-5);">
                 ${t('welcome.start')}
             </button>
-            <div style="margin-top: 2rem; padding: 1.5rem; background: white; border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto; text-align: left;">
-                <h3 style="margin-bottom: 1rem;">${t('welcome.howItWorks')}</h3>
-                <ol style="margin-left: 1.5rem; color: var(--text-secondary);">
+            <div class="welcome-card">
+                <h3>${t('welcome.howItWorks')}</h3>
+                <ol>
                     <li>${t('welcome.step1')}</li>
                     <li>${t('welcome.step2')}</li>
                     <li>${t('welcome.step3')}</li>
                     <li>${t('welcome.step4')}</li>
                     <li>${t('welcome.step5')}</li>
                 </ol>
-                <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
-                    ${t('welcome.browserWarning')}
-                </p>
+                <p class="note">${t('welcome.browserWarning')}</p>
             </div>
                 `;
             }
@@ -897,9 +1088,10 @@
                 const actions = taskModal.querySelector('.actions');
                 if (actions) {
                     actions.innerHTML = `
-                        <button class="btn btn-secondary" onclick="closeModal()">${t('taskDetail.close')}</button>
-                        <button class="btn btn-secondary" onclick="deleteCurrentTask()" style="background: #ef4444; color: white;">${t('taskDetail.delete')}</button>
-                        <button class="btn btn-secondary" onclick="archiveCurrentTask()" style="background: #f59e0b; color: white;">${t('taskDetail.archive')}</button>
+                        <div class="push">
+                            <button class="btn btn-danger" onclick="deleteCurrentTask()">${t('taskDetail.delete')}</button>
+                            <button class="btn btn-secondary" onclick="archiveCurrentTask()">${t('taskDetail.archive')}</button>
+                        </div>
                         <button class="btn btn-primary" id="editTaskBtn" onclick="editCurrentTask()">${t('taskDetail.edit')}</button>
                     `;
                 }
@@ -949,18 +1141,6 @@
                 }
             });
 
-            // Update priority options - use language-independent keys
-            const prioritySelect = document.getElementById('taskPriority');
-            if (prioritySelect) {
-                prioritySelect.innerHTML = `
-                    <option value="">${t('taskForm.priorityNone')}</option>
-                    <option value="Critical">${t('taskForm.priorityCritical')}</option>
-                    <option value="High">${t('taskForm.priorityHigh')}</option>
-                    <option value="Medium">${t('taskForm.priorityMedium')}</option>
-                    <option value="Low">${t('taskForm.priorityLow')}</option>
-                `;
-            }
-
             // Update form help texts
             const tagsHelp = document.querySelector('label[for="taskTags"] + input + small');
             if (tagsHelp) tagsHelp.textContent = t('taskForm.tagsHelp');
@@ -991,19 +1171,13 @@
             if (searchInput) searchInput.placeholder = t('filters.search');
 
             // Update filter labels
-            const labels = filterBar.querySelectorAll('label');
-            if (labels[0]) labels[0].textContent = t('filters.tags');
-            if (labels[1]) labels[1].textContent = t('filters.category');
-            if (labels[2]) labels[2].textContent = t('filters.user');
-            if (labels[3]) labels[3].textContent = t('filters.priority');
-
-            // Update select options
-            const selects = filterBar.querySelectorAll('select option[value=""]');
-            selects.forEach(opt => opt.textContent = t('filters.select'));
+            const names = { tag: t('filters.tags'), category: t('filters.category'), user: t('filters.user'), priority: t('filters.priority') };
+            filterBar.querySelectorAll('.fdrop').forEach(d => {
+                d.querySelector('.flabel').textContent = names[d.dataset.type].replace(/\s*[:\uFF1A]\s*$/, '');
+            });
 
             // Update clear button
-            const clearBtn = filterBar.querySelector('button[onclick="clearFilters()"]');
-            if (clearBtn) clearBtn.textContent = t('filters.clearAll');
+            renderFilters();  // the Clear all button lives in the chips row
         }
 
         // Render columns modal structure with translations
@@ -1022,6 +1196,8 @@
 
             const searchInput = document.getElementById('archiveSearch');
             if (searchInput) searchInput.placeholder = t('archives.search');
+            const backlogSearch = document.getElementById('backlogSearch');
+            if (backlogSearch) backlogSearch.placeholder = t('backlog.search');
         }
 
         // Set language and save to localStorage

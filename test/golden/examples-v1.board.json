@@ -1,0 +1,940 @@
+{
+  "config": {
+    "lastTaskId": 0,
+    "columns": [
+      {
+        "name": "📝 Backlog",
+        "id": "backlog"
+      },
+      {
+        "name": "📋 To Do",
+        "id": "todo"
+      },
+      {
+        "name": "🚀 In Progress",
+        "id": "in-progress"
+      },
+      {
+        "name": "👀 In Review",
+        "id": "in-review"
+      },
+      {
+        "name": "✅ Done",
+        "id": "done"
+      }
+    ],
+    "categories": [
+      "Frontend",
+      "Backend",
+      "Database",
+      "DevOps",
+      "Design",
+      "Tests",
+      "Documentation",
+      "Security"
+    ],
+    "users": [
+      "@alice",
+      "@bob",
+      "@charlie",
+      "@diana"
+    ],
+    "priorities": [
+      "🔴 Critical",
+      "🟠 High",
+      "🟡 Medium",
+      "🟢 Low"
+    ],
+    "tags": [
+      "bug",
+      "feature",
+      "urgent",
+      "refactor",
+      "performance",
+      "security",
+      "api",
+      "ui",
+      "database"
+    ],
+    "boardTitle": "Kanban - E-commerce Project"
+  },
+  "tasks": [
+    {
+      "id": "TASK-015",
+      "title": "Ajouter système de recommandations produits",
+      "status": "backlog",
+      "priority": "Low",
+      "category": "Backend",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#feature",
+        "#ai",
+        "#recommandations"
+      ],
+      "created": "2025-11-02",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Implémenter un moteur de recommandations basé sur l'historique d'achats et les produits consultés.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Analyser les algorithmes de recommandation (collaborative filtering, content-based)"
+        },
+        {
+          "completed": false,
+          "text": "Choisir la solution technique (service externe ou algo interne)"
+        },
+        {
+          "completed": false,
+          "text": "Implémenter la collecte de données utilisateur"
+        },
+        {
+          "completed": false,
+          "text": "Créer l'API de recommandations"
+        },
+        {
+          "completed": false,
+          "text": "Intégrer dans l'interface produit"
+        },
+        {
+          "completed": false,
+          "text": "Tests A/B pour mesurer l'impact"
+        }
+      ],
+      "notes": "Possibilité d'utiliser un service tiers comme AWS Personalize ou implémenter un algo simple avec des similarités cosinus.\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-016",
+      "title": "Mode sombre complet",
+      "status": "backlog",
+      "priority": "Medium",
+      "category": "Frontend",
+      "assignees": [
+        "@diana"
+      ],
+      "tags": [
+        "#feature",
+        "#ui",
+        "#design"
+      ],
+      "created": "2025-11-03",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Ajouter un thème sombre pour toute l'application avec toggle de préférence utilisateur.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Définir la palette de couleurs dark mode"
+        },
+        {
+          "completed": false,
+          "text": "Créer les variables CSS pour les deux thèmes"
+        },
+        {
+          "completed": false,
+          "text": "Implémenter le toggle switch"
+        },
+        {
+          "completed": false,
+          "text": "Sauvegarder la préférence utilisateur"
+        },
+        {
+          "completed": false,
+          "text": "Tester sur toutes les pages"
+        },
+        {
+          "completed": false,
+          "text": "Respecter la préférence système (prefers-color-scheme)"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-017",
+      "title": "Export rapports analytics PDF",
+      "status": "backlog",
+      "priority": "Low",
+      "category": "Backend",
+      "assignees": [
+        "@bob"
+      ],
+      "tags": [
+        "#feature",
+        "#reporting",
+        "#pdf"
+      ],
+      "created": "2025-11-04",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Permettre aux admins d'exporter les statistiques de vente en PDF.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Choisir librairie PDF (jsPDF, PDFKit, etc.)"
+        },
+        {
+          "completed": false,
+          "text": "Designer le template PDF"
+        },
+        {
+          "completed": false,
+          "text": "Implémenter génération côté serveur"
+        },
+        {
+          "completed": false,
+          "text": "Ajouter graphiques et tableaux"
+        },
+        {
+          "completed": false,
+          "text": "Bouton d'export dans le dashboard"
+        },
+        {
+          "completed": false,
+          "text": "Tests avec gros volumes de données"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-012",
+      "title": "Corriger bug de calcul de taxes",
+      "status": "todo",
+      "priority": "Critical",
+      "category": "Backend",
+      "assignees": [
+        "@bob"
+      ],
+      "tags": [
+        "#bug",
+        "#urgent",
+        "#taxes",
+        "#payment"
+      ],
+      "created": "2025-11-05",
+      "started": "",
+      "due": "2025-11-08",
+      "completed": "",
+      "description": "Les taxes ne sont pas calculées correctement pour les livraisons internationales. Clients canadiens facturés avec TVA française.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Reproduire le bug avec commandes test"
+        },
+        {
+          "completed": false,
+          "text": "Identifier la logique de calcul de taxes actuelle"
+        },
+        {
+          "completed": false,
+          "text": "Créer table de mapping pays → taux de taxe"
+        },
+        {
+          "completed": false,
+          "text": "Implémenter la correction"
+        },
+        {
+          "completed": false,
+          "text": "Tests unitaires pour chaque pays"
+        },
+        {
+          "completed": false,
+          "text": "Tests end-to-end sur le checkout"
+        }
+      ],
+      "notes": "Bug signalé par 12 clients. Impact financier potentiel. À corriger en priorité absolue.\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-013",
+      "title": "Optimiser temps de chargement page produit",
+      "status": "todo",
+      "priority": "High",
+      "category": "Performance",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#performance",
+        "#optimization",
+        "#frontend"
+      ],
+      "created": "2025-11-06",
+      "started": "",
+      "due": "2025-11-12",
+      "completed": "",
+      "description": "Page produit charge en 2.8s, objectif < 1s. Images trop lourdes, requêtes API multiples non optimisées.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Profiler avec Lighthouse et DevTools"
+        },
+        {
+          "completed": false,
+          "text": "Optimiser images (WebP, lazy loading, responsive)"
+        },
+        {
+          "completed": false,
+          "text": "Grouper les requêtes API (GraphQL ou batch endpoint)"
+        },
+        {
+          "completed": false,
+          "text": "Implémenter cache côté client"
+        },
+        {
+          "completed": false,
+          "text": "Code splitting pour réduire bundle JS"
+        },
+        {
+          "completed": false,
+          "text": "Tests de performance avant/après"
+        }
+      ],
+      "notes": "**Métriques actuelles** :\r\n- LCP: 2.8s (objectif: < 1s)\r\n- FID: 120ms (objectif: < 100ms)\r\n- CLS: 0.18 (objectif: < 0.1)\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-014",
+      "title": "Ajouter filtres avancés catalogue",
+      "status": "todo",
+      "priority": "High",
+      "category": "Frontend",
+      "assignees": [
+        "@diana"
+      ],
+      "tags": [
+        "#feature",
+        "#ui",
+        "#catalogue"
+      ],
+      "created": "2025-11-07",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Permettre de filtrer les produits par prix, marque, couleur, taille, note, disponibilité avec combinaisons multiples.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Designer l'interface des filtres (sidebar ou top bar)"
+        },
+        {
+          "completed": false,
+          "text": "Implémenter les composants de filtres (checkboxes, range slider, etc.)"
+        },
+        {
+          "completed": false,
+          "text": "Ajouter logique de filtrage côté client"
+        },
+        {
+          "completed": false,
+          "text": "Pagination avec filtres actifs"
+        },
+        {
+          "completed": false,
+          "text": "URL query params pour partager filtres"
+        },
+        {
+          "completed": false,
+          "text": "Tests avec différentes combinaisons"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-009",
+      "title": "Implémenter paiement Stripe",
+      "status": "in-progress",
+      "priority": "Critical",
+      "category": "Backend",
+      "assignees": [
+        "@bob",
+        "@charlie"
+      ],
+      "tags": [
+        "#feature",
+        "#payment",
+        "#stripe",
+        "#api"
+      ],
+      "created": "2025-10-28",
+      "started": "2025-11-01",
+      "due": "2025-11-10",
+      "completed": "",
+      "description": "Intégrer Stripe pour gérer les paiements CB, Apple Pay, Google Pay.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Créer compte Stripe et obtenir clés API"
+        },
+        {
+          "completed": true,
+          "text": "Setup SDK Stripe côté serveur"
+        },
+        {
+          "completed": true,
+          "text": "Créer endpoints payment intent et confirmation"
+        },
+        {
+          "completed": true,
+          "text": "Implémenter webhook pour événements Stripe"
+        },
+        {
+          "completed": false,
+          "text": "Intégrer Stripe Elements côté frontend"
+        },
+        {
+          "completed": false,
+          "text": "Gérer les erreurs de paiement (carte refusée, etc.)"
+        },
+        {
+          "completed": false,
+          "text": "Tests avec cartes de test Stripe"
+        },
+        {
+          "completed": false,
+          "text": "Passer en mode production"
+        }
+      ],
+      "notes": "**API endpoints créés** :\r\n- POST /api/payment/create-intent\r\n- POST /api/payment/confirm\r\n- POST /api/webhooks/stripe\r\n\r\n**En cours** : Intégration frontend avec Stripe Elements (sous-tâche 5/8).\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-010",
+      "title": "Migration base de données PostgreSQL",
+      "status": "in-progress",
+      "priority": "High",
+      "category": "Database",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#database",
+        "#migration",
+        "#postgresql"
+      ],
+      "created": "2025-10-30",
+      "started": "2025-11-04",
+      "due": "",
+      "completed": "",
+      "description": "Migrer de SQLite vers PostgreSQL pour supporter la montée en charge.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup PostgreSQL sur serveur staging"
+        },
+        {
+          "completed": true,
+          "text": "Créer schéma de migration"
+        },
+        {
+          "completed": true,
+          "text": "Script d'export SQLite"
+        },
+        {
+          "completed": true,
+          "text": "Script d'import PostgreSQL"
+        },
+        {
+          "completed": false,
+          "text": "Migration données de production (prévu demain)"
+        },
+        {
+          "completed": false,
+          "text": "Tests de validation des données"
+        },
+        {
+          "completed": false,
+          "text": "Basculement production"
+        },
+        {
+          "completed": false,
+          "text": "Monitoring post-migration"
+        }
+      ],
+      "notes": "**Blocage actuel** :\r\nMigration en staging OK (15,000 produits, 8,000 utilisateurs, 12,000 commandes).\r\nPrêt pour migration prod demain matin 6h (trafic faible).\r\n\r\n**Backup** : Snapshot complet avant migration.\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-011",
+      "title": "Dashboard admin analytics",
+      "status": "in-progress",
+      "priority": "Medium",
+      "category": "Frontend",
+      "assignees": [
+        "@diana",
+        "@charlie"
+      ],
+      "tags": [
+        "#feature",
+        "#dashboard",
+        "#admin",
+        "#analytics"
+      ],
+      "created": "2025-11-01",
+      "started": "2025-11-05",
+      "due": "",
+      "completed": "",
+      "description": "Créer un dashboard pour les admins avec statistiques de vente, graphiques, KPIs.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Designer la maquette du dashboard"
+        },
+        {
+          "completed": true,
+          "text": "Créer les composants de graphiques (Chart.js)"
+        },
+        {
+          "completed": true,
+          "text": "API endpoint pour statistiques"
+        },
+        {
+          "completed": false,
+          "text": "Intégrer les graphiques dans l'interface"
+        },
+        {
+          "completed": false,
+          "text": "Ajouter filtres par date"
+        },
+        {
+          "completed": false,
+          "text": "Export CSV des données"
+        },
+        {
+          "completed": false,
+          "text": "Tests avec données réelles"
+        }
+      ],
+      "notes": "**KPIs à afficher** :\r\n- CA total et évolution\r\n- Nombre de commandes\r\n- Panier moyen\r\n- Produits les plus vendus\r\n- Top clients\r\n- Taux de conversion\r\n\r\nProgression : 60% (4/7 sous-tâches).\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-007",
+      "title": "Système de wishlist",
+      "status": "in-review",
+      "priority": "Medium",
+      "category": "Frontend",
+      "assignees": [
+        "@diana"
+      ],
+      "tags": [
+        "#feature",
+        "#wishlist",
+        "#ui"
+      ],
+      "created": "2025-10-25",
+      "started": "2025-10-28",
+      "due": "",
+      "completed": "2025-11-03",
+      "description": "Permettre aux utilisateurs de sauvegarder des produits favoris dans une wishlist.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Créer modèle Wishlist en BDD"
+        },
+        {
+          "completed": true,
+          "text": "API CRUD pour wishlist"
+        },
+        {
+          "completed": true,
+          "text": "Bouton \"Ajouter aux favoris\" sur page produit"
+        },
+        {
+          "completed": true,
+          "text": "Page dédiée \"Mes favoris\""
+        },
+        {
+          "completed": true,
+          "text": "Partage de wishlist par lien"
+        },
+        {
+          "completed": true,
+          "text": "Tests unitaires et e2e"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ Fonctionnalité complète et testée. En attente de review de @bob.\r\n\r\n**Fichiers modifiés** :\r\n- src/api/wishlist.js (nouveau)\r\n- src/components/WishlistButton.jsx (nouveau)\r\n- src/pages/Wishlist.jsx (nouveau)\r\n- src/models/Wishlist.js (nouveau)\r\n\r\n**Tests effectués** :\r\n- ✅ Ajout/suppression produits\r\n- ✅ Affichage liste\r\n- ✅ Partage par lien unique\r\n- ✅ Synchronisation multi-devices\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-008",
+      "title": "Système de reviews produits",
+      "status": "in-review",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [
+        "@bob",
+        "@alice"
+      ],
+      "tags": [
+        "#feature",
+        "#reviews",
+        "#moderation"
+      ],
+      "created": "2025-10-26",
+      "started": "2025-10-30",
+      "due": "",
+      "completed": "2025-11-04",
+      "description": "Permettre aux clients de laisser des avis et notes sur les produits.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Créer modèle Review en BDD"
+        },
+        {
+          "completed": true,
+          "text": "API pour CRUD reviews"
+        },
+        {
+          "completed": true,
+          "text": "Système de modération (validation admin)"
+        },
+        {
+          "completed": true,
+          "text": "Affichage reviews sur page produit"
+        },
+        {
+          "completed": true,
+          "text": "Calcul note moyenne"
+        },
+        {
+          "completed": true,
+          "text": "Upload photos dans reviews"
+        },
+        {
+          "completed": true,
+          "text": "Tri reviews (plus utiles, récents, etc.)"
+        },
+        {
+          "completed": true,
+          "text": "Tests complets"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ Système complet avec modération, photos, et tri. En review finale.\r\n\r\n**Fichiers modifiés** :\r\n- src/api/reviews.js (nouveau)\r\n- src/models/Review.js (nouveau)\r\n- src/components/ReviewList.jsx (nouveau)\r\n- src/components/ReviewForm.jsx (nouveau)\r\n- src/admin/ModerationPanel.jsx (nouveau)\r\n\r\n**Décisions techniques** :\r\n- Modération automatique + manuelle (filtrage mots-clés puis validation admin)\r\n- Upload photos via Cloudinary\r\n- Calcul note moyenne en temps réel avec trigger BDD\r\n\r\n**Tests effectués** :\r\n- ✅ CRUD reviews complet\r\n- ✅ Modération auto/manuelle\r\n- ✅ Upload 5 photos max par review\r\n- ✅ Performance avec 10,000 reviews\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-001",
+      "title": "Setup projet et architecture",
+      "status": "done",
+      "priority": "Critical",
+      "category": "DevOps",
+      "assignees": [
+        "@alice",
+        "@bob"
+      ],
+      "tags": [
+        "#setup",
+        "#architecture",
+        "#devops"
+      ],
+      "created": "2025-10-15",
+      "started": "2025-10-15",
+      "due": "",
+      "completed": "2025-10-18",
+      "description": "Initialiser le projet avec stack technique, CI/CD, et environnements dev/staging/prod.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Initialiser repo Git"
+        },
+        {
+          "completed": true,
+          "text": "Setup Node.js + Express backend"
+        },
+        {
+          "completed": true,
+          "text": "Setup React frontend"
+        },
+        {
+          "completed": true,
+          "text": "Configuration Docker + docker-compose"
+        },
+        {
+          "completed": true,
+          "text": "Setup GitHub Actions CI/CD"
+        },
+        {
+          "completed": true,
+          "text": "Environnements dev/staging/prod"
+        },
+        {
+          "completed": true,
+          "text": "Documentation architecture"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ Projet complètement setupé et déployable.\r\n\r\n**Stack technique** :\r\n- Backend: Node.js 20 + Express + TypeScript\r\n- Frontend: React 18 + Vite + TailwindCSS\r\n- Database: PostgreSQL 15\r\n- Cache: Redis 7\r\n- Hosting: AWS (EC2 + RDS + S3)\r\n\r\n**Fichiers modifiés** :\r\n- package.json, Dockerfile, docker-compose.yml\r\n- .github/workflows/ci.yml\r\n- docs/ARCHITECTURE.md\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-002",
+      "title": "Authentification JWT",
+      "status": "done",
+      "priority": "Critical",
+      "category": "Backend",
+      "assignees": [
+        "@bob"
+      ],
+      "tags": [
+        "#security",
+        "#auth",
+        "#jwt"
+      ],
+      "created": "2025-10-18",
+      "started": "2025-10-19",
+      "due": "",
+      "completed": "2025-10-22",
+      "description": "Implémenter système d'authentification avec JWT, refresh tokens, et sécurité renforcée.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Créer modèle User"
+        },
+        {
+          "completed": true,
+          "text": "Hash passwords avec bcrypt"
+        },
+        {
+          "completed": true,
+          "text": "Génération JWT access + refresh tokens"
+        },
+        {
+          "completed": true,
+          "text": "Middleware d'authentification"
+        },
+        {
+          "completed": true,
+          "text": "Endpoints login/logout/refresh"
+        },
+        {
+          "completed": true,
+          "text": "Rate limiting anti-bruteforce"
+        },
+        {
+          "completed": true,
+          "text": "Tests sécurité"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ Système d'auth sécurisé et testé.\r\n\r\n**Décisions techniques** :\r\n- Access token: 15 min (JWT)\r\n- Refresh token: 7 jours (stocké en BDD)\r\n- Rate limiting: 5 tentatives / 15 min par IP\r\n- HTTPS obligatoire en production\r\n\r\n**Tests effectués** :\r\n- ✅ Login/logout/refresh\r\n- ✅ Token expiration\r\n- ✅ Rate limiting\r\n- ✅ Tests de pénétration basiques\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-003",
+      "title": "Catalogue produits avec recherche",
+      "status": "done",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#feature",
+        "#catalogue",
+        "#search"
+      ],
+      "created": "2025-10-20",
+      "started": "2025-10-23",
+      "due": "",
+      "completed": "2025-10-27",
+      "description": "Créer le catalogue produits avec recherche full-text et filtres de base.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Modèle Product en BDD"
+        },
+        {
+          "completed": true,
+          "text": "API CRUD produits"
+        },
+        {
+          "completed": true,
+          "text": "Index full-text pour recherche"
+        },
+        {
+          "completed": true,
+          "text": "Pagination et tri"
+        },
+        {
+          "completed": true,
+          "text": "Upload images produits (S3)"
+        },
+        {
+          "completed": true,
+          "text": "Cache Redis pour requêtes fréquentes"
+        },
+        {
+          "completed": true,
+          "text": "Tests performance"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ 500 produits ajoutés, recherche < 50ms.\r\n\r\n**Fichiers modifiés** :\r\n- src/models/Product.js\r\n- src/api/products.js\r\n- src/services/s3.js\r\n\r\n**Performances** :\r\n- Recherche full-text: 35ms moyenne\r\n- Listing avec pagination: 20ms\r\n- Cache hit rate: 85%\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-004",
+      "title": "Panier d'achat",
+      "status": "done",
+      "priority": "High",
+      "category": "Frontend",
+      "assignees": [
+        "@diana"
+      ],
+      "tags": [
+        "#feature",
+        "#cart",
+        "#ui"
+      ],
+      "created": "2025-10-22",
+      "started": "2025-10-25",
+      "due": "",
+      "completed": "2025-10-29",
+      "description": "Implémenter le panier d'achat avec ajout/suppression, quantités, calcul total.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Modèle Cart en BDD"
+        },
+        {
+          "completed": true,
+          "text": "API gestion panier"
+        },
+        {
+          "completed": true,
+          "text": "Composant CartIcon avec badge"
+        },
+        {
+          "completed": true,
+          "text": "Page panier détaillée"
+        },
+        {
+          "completed": true,
+          "text": "Calcul automatique totaux (HT, TVA, TTC)"
+        },
+        {
+          "completed": true,
+          "text": "Persistence panier (localStorage + BDD si connecté)"
+        },
+        {
+          "completed": true,
+          "text": "Tests e2e"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ Panier fonctionnel avec sync multi-devices.\r\n\r\n**Fichiers modifiés** :\r\n- src/components/Cart.jsx\r\n- src/api/cart.js\r\n- src/hooks/useCart.js\r\n\r\n**Tests effectués** :\r\n- ✅ Ajout/suppression produits\r\n- ✅ Modification quantités\r\n- ✅ Calcul totaux avec taxes\r\n- ✅ Sync entre devices pour users connectés\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-005",
+      "title": "Interface utilisateur responsive",
+      "status": "done",
+      "priority": "High",
+      "category": "Design",
+      "assignees": [
+        "@diana"
+      ],
+      "tags": [
+        "#design",
+        "#responsive",
+        "#ui",
+        "#mobile"
+      ],
+      "created": "2025-10-24",
+      "started": "2025-10-27",
+      "due": "",
+      "completed": "2025-11-01",
+      "description": "Créer une interface moderne, responsive (mobile-first) avec TailwindCSS.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Définir design system (couleurs, fonts, spacing)"
+        },
+        {
+          "completed": true,
+          "text": "Composants header/footer/navigation"
+        },
+        {
+          "completed": true,
+          "text": "Page d'accueil"
+        },
+        {
+          "completed": true,
+          "text": "Page produit détail"
+        },
+        {
+          "completed": true,
+          "text": "Page catalogue avec grille responsive"
+        },
+        {
+          "completed": true,
+          "text": "Tests sur mobile, tablette, desktop"
+        },
+        {
+          "completed": true,
+          "text": "Accessibilité (WCAG AA)"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ Interface complète, responsive, accessible.\r\n\r\n**Design system** :\r\n- Couleurs: Palette bleue (primary: #3b82f6)\r\n- Font: Inter\r\n- Breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px)\r\n\r\n**Tests effectués** :\r\n- ✅ iPhone 13 Pro, iPad Air, Desktop 1920px\r\n- ✅ Score Lighthouse Accessibility: 98/100\r\n\r\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-006",
+      "title": "Tests unitaires et e2e",
+      "status": "done",
+      "priority": "High",
+      "category": "Tests",
+      "assignees": [
+        "@charlie"
+      ],
+      "tags": [
+        "#tests",
+        "#quality",
+        "#ci"
+      ],
+      "created": "2025-10-26",
+      "started": "2025-10-30",
+      "due": "",
+      "completed": "2025-11-02",
+      "description": "Mettre en place suite de tests complète : unitaires (Jest), e2e (Playwright).",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup Jest pour backend"
+        },
+        {
+          "completed": true,
+          "text": "Setup Vitest + Testing Library pour frontend"
+        },
+        {
+          "completed": true,
+          "text": "Tests unitaires API (80%+ couverture)"
+        },
+        {
+          "completed": true,
+          "text": "Setup Playwright"
+        },
+        {
+          "completed": true,
+          "text": "Tests e2e parcours utilisateur"
+        },
+        {
+          "completed": true,
+          "text": "Intégration dans CI/CD"
+        },
+        {
+          "completed": true,
+          "text": "Coverage reporting"
+        }
+      ],
+      "notes": "**Résultat** :\r\n✅ 240 tests, couverture 87%, CI green.\r\n\r\n**Métriques** :\r\n- Tests unitaires: 182 (backend: 95, frontend: 87)\r\n- Tests e2e: 58 scénarios\r\n- Couverture: Backend 92%, Frontend 81%\r\n- Durée CI: 4min 30s\r\n\r\n**Fichiers modifiés** :\r\n- tests/ (nouveau dossier, 240 fichiers de tests)\r\n- jest.config.js, vitest.config.js, playwright.config.js\r\n\r\n---\r\n\r\n<!-- LAST_TASK_ID:017 -->",
+      "extra": ""
+    }
+  ],
+  "formatV2": false
+}

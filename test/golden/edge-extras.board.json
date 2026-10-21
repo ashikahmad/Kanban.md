@@ -1,0 +1,124 @@
+{
+  "config": {
+    "lastTaskId": 5,
+    "columns": [
+      {
+        "name": "📝 To Do",
+        "id": "todo"
+      },
+      {
+        "name": "🚀 Doing",
+        "id": "doing"
+      },
+      {
+        "name": "✅ Done",
+        "id": "done"
+      }
+    ],
+    "categories": [
+      "Frontend",
+      "Backend",
+      "Design",
+      "Frontend"
+    ],
+    "users": [
+      "@alice (Alice A)",
+      "@bob"
+    ],
+    "priorities": [
+      "🔴 Critical",
+      "🟢 Low"
+    ],
+    "tags": [
+      "bug",
+      "feature"
+    ],
+    "boardTitle": "Extras Board"
+  },
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "Task with preserved sections",
+      "status": "doing",
+      "priority": "Critical",
+      "category": "Backend",
+      "assignees": [
+        "@alice",
+        "@bob"
+      ],
+      "tags": [
+        "#bug",
+        "#feature"
+      ],
+      "created": "2025-02-01",
+      "started": "2025-02-02",
+      "due": "2025-02-10",
+      "completed": "",
+      "description": "Description line one.\nDescription line two with **bold** text.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "A subtask"
+        },
+        {
+          "completed": true,
+          "text": "Done subtask"
+        }
+      ],
+      "notes": "Plain note.\n\n### A heading inside notes\n\n## A second-level heading inside notes\n- [ ] not a subtask, inside notes",
+      "extra": "**Links**:\n- [ ] https://example.com/a\n- spec: docs/spec.md\n\n**Review**:\nLooks fine."
+    },
+    {
+      "id": "TASK-002",
+      "title": "Task with status unknown",
+      "status": "todo",
+      "priority": "Low",
+      "category": "Design",
+      "assignees": [],
+      "tags": [],
+      "created": "2025-02-03",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "### TASK-ABC | Malformed header is not a task",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-003",
+      "title": "No padding id",
+      "status": "done",
+      "priority": "Low",
+      "category": "Design",
+      "assignees": [],
+      "tags": [],
+      "created": "2025-02-04",
+      "started": "",
+      "due": "",
+      "completed": "2025-02-05",
+      "description": "Mentions **Notes** mid line and ### TASK-009 | not a header",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-004",
+      "title": "Bare task",
+      "status": "todo",
+      "priority": "",
+      "category": "",
+      "assignees": [],
+      "tags": [],
+      "created": "",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    }
+  ],
+  "formatV2": true
+}

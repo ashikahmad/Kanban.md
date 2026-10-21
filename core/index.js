@@ -1,0 +1,12 @@
+// Everything the page needs from the core, as one bundle entry (see build.mjs). Node code imports
+// the individual modules directly.
+export * from './text.js';
+export * from './board.js';
+export * from './migrate.js';
+export * from './ops.js';
+export * from './read.js';
+export * from './changes.js';
+export * from './housekeeping-spec.js';
+export * from './backlog-spec.js';
+export * from './share.js';
+export * from './housekeeping.js';

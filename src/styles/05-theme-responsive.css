@@ -1,72 +1,17 @@
-        /* Dark mode toggle button */
-        .theme-toggle {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 0.6rem 0.8rem;
-            cursor: pointer;
-            font-size: 1.1rem;
-            line-height: 1;
-            transition: all 0.2s;
-        }
+        @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 
-        .theme-toggle:hover {
-            background: var(--btn-secondary-hover);
+        @media (max-width: 900px) {
+            .header { flex-wrap: wrap; height: auto; padding: var(--s-2) var(--s-3); }
+            #filterBar { order: 3; flex: 1 1 100%; max-width: none; }
+            .filter-group { right: 0; }
+            .header-spacer { display: none; }
+            .header h1 { margin-right: auto; }
         }
-
-        /* Dark mode overrides for inline styles */
-        [data-theme="dark"] #filterBar,
-        [data-theme="dark"] .welcome div[style*="background: white"],
-        [data-theme="dark"] #newTaskForm {
-            background: var(--bg-tertiary) !important;
-        }
-
-        [data-theme="dark"] select,
-        [data-theme="dark"] input[type="text"],
-        [data-theme="dark"] input[type="date"],
-        [data-theme="dark"] textarea {
-            background: var(--bg-input) !important;
-            color: var(--text-primary) !important;
-            border-color: var(--border-input) !important;
-        }
-
-        [data-theme="dark"] label {
-            color: var(--text-label) !important;
-        }
-
-        [data-theme="dark"] small {
-            color: var(--text-secondary) !important;
-        }
-
-        [data-theme="dark"] #filterBar {
-            border-bottom-color: var(--border-color) !important;
-        }
-
-        [data-theme="dark"] .modal-content {
-            color: var(--text-primary);
-        }
-
-        /* Responsive / mobile (issue #12) — placed last so it overrides base rules */
         @media (max-width: 768px) {
-            .kanban-board {
-                padding: 1rem;
-                gap: 1rem;
-                scroll-snap-type: x mandatory;
-            }
-            .kanban-column {
-                flex: 0 0 85%;
-                min-width: 0;
-                scroll-snap-align: start;
-            }
-            .modal-content {
-                width: 95%;
-                padding: 1.25rem;
-            }
-            /* Stack multi-column form grids vertically on small screens */
-            .modal-form-grid {
-                grid-template-columns: 1fr !important;
-            }
+            #kanbanView { scroll-snap-type: x proximity; }
+            .kanban-board { padding: 0 var(--s-3) var(--s-3); gap: var(--s-2); }
+            .kanban-column { flex: 0 0 85vw; scroll-snap-align: start; }
+            .form-grid.cols-2, .form-grid.cols-4 { grid-template-columns: 1fr; }
+            .detail-meta { grid-template-columns: 1fr 1fr; }
         }
-        @media (max-width: 480px) {
-            .kanban-column { flex: 0 0 92%; }
-        }
+        @media (max-width: 480px) { .kanban-column { flex: 0 0 92vw; } .filter-group { width: calc(100vw - var(--s-6)); } }

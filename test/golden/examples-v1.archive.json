@@ -1,0 +1,525 @@
+{
+  "tasks": [
+    {
+      "id": "TASK-018",
+      "title": "Audit sécurité complet",
+      "status": "archived",
+      "priority": "Critique",
+      "category": "Security",
+      "assignees": [
+        "@charlie",
+        "@bob"
+      ],
+      "tags": [
+        "#security",
+        "#audit",
+        "#vulnerabilities"
+      ],
+      "created": "2025-09-15",
+      "started": "2025-09-18",
+      "due": "",
+      "completed": "2025-09-25",
+      "description": "Effectuer un audit de sécurité complet de l'application avant la mise en production.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Scan automatisé des vulnérabilités (OWASP ZAP)"
+        },
+        {
+          "completed": true,
+          "text": "Tests de pénétration manuels"
+        },
+        {
+          "completed": true,
+          "text": "Audit des dépendances NPM (npm audit)"
+        },
+        {
+          "completed": true,
+          "text": "Vérification HTTPS et certificats SSL"
+        },
+        {
+          "completed": true,
+          "text": "Tests injection SQL, XSS, CSRF"
+        },
+        {
+          "completed": true,
+          "text": "Audit des permissions et accès"
+        },
+        {
+          "completed": true,
+          "text": "Documentation des failles trouvées"
+        },
+        {
+          "completed": true,
+          "text": "Correction de toutes les vulnérabilités critiques"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ Audit terminé, 23 vulnérabilités corrigées.\n\n**Vulnérabilités trouvées** :\n- 3 critiques (injection SQL, XSS réfléchi, CSRF)\n- 8 hautes (rate limiting manquant, headers sécurité absents)\n- 12 moyennes (dépendances obsolètes, cookies non sécurisés)\n\n**Corrections appliquées** :\n- Requêtes paramétrées pour toutes les queries SQL\n- Sanitization des inputs avec DOMPurify\n- CSRF tokens sur tous les formulaires\n- Rate limiting sur login/API (express-rate-limit)\n- Headers sécurité (Helmet.js) : CSP, HSTS, etc.\n- Mise à jour de 15 dépendances NPM\n\n**Fichiers modifiés** :\n- src/middleware/security.js (nouveau)\n- src/api/*.js (ajout parameterized queries)\n- package.json (mises à jour dépendances)\n\n**Tests effectués** :\n- ✅ OWASP ZAP : 0 vulnérabilité critique\n- ✅ npm audit : 0 vulnérabilité haute/critique\n- ✅ Tests de pénétration : tous passés\n- ✅ SSL Labs : A+ rating\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-019",
+      "title": "Notifications email transactionnelles",
+      "status": "archived",
+      "priority": "Haute",
+      "category": "Backend",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#feature",
+        "#email",
+        "#notifications",
+        "#sendgrid"
+      ],
+      "created": "2025-09-10",
+      "started": "2025-09-12",
+      "due": "",
+      "completed": "2025-09-18",
+      "description": "Implémenter système d'emails transactionnels : confirmation commande, tracking, password reset.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup SendGrid et obtenir clés API"
+        },
+        {
+          "completed": true,
+          "text": "Créer templates HTML responsive pour emails"
+        },
+        {
+          "completed": true,
+          "text": "Implémenter service d'envoi d'emails"
+        },
+        {
+          "completed": true,
+          "text": "Email confirmation commande"
+        },
+        {
+          "completed": true,
+          "text": "Email tracking livraison"
+        },
+        {
+          "completed": true,
+          "text": "Email password reset"
+        },
+        {
+          "completed": true,
+          "text": "Email bienvenue nouveaux utilisateurs"
+        },
+        {
+          "completed": true,
+          "text": "Tests d'envoi et délivrabilité"
+        },
+        {
+          "completed": true,
+          "text": "Monitoring taux d'ouverture/clics"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ 7 types d'emails transactionnels opérationnels.\n\n**Templates créés** :\n1. Confirmation commande (avec récap produits, total)\n2. Commande expédiée (avec lien tracking)\n3. Commande livrée\n4. Password reset (avec token sécurisé, expiration 1h)\n5. Bienvenue nouvel utilisateur\n6. Confirmation email (double opt-in)\n7. Panier abandonné (reminder 24h)\n\n**Fichiers modifiés** :\n- src/services/email.js (nouveau)\n- templates/emails/*.html (7 templates)\n- src/api/orders.js (triggers emails)\n- src/api/auth.js (password reset, bienvenue)\n\n**Décisions techniques** :\n- SendGrid pour fiabilité et analytics\n- Templates responsive avec MJML → HTML\n- Queue avec Bull + Redis pour envois asynchrones\n- Retry automatique 3x en cas d'échec\n\n**Métriques** :\n- Taux de délivrabilité: 99.2%\n- Taux d'ouverture: 45%\n- Taux de clics: 12%\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-020",
+      "title": "Intégration Stripe Connect pour marketplace",
+      "status": "archived",
+      "priority": "Haute",
+      "category": "Backend",
+      "assignees": [
+        "@bob",
+        "@charlie"
+      ],
+      "tags": [
+        "#feature",
+        "#payment",
+        "#stripe",
+        "#marketplace"
+      ],
+      "created": "2025-08-20",
+      "started": "2025-08-25",
+      "due": "",
+      "completed": "2025-09-05",
+      "description": "Implémenter Stripe Connect pour permettre aux vendeurs de recevoir paiements.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup Stripe Connect dans dashboard"
+        },
+        {
+          "completed": true,
+          "text": "Créer flux d'onboarding vendeurs (Stripe Account Links)"
+        },
+        {
+          "completed": true,
+          "text": "Implémenter split payments (commission plateforme)"
+        },
+        {
+          "completed": true,
+          "text": "Dashboard vendeur pour voir revenus"
+        },
+        {
+          "completed": true,
+          "text": "Gestion des transferts vers comptes vendeurs"
+        },
+        {
+          "completed": true,
+          "text": "Webhooks pour événements Connect"
+        },
+        {
+          "completed": true,
+          "text": "Tests avec comptes test Stripe"
+        },
+        {
+          "completed": true,
+          "text": "Documentation pour vendeurs"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ Marketplace opérationnelle avec paiements aux vendeurs.\n\n**Architecture** :\n- Plateforme : Stripe Account principal\n- Vendeurs : Connected Accounts (Express type)\n- Commission : 5% par transaction (prélevée automatiquement)\n- Payout vendeurs : Automatique J+7\n\n**Flux onboarding vendeur** :\n1. Vendeur crée compte → Stripe Account créé\n2. Redirect vers Stripe pour KYC/vérifications\n3. Stripe webhook confirme account activé\n4. Vendeur peut recevoir paiements\n\n**Fichiers modifiés** :\n- src/api/vendors.js (nouveau)\n- src/api/payment.js (ajout split payments)\n- src/services/stripe-connect.js (nouveau)\n- src/dashboard/VendorDashboard.jsx (nouveau)\n\n**Tests effectués** :\n- ✅ Onboarding vendeur complet\n- ✅ Split payment avec commission\n- ✅ Transferts automatiques\n- ✅ Gestion des refunds (split entre vendeur/plateforme)\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-021",
+      "title": "Système de coupons et promotions",
+      "status": "archived",
+      "priority": "Moyenne",
+      "category": "Backend",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#feature",
+        "#promo",
+        "#coupons",
+        "#marketing"
+      ],
+      "created": "2025-08-15",
+      "started": "2025-08-18",
+      "due": "",
+      "completed": "2025-08-28",
+      "description": "Créer système de coupons de réduction : pourcentage, montant fixe, shipping gratuit.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Modèle Coupon en BDD"
+        },
+        {
+          "completed": true,
+          "text": "API CRUD coupons (admin only)"
+        },
+        {
+          "completed": true,
+          "text": "Types de réduction (%, fixe, shipping)"
+        },
+        {
+          "completed": true,
+          "text": "Conditions (montant min, produits spécifiques, première commande)"
+        },
+        {
+          "completed": true,
+          "text": "Limitations (usage max, date expiration, utilisateur unique)"
+        },
+        {
+          "completed": true,
+          "text": "Application au panier"
+        },
+        {
+          "completed": true,
+          "text": "Dashboard admin pour gérer coupons"
+        },
+        {
+          "completed": true,
+          "text": "Analytics utilisation coupons"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ Système flexible de coupons avec analytics.\n\n**Types de coupons** :\n1. Pourcentage : `-20%` sur total\n2. Montant fixe : `-10€` sur total\n3. Shipping gratuit\n4. BOGO : Buy One Get One\n5. Produit gratuit (ajout automatique)\n\n**Conditions supportées** :\n- Montant minimum commande\n- Catégories/produits spécifiques\n- Première commande uniquement\n- Utilisateur spécifique (@email)\n- Date de validité\n\n**Fichiers modifiés** :\n- src/models/Coupon.js (nouveau)\n- src/api/coupons.js (nouveau)\n- src/api/cart.js (application réduction)\n- src/admin/CouponManager.jsx (nouveau)\n- src/components/CouponInput.jsx (nouveau)\n\n**Exemples créés** :\n- `WELCOME10` : -10% première commande\n- `FREESHIP50` : Shipping gratuit si > 50€\n- `SUMMER2025` : -20% sur catégorie été\n\n**Tests effectués** :\n- ✅ Application réduction correcte\n- ✅ Validation conditions\n- ✅ Limitations usage respectées\n- ✅ Cumul de coupons (si autorisé)\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-022",
+      "title": "API publique REST avec rate limiting",
+      "status": "archived",
+      "priority": "Moyenne",
+      "category": "Backend",
+      "assignees": [
+        "@bob"
+      ],
+      "tags": [
+        "#api",
+        "#public",
+        "#ratelimit",
+        "#documentation"
+      ],
+      "created": "2025-08-05",
+      "started": "2025-08-10",
+      "due": "",
+      "completed": "2025-08-20",
+      "description": "Créer une API publique REST pour partenaires avec documentation complète.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Définir les endpoints publics"
+        },
+        {
+          "completed": true,
+          "text": "Système d'API keys (génération, révocation)"
+        },
+        {
+          "completed": true,
+          "text": "Rate limiting par API key (100 req/min)"
+        },
+        {
+          "completed": true,
+          "text": "Documentation OpenAPI/Swagger"
+        },
+        {
+          "completed": true,
+          "text": "Exemples de requêtes (curl, JS, Python)"
+        },
+        {
+          "completed": true,
+          "text": "Dashboard usage API pour clients"
+        },
+        {
+          "completed": true,
+          "text": "Monitoring et analytics"
+        },
+        {
+          "completed": true,
+          "text": "Tests charge"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ API publique documentée avec 15 endpoints.\n\n**Endpoints publics** :\n- GET /api/v1/products (liste produits)\n- GET /api/v1/products/:id (détail produit)\n- GET /api/v1/categories (liste catégories)\n- POST /api/v1/webhooks (recevoir events)\n- GET /api/v1/orders/:id (tracking commande)\n\n**Authentification** :\n- Header : `X-API-Key: sk_live_xxxxx`\n- API keys générables dans dashboard\n- Scopes : read_products, read_orders, write_webhooks\n\n**Rate limiting** :\n- 100 requests / minute / API key\n- 429 Too Many Requests si dépassé\n- Header `X-RateLimit-Remaining`\n\n**Fichiers modifiés** :\n- src/api/v1/*.js (nouveaux endpoints)\n- src/middleware/apiAuth.js (nouveau)\n- src/middleware/rateLimit.js (nouveau)\n- docs/api-reference.yaml (OpenAPI spec)\n- src/dashboard/APIKeyManager.jsx (nouveau)\n\n**Documentation** :\n- Swagger UI disponible sur /api/docs\n- Exemples code en 5 langages\n- Tutoriel quickstart\n\n**Tests effectués** :\n- ✅ Rate limiting fonctionne\n- ✅ Load test : 10,000 req/min sans dégradation\n- ✅ Sécurité : API keys non devinables\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-023",
+      "title": "Migration images vers CDN Cloudflare",
+      "status": "archived",
+      "priority": "Haute",
+      "category": "DevOps",
+      "assignees": [
+        "@charlie"
+      ],
+      "tags": [
+        "#devops",
+        "#cdn",
+        "#performance",
+        "#images"
+      ],
+      "created": "2025-07-25",
+      "started": "2025-07-28",
+      "due": "",
+      "completed": "2025-08-05",
+      "description": "Migrer toutes les images produits vers Cloudflare CDN pour meilleures performances.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup Cloudflare Images"
+        },
+        {
+          "completed": true,
+          "text": "Script migration S3 → Cloudflare"
+        },
+        {
+          "completed": true,
+          "text": "Transformation automatique (resize, WebP)"
+        },
+        {
+          "completed": true,
+          "text": "Mise à jour URLs dans BDD"
+        },
+        {
+          "completed": true,
+          "text": "Configuration cache headers"
+        },
+        {
+          "completed": true,
+          "text": "Tests de performance avant/après"
+        },
+        {
+          "completed": true,
+          "text": "Rollback plan en cas de problème"
+        },
+        {
+          "completed": true,
+          "text": "Monitoring post-migration"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ 15,000 images migrées, temps chargement -65%.\n\n**Migration** :\n- 15,000 images produits (50GB total)\n- Durée migration : 6h\n- Zero downtime (URLs updated progressively)\n\n**Bénéfices** :\n- Temps chargement images : 800ms → 280ms (-65%)\n- Bande passante serveur : -80%\n- Transformations automatiques (resize, WebP, quality)\n- Cache global (180 data centers)\n\n**Configuration Cloudflare** :\n- Resize automatique selon device (srcset)\n- Conversion auto WebP si navigateur supporte\n- Quality: 85% (bon compromis taille/qualité)\n- Cache TTL: 30 jours\n\n**Fichiers modifiés** :\n- scripts/migrate-to-cloudflare.js (nouveau)\n- src/services/images.js (nouveau helper)\n- src/models/Product.js (update image URLs)\n\n**Tests effectués** :\n- ✅ Toutes les images accessibles\n- ✅ Lighthouse score : +25 points\n- ✅ LCP : 2.1s → 0.7s\n- ✅ Pas de broken images\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-024",
+      "title": "Fonctionnalité social login (Google, Facebook)",
+      "status": "archived",
+      "priority": "Moyenne",
+      "category": "Backend",
+      "assignees": [
+        "@alice",
+        "@bob"
+      ],
+      "tags": [
+        "#feature",
+        "#auth",
+        "#social",
+        "#oauth"
+      ],
+      "created": "2025-07-18",
+      "started": "2025-07-22",
+      "due": "",
+      "completed": "2025-07-30",
+      "description": "Permettre connexion via Google et Facebook OAuth pour faciliter l'inscription.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup Google OAuth (credentials, redirect URI)"
+        },
+        {
+          "completed": true,
+          "text": "Setup Facebook OAuth (app, permissions)"
+        },
+        {
+          "completed": true,
+          "text": "Implémenter flow OAuth avec Passport.js"
+        },
+        {
+          "completed": true,
+          "text": "Linking comptes sociaux à comptes existants"
+        },
+        {
+          "completed": true,
+          "text": "Récupération email/nom depuis providers"
+        },
+        {
+          "completed": true,
+          "text": "Boutons \"Sign in with Google/Facebook\""
+        },
+        {
+          "completed": true,
+          "text": "Gestion erreurs OAuth"
+        },
+        {
+          "completed": true,
+          "text": "Tests avec différents scénarios"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ Login social Google + Facebook opérationnel.\n\n**Flow OAuth** :\n1. User clique \"Sign in with Google\"\n2. Redirect vers Google consent screen\n3. Callback avec authorization code\n4. Exchange code → access token\n5. Fetch user profile (email, name, photo)\n6. Create ou login user\n7. Redirect vers app avec JWT\n\n**Providers supportés** :\n- Google OAuth 2.0\n- Facebook Login\n\n**Permissions demandées** :\n- Google : email, profile\n- Facebook : email, public_profile\n\n**Fichiers modifiés** :\n- src/auth/passport-config.js (nouveau)\n- src/api/auth.js (ajout routes /auth/google, /auth/facebook)\n- src/components/SocialLoginButtons.jsx (nouveau)\n- src/models/User.js (ajout googleId, facebookId)\n\n**Décisions techniques** :\n- Passport.js pour simplicité\n- Linking automatique si même email\n- Photo profile récupérée et stockée\n\n**Tests effectués** :\n- ✅ Login Google : OK\n- ✅ Login Facebook : OK\n- ✅ Linking compte existant : OK\n- ✅ Gestion email manquant : OK\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-025",
+      "title": "Système de logs centralisé",
+      "status": "archived",
+      "priority": "Haute",
+      "category": "DevOps",
+      "assignees": [
+        "@charlie"
+      ],
+      "tags": [
+        "#devops",
+        "#logging",
+        "#monitoring",
+        "#elk"
+      ],
+      "created": "2025-07-10",
+      "started": "2025-07-12",
+      "due": "",
+      "completed": "2025-07-20",
+      "description": "Mettre en place un système de logs centralisé avec ELK stack pour debugging et monitoring.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup Elasticsearch cluster"
+        },
+        {
+          "completed": true,
+          "text": "Setup Logstash pour ingestion"
+        },
+        {
+          "completed": true,
+          "text": "Setup Kibana pour visualisation"
+        },
+        {
+          "completed": true,
+          "text": "Configuration Winston logger (Node.js)"
+        },
+        {
+          "completed": true,
+          "text": "Log shipping avec Filebeat"
+        },
+        {
+          "completed": true,
+          "text": "Création dashboards Kibana"
+        },
+        {
+          "completed": true,
+          "text": "Alertes sur erreurs critiques"
+        },
+        {
+          "completed": true,
+          "text": "Retention policy logs (30 jours)"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ Tous les logs centralisés et searchables.\n\n**Architecture** :\n- App Node.js → Winston → JSON logs → Filebeat\n- Filebeat → Logstash → parsing/enrichment\n- Logstash → Elasticsearch → indexation\n- Kibana → visualisation et dashboards\n\n**Logs collectés** :\n- Application logs (info, warning, error)\n- Access logs (requêtes HTTP)\n- Error stack traces\n- Performance metrics\n- Database slow queries\n\n**Dashboards Kibana créés** :\n1. Overview : logs par niveau, top erreurs\n2. Performance : temps réponse API, slow queries\n3. Security : tentatives login échouées, 403/401\n4. Business : commandes, CA, utilisateurs actifs\n\n**Fichiers modifiés** :\n- src/utils/logger.js (Winston config)\n- docker-compose.yml (ajout ELK services)\n- filebeat.yml (config shipping)\n- kibana/dashboards/*.json (exports dashboards)\n\n**Alertes configurées** :\n- Email si > 10 erreurs 500 / minute\n- Slack si service down\n- PagerDuty si error rate > 5%\n\n**Tests effectués** :\n- ✅ Logs visibles dans Kibana < 5s\n- ✅ Recherche full-text rapide\n- ✅ Dashboards rafraîchis temps réel\n- ✅ Alertes fonctionnelles\n\n---",
+      "extra": ""
+    },
+    {
+      "id": "TASK-026",
+      "title": "Tests de charge et optimisation",
+      "status": "archived",
+      "priority": "Critique",
+      "category": "Performance",
+      "assignees": [
+        "@alice",
+        "@charlie"
+      ],
+      "tags": [
+        "#performance",
+        "#loadtest",
+        "#optimization",
+        "#k6"
+      ],
+      "created": "2025-07-01",
+      "started": "2025-07-05",
+      "due": "",
+      "completed": "2025-07-15",
+      "description": "Effectuer tests de charge pour identifier bottlenecks et optimiser avant lancement.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Setup K6 pour load testing"
+        },
+        {
+          "completed": true,
+          "text": "Scénarios de test (navigation, achat, recherche)"
+        },
+        {
+          "completed": true,
+          "text": "Test 1 : 100 users concurrents"
+        },
+        {
+          "completed": true,
+          "text": "Test 2 : 1,000 users concurrents"
+        },
+        {
+          "completed": true,
+          "text": "Test 3 : 5,000 users concurrents (peak)"
+        },
+        {
+          "completed": true,
+          "text": "Identifier bottlenecks avec profiling"
+        },
+        {
+          "completed": true,
+          "text": "Optimisations (cache, indexes BDD, queries)"
+        },
+        {
+          "completed": true,
+          "text": "Re-test après optimisations"
+        }
+      ],
+      "notes": "**Résultat** :\n✅ App supporte 5,000 users concurrents avec p95 < 500ms.\n\n**Tests initiaux (avant optim)** :\n- 100 users : OK (p95: 250ms)\n- 1,000 users : Dégradation (p95: 1.2s)\n- 5,000 users : ❌ Crash (timeout, errors 500)\n\n**Bottlenecks identifiés** :\n1. Recherche produits : query full-text lente\n2. Panier : trop de requêtes BDD par action\n3. Dashboard admin : stats calculées à la volée\n4. Images : pas de CDN (fix dans TASK-023)\n\n**Optimisations appliquées** :\n1. Index full-text GIN sur PostgreSQL (search 800ms → 45ms)\n2. Cache Redis pour paniers (TTL 1h)\n3. Aggregate tables pour stats (refresh every 5min)\n4. Connection pooling BDD (10 → 50 connections)\n5. Query optimization (N+1 queries éliminées)\n6. Horizontal scaling : 1 → 3 app servers (load balancer)\n\n**Tests finaux (après optim)** :\n- 100 users : p95: 180ms ✅\n- 1,000 users : p95: 320ms ✅\n- 5,000 users : p95: 480ms ✅\n- 10,000 users : p95: 850ms ⚠️ (dégradation acceptable)\n\n**Fichiers modifiés** :\n- tests/load/*.js (scénarios K6)\n- src/api/*.js (optimisations queries)\n- docker-compose.yml (scaling à 3 instances)\n- database/indexes.sql (nouveaux indexes)\n\n**Métriques clés** :\n- Throughput : 850 req/s (before) → 4,200 req/s (after)\n- Error rate : 8% @ 5k users → 0.02% @ 5k users\n- CPU usage : 95% → 62%\n- Database connections : saturées → 40% utilisées\n\n---\n\n<!-- Total: 9 tâches archivées -->",
+      "extra": ""
+    }
+  ],
+  "formatV2": false
+}

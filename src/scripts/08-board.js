@@ -1,6 +1,7 @@
         function renderKanban() {
             const board = document.getElementById('kanbanBoard');
             board.innerHTML = '';
+            refreshHousekeepingState(); // before the cards are built: stale ones are marked as they are created
 
             console.log('Rendering kanban with', tasks.length, 'tasks');
 
@@ -14,8 +15,11 @@
             debugInfo.textContent = `Loaded ${tasks.length} tasks\nColumns: ${config.columns.map(c => c.name).join(', ')}`;
             // debugInfo.style.display = 'block'; // Uncomment to show debug info
 
+            const backlogCol = backlogColumnId();
             config.columns.forEach(column => {
-                const columnTasks = tasks.filter(t => t.status === column.id && matchesFilters(t));
+                const isBacklogStub = column.id === backlogCol; // its cards live in the backlog file and have their own panel
+                const columnTasks = orderedTasks(tasks).filter(t => t.status === column.id && matchesFilters(t));
+                const shownCount = isBacklogStub ? tasks.filter(t => t.status === column.id).length : columnTasks.length;
                 console.log(`Column ${column.id}: ${columnTasks.length} tasks`);
 
                 const columnEl = document.createElement('div');
@@ -26,14 +30,14 @@
                     <div class="column-header">
                         <div class="column-title">
                             ${escapeHtml(column.name)}
+                            <span class="column-count">${shownCount}</span>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <div class="column-count">${columnTasks.length}</div>
-                            <button class="column-add-btn">+</button>
+                        <div class="column-tools">
+                            <button class="column-add-btn" aria-label="${escapeHtml(t('taskForm.newTask'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
                         </div>
                     </div>
                     <div class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
-                        ${columnTasks.length === 0 ? `<div class="empty-state">${t('empty.noTasks')}</div>` : ''}
+                        ${!isBacklogStub && columnTasks.length === 0 ? `<div class="empty-state">${t('empty.noTasks')}</div>` : ''}
                     </div>
                 `;
 
@@ -45,13 +49,30 @@
                 addBtn.title = t('taskForm.newTask');
                 addBtn.addEventListener('click', () => openTaskModal(null, column.id));
 
-                columnTasks.forEach(task => {
-                    const taskEl = createTaskElement(task);
-                    taskList.appendChild(taskEl);
-                });
+                if (isBacklogStub) {
+                    const stub = document.createElement('div');
+                    stub.className = 'backlog-stub';
+                    const count = document.createElement('div');
+                    count.className = 'backlog-stub-count';
+                    count.textContent = String(shownCount);
+                    const note = document.createElement('div');
+                    note.className = 'backlog-stub-note';
+                    note.textContent = t('backlog.stub', { file: resolveBacklogFile(config).file });
+                    const open = document.createElement('button');
+                    open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = t('backlog.open');
+                    open.addEventListener('click', openBacklogModal);
+                    stub.append(count, note, open);
+                    taskList.appendChild(stub);
+                } else {
+                    columnTasks.forEach(task => {
+                        const taskEl = createTaskElement(task);
+                        taskList.appendChild(taskEl);
+                    });
+                }
 
                 board.appendChild(columnEl);
             });
+            updateHousekeepingBar();
         }
 
         // Deadline visibility: classify a task by its **Due** date so the card can surface it.
@@ -79,6 +100,7 @@
         function createTaskElement(task) {
             const taskEl = document.createElement('div');
             taskEl.className = 'task-card';
+            if (hkState.staleIds.has(task.id)) { taskEl.classList.add('hk-stale'); taskEl.title = t('hk.staleCard'); }
             taskEl.draggable = true;
             taskEl.dataset.taskId = task.id;
 
@@ -86,43 +108,38 @@
             const due = dueStatus(task);
             if (due) taskEl.classList.add(`task-card--${due}`);
 
-            var priorityBadgeClass = "Default";
-            if (config.priorities) {
-                const priority = config.priorities.find(p => clean(p) === task.priority);
-                if (priority) {
-                    const emoji = getFirstEmoji(priority);
-                    if (emoji && priorityIconClasses[emoji]) {
-                        priorityBadgeClass = priorityIconClasses[emoji];
-                    }
-                }
-            }
 
+            const doneCount = task.subtasks.filter(s => s.completed).length;
             const subtaskProgress = task.subtasks.length > 0 ?
                 `<div class="task-subtasks">
                     <div class="subtask-progress">
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(task.subtasks.filter(s => s.completed).length / task.subtasks.length * 100)}%"></div>
+                            <div class="progress-fill" style="width: ${(doneCount / task.subtasks.length * 100)}%"></div>
                         </div>
-                        <span>${task.subtasks.filter(s => s.completed).length}/${task.subtasks.length}</span>
+                        <span>${doneCount}/${task.subtasks.length}</span>
                     </div>
                 </div>` : '';
 
+            const dueLabel = task.due
+                ? `<span class="badge badge-due${due ? ` badge-due--${due}` : ''}" title="${escapeHtml(t(due === 'overdue' ? 'tooltip.overdue' : (due === 'soon' ? 'tooltip.dueSoon' : 'meta.due')))}">${escapeHtml(task.due)}</span>`
+                : '';
+
             taskEl.innerHTML = `
                 <div class="task-header">
+                    ${task.priority ? `${priorityIcon(task.priority, `data-filter="priority" data-filter-value="${escapeHtml(task.priority)}" title="${escapeHtml(priorityLabel(task.priority))}" role="img" aria-label="${escapeHtml(priorityLabel(task.priority))}"`)}` : ''}
                     <span class="task-id">${escapeHtml(task.id)}</span>
-                    <button class="task-edit-btn" data-edit-task="1" style="background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.25rem;">✏️</button>
+                    <button class="task-edit-btn" data-edit-task="1" title="${escapeHtml(t('taskDetail.edit'))}" aria-label="${escapeHtml(t('taskDetail.edit'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg></button>
                 </div>
                 <div class="task-title">${escapeHtml(task.title)}</div>
                 ${task.description ? `<div class="task-description">${markdownToHtml(task.description)}</div>` : ''}
                 <div class="task-meta">
-                    ${task.due ? `<span class="badge badge-due${due ? ` badge-due--${due}` : ''}" title="${escapeHtml(t(due === 'overdue' ? 'tooltip.overdue' : (due === 'soon' ? 'tooltip.dueSoon' : 'meta.due')))}">${due === 'overdue' ? '⚠️' : '📅'} ${escapeHtml(task.due)}</span>` : ''}
-                    ${task.priority ? `<span class="badge badge-priority ${priorityBadgeClass}" data-filter="priority" data-filter-value="${escapeHtml(task.priority)}" style="cursor: pointer;" title="${t('tooltip.filterByPriority')}">${escapeHtml(displayPriority(task.priority))}</span>` : ''}
-                    ${task.category ? `<span class="badge badge-category" data-filter="category" data-filter-value="${escapeHtml(task.category)}" style="cursor: pointer;" title="${t('tooltip.filterByCategory')}">${escapeHtml(task.category)}</span>` : ''}
+                    ${dueLabel}
+                    ${task.category ? `<span class="badge" data-filter="category" data-filter-value="${escapeHtml(task.category)}" title="${t('tooltip.filterByCategory')}">${escapeHtml(task.category)}</span>` : ''}
                     ${task.assignees.map(a => {
                         const normalizedId = normalizeUserId(a);
-                        return `<span class="badge badge-assignee" data-filter="user" data-filter-value="${escapeHtml(normalizedId)}" style="cursor: pointer;" title="${t('tooltip.filterByUser')}">${escapeHtml(a)}</span>`;
+                        return `<span class="badge" data-filter="user" data-filter-value="${escapeHtml(normalizedId)}" title="${t('tooltip.filterByUser')}">${escapeHtml(a)}</span>`;
                     }).join('')}
-                    ${task.tags.map(tag => `<span class="tag" data-filter="tag" data-filter-value="${escapeHtml(tag)}" style="cursor: pointer;" title="${t('tooltip.filterByTag')}">${escapeHtml(tag)}</span>`).join('')}
+                    ${task.tags.map(tag => `<span class="tag" data-filter="tag" data-filter-value="${escapeHtml(tag)}" title="${t('tooltip.filterByTag')}">${escapeHtml(tag)}</span>`).join('')}
                 </div>
                 ${subtaskProgress}
             `;
@@ -163,32 +180,28 @@
             return null;
         }
 
-        // Move a task within tasks[] (the canonical display/file order): set its status
-        // and reposition it before beforeTaskId (or at the end). The block's position in
-        // tasks[] = its rank within its column. Returns true if status or order changed.
-        function moveTask(taskId, newStatus, beforeTaskId = null) {
-            const oldIdx = tasks.findIndex(t => t.id === taskId);
-            if (oldIdx < 0) return false;
-            const task = tasks[oldIdx];
-            const statusChanged = newStatus && task.status !== newStatus;
-            const targetStatus = newStatus || task.status;
-            tasks.splice(oldIdx, 1);
-            let insertIdx;
-            if (beforeTaskId) {
-                insertIdx = tasks.findIndex(t => t.id === beforeTaskId);
-                if (insertIdx < 0) insertIdx = tasks.length;
-            } else {
-                // No explicit anchor (dropped at the bottom of a column): append right after
-                // the last task already in that column, so the .md stays grouped by column.
-                insertIdx = tasks.length;
-                for (let i = tasks.length - 1; i >= 0; i--) {
-                    if (tasks[i].status === targetStatus) { insertIdx = i + 1; break; }
-                }
-            }
-            tasks.splice(insertIdx, 0, task);
-            const posChanged = tasks.indexOf(task) !== oldIdx;
-            if (newStatus) task.status = newStatus;
-            return statusChanged || posChanged;
+        // Move a task: set its status and, when a position is given, place it before `beforeTaskId` (or
+        // at the end of the column). This is an explicit op applied to the file as it is now (see
+        // 04a-persist.js); with manual ordering on it writes an Order key instead of relocating a block.
+        // Resolves true if the files changed.
+        async function moveTask(taskId, newStatus, beforeTaskId = null, { askOrder = true } = {}) {
+            await autoSave(); // flush pending edits first
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return false;
+            const status = newStatus || task.status;
+            const op = beforeTaskId
+                ? { type: 'moveTask', id: taskId, status, before: beforeTaskId }
+                : { type: 'moveTask', id: taskId, status, atEnd: true };
+            // Would this change anything? (A drop where the card already is must not ask or write.)
+            const disk = await readProjectFiles();
+            try { if (!applyOps({ board: disk.board, archive: disk.archive, backlog: disk.backlog }, [op]).files.length) return false; }
+            catch (e) { /* the commit below reports it */ }
+            const ops = [op];
+            // First manual drop on a board with no Order keys: ask once whether to remember the order.
+            // (Not for a drop into the backlog column, where positions do not exist, nor when the caller says it is not a reorder.)
+            if (askOrder && status !== backlogColumnId() && !orderingActive() && resolveOrderChoice() === 'on') ops.unshift({ type: 'sortTasks', mode: 'positions' });
+            const result = await commit(ops, { explicit: true });
+            return result.ok && result.changed;
         }
 
         function drop(event) {
@@ -209,11 +222,9 @@
             if (draggedEl) draggedEl.classList.remove('dragging');
 
             // moveTask handles both cross-column moves and within-column reordering
-            if (moveTask(taskId, newStatus, beforeId)) {
-                renderKanban();
-                autoSave();
-                showNotification(t('notif.taskMoved'), 'success');
-            }
+            moveTask(taskId, newStatus, beforeId).then((moved) => {
+                if (moved) showNotification(t('notif.taskMoved'), 'success');
+            });
         }
 
         // ===== Touch drag & drop (mobile) — HTML5 DnD does not fire on touch devices (issue #12) =====
@@ -271,11 +282,9 @@
                         const newStatus = col.dataset.columnId;
                         const taskList = col.querySelector('.task-list');
                         const beforeId = getDropBeforeId(taskList, tch.clientY, touchDrag.taskId);
-                        if (moveTask(touchDrag.taskId, newStatus, beforeId)) {
-                            renderKanban();
-                            autoSave();
-                            showNotification(t('notif.taskMoved'), 'success');
-                        }
+                        moveTask(touchDrag.taskId, newStatus, beforeId).then((moved) => {
+                            if (moved) showNotification(t('notif.taskMoved'), 'success');
+                        });
                     }
                 }
                 touchDrag = null;

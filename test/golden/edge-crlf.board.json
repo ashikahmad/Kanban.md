@@ -1,0 +1,81 @@
+{
+  "config": {
+    "lastTaskId": 2,
+    "columns": [
+      {
+        "name": "To Do",
+        "id": "todo"
+      },
+      {
+        "name": "Done",
+        "id": "done"
+      }
+    ],
+    "categories": [
+      "Frontend",
+      "Backend"
+    ],
+    "users": [
+      "@a"
+    ],
+    "priorities": [
+      "High",
+      "Low"
+    ],
+    "tags": [
+      "x",
+      "y"
+    ],
+    "boardTitle": "CRLF Board"
+  },
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "First",
+      "status": "todo",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [
+        "@a"
+      ],
+      "tags": [
+        "#x"
+      ],
+      "created": "2025-01-01",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Some description.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "one"
+        },
+        {
+          "completed": false,
+          "text": "two"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-002",
+      "title": "Second",
+      "status": "done",
+      "priority": "Low",
+      "category": "Frontend",
+      "assignees": [],
+      "tags": [],
+      "created": "2025-01-02",
+      "started": "",
+      "due": "",
+      "completed": "2025-01-03",
+      "description": "",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    }
+  ],
+  "formatV2": true
+}

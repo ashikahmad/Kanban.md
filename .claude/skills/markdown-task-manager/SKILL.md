@@ -1,29 +1,49 @@
 ---
 name: markdown-task-manager
-description: Use when managing tasks, the system is a Kanban task manager based on local Markdown files (`kanban.md` and `archive.md`). It follows a strict format compatible with the task-manager.html web application.
+description: Use when managing tasks. The system is a Kanban task manager on local Markdown files (`kanban.md`, `archive.md`, optionally `backlog.md`) that a human edits in the kanbanmd.html web app at the same time. Prefer the Kanban MCP tools or the `kanbanmd` CLI; fall back to the file format described here.
 ---
 
-# 📋 Markdown Task Manager Skill
+# 📋 Kanban.md Skill
 
-## When to Use This Skill
+Full guide: `AI_WORKFLOW.md` in the project root. This skill is the short version.
 
-- Create tasks to document work to be done
-- Plan complex features
-- Track project progress
-- Archive completed tasks
-- Generate status reports
+## When to use it
 
-## 📋 STRICT Task Format
+- Create tasks to document work to be done, plan features, track progress
+- Report status ("where are we?"), archive on request
 
-### Mandatory Template
+A human is using the board in the browser while you work. Make small, targeted edits.
+
+## 1. Tools first
+
+If the **Kanban MCP server** is connected (`get_board`, `get_task`, `save_task`, `move_task`, …) or you can run `kanbanmd`, use it. Do **not** read or hand-edit `kanban.md` then: the tools return a few hundred tokens instead of the whole file, validate every change, and merge with the human's concurrent edits.
+
+| Intent | Tool |
+|---|---|
+| What is in a column / who has what / what is overdue | `get_board` (filters), `get_board_stats` |
+| One task in full | `get_task` |
+| Valid columns, priorities, users | `get_config` |
+| Create / change a task | `save_task` (no `id` creates) |
+| Change column | `move_task` |
+| Subtasks, notes | `subtask`, `add_note` |
+| Archive / restore / delete | `archive_tasks`, `restore_task`, `delete_task` |
+| Archive or backlog file contents | `get_board` with `archived: true` / `backlog: true` |
+
+Rules: pass the task's `etag` as `ifMatch` when changing something you read earlier (a `conflict` means re-read and redo); use `dryRun` to preview; errors list the valid choices; `needs_migration` means tell the user to open the board in the browser or run `kanbanmd migrate`; if `get_board_stats` returns `housekeeping` suggestions, **tell the user, never archive unasked**; `sort_tasks` rewrites a file-wide order, so never call it unprompted.
+
+CLI equivalents: `kanbanmd board --status review`, `task TASK-014`, `move TASK-014 done`, `create --title … --status …`, `note`, `toggle`, `archive`, `stats`, `housekeeping`. Add `--dry-run` to preview.
+
+## 2. Task format (only if you edit files yourself): v3, one field per line, each ending in two spaces (Markdown hard break; lines without them still parse)
 
 ```markdown
 ### TASK-XXX | Task title
-
 **Status**: <column-id>
-**Priority**: [Critical|High|Medium|Low] | **Category**: [Value] | **Assigned**: @user1, @user2
-**Created**: YYYY-MM-DD | **Started**: YYYY-MM-DD | **Due**: YYYY-MM-DD | **Finished**: YYYY-MM-DD
-**Tags**: #tag1 #tag2 #tag3
+**Priority**: High
+**Category**: Backend
+**Assigned**: @user1, @user2
+**Created**: YYYY-MM-DD
+**Due**: YYYY-MM-DD
+**Tags**: #tag1 #tag2
 
 Free text description. **NO `##` or `###` headings allowed**.
 
@@ -32,320 +52,26 @@ Free text description. **NO `##` or `###` headings allowed**.
 - [x] Completed subtask
 
 **Notes**:
-Additional notes with subsections `**Title**:`.
-
 **Result**:
 What was done.
-
-**Modified files**:
-- file.js (lines 42-58)
 ```
 
-### ❌ FORBIDDEN
+Required: the `### TASK-XXX |` header and `**Status**:` (a column id). Everything else is optional and independent; leave empty fields out. Optional `**Order**: n` is a manual card order: leave it alone. Forbidden: `##`/`###` headings inside a task; `**Subtasks**`/`**Notes**` without the colon.
 
-- `## Title` or `### Title` inside a task
-- `**Subtasks**` or `**Notes**` without `:`
-- Automatic archiving (only on user request)
+- **Move a task:** edit its one `**Status**:` line. Never cut and paste the block.
+- **New task:** append the block at the end of `kanban.md` and bump `<!-- Config: Last Task ID: N -->`.
+- If the Configuration has `**Backlog file**: backlog.md (backlog)`, tasks of that column live in `backlog.md`; a status change moves them. Do not manage the file.
 
-**Why?** All tasks share one `## Tasks` section, so a stray `##`/`###` heading inside a task can break parsing.
+## 3. Workflow
 
-## 🔄 Workflow
+1. **New request:** create the task (status = first column), break into subtasks if needed.
+2. **Start:** move to in-progress, set `Started`, tick subtasks as you go.
+3. **Finish:** move to done, set `Finished`, document `**Result**:`, `**Modified files**:`, `**Technical decisions**:`, `**Tests performed**:` in `**Notes**:`.
+4. **Archiving:** never automatic. Finished tasks stay in the done column until the user asks.
+5. Reference tasks in commits (`TASK-XXX`).
 
-> **V2 — status is a field, not a position.** A task's column is its `**Status**:`
-> value; all tasks live in one `## Tasks` section. **Move a task by editing its one
-> `**Status**:` line — never cut/paste the whole block** (~1 line vs 20+).
+## Golden rules
 
-### 1. New Request
-1. Read `kanban.md` to get the last task ID
-2. Add the task to the `## Tasks` section with `**Status**: todo` (first column id)
-3. Unique ID (TASK-XXX) auto-incremented
-4. Break down into subtasks if needed
-5. Increment counter in `<!-- Config: Last Task ID: XXX -->`
-
-### 2. Start Work
-1. Edit one line: `**Status**: todo` → `**Status**: in-progress`
-2. Add `**Started**: YYYY-MM-DD`
-3. Check off subtasks progressively
-
-### 3. Finish Work
-1. Edit one line: `**Status**: in-progress` → `**Status**: done`
-2. Add `**Finished**: YYYY-MM-DD`
-3. Document in `**Notes**:`:
-   - `**Result**:` - What was done
-   - `**Modified files**:` - List with line numbers
-   - `**Technical decisions**:` - Choices made
-   - `**Tests performed**:` - Validated tests
-
-### 4. Archiving
-
-**⚠️ Tasks are NOT archived immediately!**
-
-- Completed tasks stay at `**Status**: done`
-- **Only on user request** → move to `archive.md`
-- **Never archive directly at end of work**
-
-## 📁 File Structure
-
-### kanban.md
-
-```markdown
-# Kanban Board
-
-<!-- Config: Last Task ID: 42 -->
-<!-- Format: v2 -->
-
-## ⚙️ Configuration
-
-**Columns**: 📝 To Do (todo) | 🚀 In Progress (in-progress) | 👀 Review (in-review) | ✅ Done (done)
-**Categories**: Frontend, Backend, DevOps
-**Users**: @alice, @bob
-**Priorities**: 🔴 Critical | 🟠 High | 🟡 Medium | 🟢 Low
-**Tags**: #bug, #feature, #docs
-
----
-
-## Tasks
-
-### TASK-001 | Title
-**Status**: todo
-[...]
-
-### TASK-003 | Completed task
-**Status**: done
-[...]
-```
-
-All tasks share the single `## Tasks` section; the column comes from `**Status**:`
-(which must equal a column `id` from the Config), and file order = order within a column.
-
-### ⚡ Token-economical operations (for AI)
-
-No stored index — rebuild it on demand with `grep`, and read/edit **one task**:
-
-```bash
-grep -nE "^### TASK-|^\*\*Status\*\*:" kanban.md    # board overview (index on demand)
-grep -n "^### TASK-042 " kanban.md                   # locate a task by id
-sed -n '/^### TASK-042 /,/^### TASK-/p' kanban.md     # read just that task
-# MOVE = edit one line:   **Status**: todo  ->  **Status**: in-progress
-grep -n "^\*\*Status\*\*: in-progress" kanban.md | head -1   # next task in a column
-```
-
-### archive.md
-
-```markdown
-# Task Archive
-
-> Archived tasks
-
-## ✅ Archives
-
-### TASK-001 | Archived task
-[... full content ...]
-
----
-
-### TASK-002 | Another archived task
-[... full content ...]
-```
-
-## 🎯 Golden Rules
-
-### ✅ ALWAYS
-
-1. Create task BEFORE coding
-2. Strict format (no `##` inside tasks)
-3. Break down if complex (3+ steps)
-4. Update in real-time
-5. Document result in `**Notes**:`
-6. Reference tasks in commits (`TASK-XXX`)
-7. Leave in "Done" (archive only on user request)
-
-### ❌ NEVER
-
-1. `## Title` inside a task
-2. Code without creating task
-3. Forget to check off subtasks
-4. Archive immediately (stay in "Done")
-5. Forget to document the result
-
-## 🔧 User Commands
-
-### Planning
-- "Plan [feature]"
-- "Create roadmap for 3 months"
-
-### Execution
-- "Do TASK-XXX"
-- "Continue TASK-XXX"
-
-### Tracking
-- "Where are we?"
-- "Weekly status"
-
-### Modifications
-- "Break down TASK-XXX"
-- "Add subtask to TASK-XXX"
-
-### Search
-- "Search in archives: [keyword]"
-
-### Maintenance
-- "Archive completed tasks"
-
-## 📝 Complete Examples
-
-### Simple Task
-
-```markdown
-### TASK-001 | Fix login bug
-
-**Priority**: Critical | **Category**: Backend | **Assigned**: @bob
-**Created**: 2025-01-20 | **Due**: 2025-01-21
-**Tags**: #bug #urgent
-
-Users cannot log in. Error 500 in logs.
-
-**Notes**:
-Check Redis, related to yesterday's deployment.
-```
-
-### Complete Task with Result
-
-```markdown
-### TASK-042 | Notification system
-
-**Priority**: High | **Category**: Backend | **Assigned**: @alice
-**Created**: 2025-01-15 | **Started**: 2025-01-18 | **Finished**: 2025-01-22
-**Tags**: #feature
-
-Real-time notifications with WebSockets.
-
-**Subtasks**:
-- [x] Setup WebSocket server
-- [x] REST API
-- [x] Email sending
-- [x] Notifications UI
-- [x] E2E tests
-
-**Notes**:
-
-**Result**:
-✅ Functional system with WebSocket, REST API and emails.
-
-**Modified files**:
-- src/websocket/server.js (lines 1-150)
-- src/api/notifications.js (lines 20-85)
-
-**Technical decisions**:
-- Socket.io for WebSockets
-- SendGrid for emails
-- 30-day history in MongoDB
-
-**Tests performed**:
-- ✅ 100 simultaneous connections
-- ✅ Auto-reconnection
-- ✅ Emails < 2s
-```
-
-## 🛠️ Skill Functions
-
-When using this skill, you must:
-
-1. **Read kanban.md** to understand current state and get last ID
-2. **Create tasks** following strict format
-3. **Update tasks** by moving between sections
-4. **Check off subtasks** progressively
-5. **Document result** in Notes before marking Done
-6. **Increment Last Task ID** in config comment
-7. **Never archive** unless explicitly requested
-
-## 📘 Git Integration
-
-```bash
-# Commits with reference
-git commit -m "feat: Add feature (TASK-042 - 3/5)"
-git commit -m "fix: Bug fix (TASK-001)"
-
-# Branches
-git checkout -b feature/TASK-042-notifications
-```
-
-## ⚠️ Critical Points of Attention
-
-1. **Markdown Format**: Strictly respect format (no `##` inside tasks)
-2. **ID Increment**: Always increment `<!-- Config: Last Task ID: XXX -->`
-3. **Columns**: Use exact column names defined in Configuration
-4. **Archiving**: NEVER archive automatically, only on request
-5. **Documentation**: Always fill `**Notes**:` with Result, Modified files, etc.
-
-## 🎓 Usage
-
-### Initialization
-
-Before using the skill, verify the project contains:
-- `kanban.md` (required)
-- `archive.md` (required)
-- `AI_WORKFLOW.md` (optional but recommended)
-
-### First Use
-
-```
-"Use the markdown-task-manager skill to create a task for [feature]"
-```
-
-### Invocation Examples
-
-```
-"Skill markdown-task-manager: create a task to implement authentication"
-"Skill markdown-task-manager: update TASK-007 with results"
-"Skill markdown-task-manager: list all tasks in progress"
-"Skill markdown-task-manager: archive completed tasks"
-```
-
-## 🔍 Implementation Details
-
-### Reading kanban.md
-
-Always start by reading `kanban.md` to:
-- Get the last task ID from `<!-- Config: Last Task ID: XXX -->`
-- Understand existing columns structure
-- Check current tasks in each column
-
-### Creating a New Task
-
-1. Calculate new ID: `last_id + 1`
-2. Format as `TASK-XXX` (3 digits with leading zeros)
-3. Add to "📝 To Do" section
-4. Update `<!-- Config: Last Task ID: XXX -->` comment
-5. Use today's date for `**Created**:`
-
-### Moving Tasks Between Columns
-
-When moving a task:
-1. Copy entire task content (from `### TASK-XXX` to blank line before next task)
-2. Paste in target column section
-3. Delete from original location
-4. Update dates accordingly (`**Started**:` or `**Finished**:`)
-
-### Completing Tasks
-
-Before moving to "✅ Done":
-1. Ensure all subtasks are checked `[x]`
-2. Add `**Finished**: YYYY-MM-DD`
-3. Fill in `**Notes**:` section with:
-   - `**Result**:` describing what was accomplished
-   - `**Modified files**:` listing changed files with line ranges
-   - `**Technical decisions**:` if any choices were made
-   - `**Tests performed**:` if tests were run
-
-### Archiving Tasks
-
-Only when user explicitly requests archiving:
-1. Read task from "✅ Done" section in `kanban.md`
-2. Append task to "## ✅ Archives" section in `archive.md`
-3. Add separator `---` between archived tasks
-4. Remove task from `kanban.md`
-
----
-
-**This skill ensures complete traceability and total transparency of work done by AI.**
+- Create the task before coding; progress in real time; document the result.
+- Use the tools when you have them; otherwise the strict format.
+- Never archive unasked; never rewrite a whole file when a one-line edit will do.

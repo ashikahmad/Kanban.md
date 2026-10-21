@@ -1,0 +1,71 @@
+{
+  "config": {
+    "lastTaskId": 0,
+    "columns": [
+      {
+        "name": "📝 To Do",
+        "id": "todo"
+      },
+      {
+        "name": "🚀 In Progress",
+        "id": "in-progress"
+      },
+      {
+        "name": "👀 In Review",
+        "id": "in-review"
+      },
+      {
+        "name": "✅ Done",
+        "id": "done"
+      }
+    ],
+    "categories": [
+      "Frontend",
+      "Backend",
+      "Design",
+      "DevOps",
+      "Tests",
+      "Documentation"
+    ],
+    "users": [
+      "@user (User)"
+    ],
+    "priorities": [
+      "🔴 Critical",
+      "🟠 High",
+      "🟡 Medium",
+      "🟢 Low"
+    ],
+    "tags": [
+      "bug",
+      "feature",
+      "ui",
+      "backend",
+      "urgent",
+      "refactor",
+      "docs",
+      "test"
+    ],
+    "boardTitle": "Minimal"
+  },
+  "tasks": [
+    {
+      "id": "TASK-007",
+      "title": "Only a title",
+      "status": "todo",
+      "priority": "",
+      "category": "",
+      "assignees": [],
+      "tags": [],
+      "created": "",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    }
+  ],
+  "formatV2": true
+}

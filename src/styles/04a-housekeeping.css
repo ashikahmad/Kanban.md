@@ -1,0 +1,5 @@
+/* Housekeeping nudge: a quiet bar under the header, and a dashed outline on stale backlog cards. */
+.hk-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); margin: 0 var(--s-4) var(--s-3); padding: var(--s-2) var(--s-3); background: var(--c-accent-soft); border: 1px solid var(--c-border); border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--c-text); }
+.hk-bar .hk-msgs { flex: 1 1 280px; display: flex; flex-wrap: wrap; gap: var(--s-1) var(--s-4); color: var(--c-muted); }
+.hk-bar .hk-actions { display: flex; gap: var(--s-2); }
+.task-card.hk-stale { outline: 1px dashed var(--c-warn); outline-offset: -1px; }

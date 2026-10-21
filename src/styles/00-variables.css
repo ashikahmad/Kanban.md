@@ -1,83 +1,101 @@
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* Design tokens. Everything else in the stylesheet reads from these. */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --bg-primary: #f5f5f5;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f8f9fa;
-            --bg-input: #ffffff;
-            --border-color: #e0e0e0;
-            --border-input: #cbd5e0;
-            --text-primary: #212121;
-            --text-secondary: #757575;
-            --text-label: #333333;
-            --accent: #2196F3;
-            --accent-hover: #1976D2;
-            --shadow: 0 2px 4px rgba(0,0,0,0.1);
-            --shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
-            --badge-category-bg: #E3F2FD;
-            --badge-category-text: #1565C0;
-            --badge-assignee-bg: #F3E5F5;
-            --badge-assignee-text: #6A1B9A;
-            --tag-bg: #FFF3E0;
-            --tag-text: #E65100;
-            --notification-bg: #ffffff;
-            --debug-bg: #f9f9f9;
-            --debug-border: #ddd;
-            --btn-secondary-hover: #e8e8e8;
-            --search-clear-color: #718096;
+            /* Spacing scale (4px base) */
+            --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px;
+            /* Radius */
+            --r-sm: 6px; --r-md: 10px;
+            /* Type scale */
+            --fs-xs: 11px; --fs-sm: 12.5px; --fs-md: 14px; --fs-lg: 16px; --fs-xl: 20px;
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+            --control-h: 32px;
+            --col-min: 280px;
+            --col-max: 460px;
 
-            /* Short aliases used by some inline styles (var(--bg)/var(--text)/var(--border)).
-               They reference the suffixed vars, so they follow the dark theme automatically. */
-            --bg: var(--bg-secondary);
-            --text: var(--text-primary);
-            --border: var(--border-color);
+            /* Surface ladder: the further back, the darker; the nearer the user, the lighter, in both themes:
+               page < column / bar / dialog < card / control < popover. Cool slate neutrals, soft borders.
+               Light mode cannot go lighter than white, so popovers lean on a shadow there. */
+            --c-page: #E9ECF1;      
+            --c-column: #F4F6F9;
+            --c-card: #FFFFFF;
+            --c-input: #FFFFFF;
+            --c-pop: #FFFFFF;
+            --c-hover: rgba(15, 23, 42, 0.05);
+            --c-fill: rgba(100, 116, 139, 0.13);   /* chips, tracks: a tint, so it reads on any level */
+            --c-border: #E1E5EB;
+            --c-border-strong: #CDD3DC;
+            /* Text */
+            --c-text: #171A1F;
+            --c-muted: #5F6875;
+            --c-faint: #8B93A1;
+            /* Accent and states */
+            --c-accent: #2F5BEA;
+            --c-accent-hover: #2349C4;
+            --c-accent-soft: rgba(47, 91, 234, 0.10);
+            --c-on-accent: #FFFFFF;
+            --c-danger: #D23B3B;
+            --c-warn: #B7791F;
+            --c-ok: #3FA66A;
+            --c-overlay: rgba(15, 23, 42, 0.40);
+            --shadow-pop: 0 10px 30px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(15, 23, 42, 0.06);
+            --c-code-bg: var(--c-fill);
+            --c-code-text: #171A1F;
 
-            /* Priority colors */
-            --priority-default: #888888;
-            --priority-red: #EF4444;
-            --priority-orange: #F97316;
-            --priority-yellow: #EAB308;
-            --priority-green: #22C55E;
+            /* Priority dots */
+            --priority-default: #8B93A1;
+            --priority-red: #D93A40;
+            --priority-orange: #E8590C;
+            --priority-yellow: #A87D00;
+            --priority-green: #2B8A57;
             --priority-blue: #3B82F6;
-            --priority-purple: #A855F7;
-            --priority-white: #E5E7EB;
+            --priority-purple: #8B6BD8;
+            --priority-white: #CFD4DC;
             --priority-black: #1F2937;
+
+            /* Aliases for older inline references */
+            --bg-primary: var(--c-page); --bg-secondary: var(--c-card); --bg-tertiary: var(--c-column);
+            --bg-input: var(--c-input); --border-color: var(--c-border); --border-input: var(--c-border-strong);
+            --text-primary: var(--c-text); --text-secondary: var(--c-muted); --text-label: var(--c-muted);
+            --accent: var(--c-accent); --accent-hover: var(--c-accent-hover); --primary: var(--c-accent);
+            --bg: var(--c-card); --text: var(--c-text); --border: var(--c-border);
+            --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%235F6875' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+            color-scheme: light;
         }
 
         [data-theme="dark"] {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --bg-tertiary: #1a1a2e;
-            --bg-input: #0f3460;
-            --border-color: #2a2a4a;
-            --border-input: #3a3a5a;
-            --text-primary: #e0e0e0;
-            --text-secondary: #a0a0b8;
-            --text-label: #c8c8d8;
-            --accent: #4facfe;
-            --accent-hover: #3a8fd4;
-            --shadow: 0 2px 4px rgba(0,0,0,0.3);
-            --shadow-hover: 0 4px 8px rgba(0,0,0,0.4);
-            --badge-category-bg: #1a3a5c;
-            --badge-category-text: #64b5f6;
-            --badge-assignee-bg: #2a1a3c;
-            --badge-assignee-text: #ce93d8;
-            --tag-bg: #3c2a1a;
-            --tag-text: #ffb74d;
-            --notification-bg: #16213e;
-            --debug-bg: #1a1a2e;
-            --debug-border: #2a2a4a;
-            --btn-secondary-hover: #2a2a4a;
-            --search-clear-color: #a0a0b8;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
+            --c-page: #0E1013;      
+            --c-column: #14171C;
+            --c-card: #1B1F26;
+            --c-input: #1B1F26;
+            --c-pop: #232831;
+            --c-hover: rgba(255, 255, 255, 0.05);
+            --c-fill: rgba(148, 163, 184, 0.16);
+            --c-border: #252A33;
+            --c-border-strong: #343B47;
+            --c-text: #E8EAEE;
+            --c-muted: #A0A8B5;
+            --c-faint: #707988;
+            --c-accent: #7B9BFF;
+            --c-accent-hover: #9BB3FF;
+            --c-accent-soft: rgba(123, 155, 255, 0.16);
+            --c-on-accent: #0E1013;
+            --c-danger: #EF6B6B;
+            --c-warn: #E0A94A;
+            --c-ok: #4CC983;
+            --c-overlay: rgba(0, 0, 0, 0.55);
+            --shadow-pop: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07);
+            --c-code-text: #E8EAEE;
+            --priority-default: #707988;
+            --priority-red: #EF6B6B;
+            --priority-orange: #FF8A3D;
+            --priority-yellow: #F2CC3A;
+            --priority-green: #4CC983;
+            --priority-blue: #6EA8FF;
+            --priority-purple: #B197F0;
+            --priority-white: #5B6372;
+            --priority-black: #8B93A1;
+            --chev: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23A0A8B5' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+            color-scheme: dark;
         }

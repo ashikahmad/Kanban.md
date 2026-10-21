@@ -1,0 +1,52 @@
+{
+  "config": {
+    "lastTaskId": 0,
+    "columns": [
+      {
+        "name": "📝 To Do",
+        "id": "to-do"
+      },
+      {
+        "name": "🚀 In Progress",
+        "id": "in-progress"
+      },
+      {
+        "name": "👀 In Review",
+        "id": "in-review"
+      },
+      {
+        "name": "✅ Done",
+        "id": "done"
+      }
+    ],
+    "categories": [
+      "Frontend",
+      "Backend",
+      "Database",
+      "DevOps",
+      "Design",
+      "Tests",
+      "Documentation"
+    ],
+    "users": [
+      "@user"
+    ],
+    "priorities": [
+      "🔴 Critical",
+      "🟠 High",
+      "🟡 Medium",
+      "🟢 Low"
+    ],
+    "tags": [
+      "feature",
+      "bug",
+      "refactor",
+      "docs",
+      "performance",
+      "security"
+    ],
+    "boardTitle": "Kanban Board"
+  },
+  "tasks": [],
+  "formatV2": false
+}

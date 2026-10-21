@@ -1,14 +1,23 @@
 {
-  "name": "markdown-task-manager",
+  "name": "kanban-md",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Single-file Markdown Kanban task manager — built from src/ into one self-contained, dependency-free task-manager.html",
+  "description": "Single-file Markdown Kanban task manager — built from src/ into one self-contained, dependency-free kanbanmd.html",
   "scripts": {
     "build": "node build.mjs",
-    "build:dev": "node build.mjs --dev"
+    "build:dev": "node build.mjs --dev",
+    "test": "node --test test/*.test.mjs",
+    "measure": "node test/tools/measure.mjs",
+    "mcp:install": "npm install --prefix mcp"
   },
   "devDependencies": {
-    "html-minifier-terser": "^7.2.0"
+    "esbuild": "^0.28.2",
+    "html-minifier-terser": "^7.2.0",
+    "marked": "^18.1.1",
+    "terser": "^5.51.2"
+  },
+  "bin": {
+    "kanbanmd": "cli/kanbanmd.js"
   }
 }

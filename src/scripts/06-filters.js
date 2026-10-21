@@ -1,19 +1,3 @@
-        async function autoSave() {
-            if (!kanbanFileHandle) return false;
-            try {
-                const newContent = generateMarkdown();
-                const writable = await kanbanFileHandle.createWritable();
-                await writable.write(newContent);
-                await writable.close();
-                currentKanbanContent = newContent;
-                console.log('Auto-saved');
-                return true;
-            } catch (error) {
-                console.error('Auto-save failed:', error);
-                return false;
-            }
-        }
-
         // Helper function to normalize user identifier (extract @username from @username (Display Name))
         function normalizeUserId(userString) {
             if (!userString) return '';
@@ -84,40 +68,53 @@
             document.getElementById('usersList').innerHTML = users.map(u => `<option value="${escapeHtml(u)}">`).join('');
             document.getElementById('tagsList').innerHTML = tags.map(t => `<option value="${escapeHtml(t)}">`).join('');
 
-            // Update filter selects
-            document.getElementById('filterTagSelect').innerHTML = `<option value="">${t('filters.select')}</option>` + tags.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-            document.getElementById('filterCategorySelect').innerHTML = `<option value="">${t('filters.select')}</option>` + categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
-            document.getElementById('filterUserSelect').innerHTML = `<option value="">${t('filters.select')}</option>` + users.map(u => {
-                const normalizedId = normalizeUserId(u);
-                return `<option value="${escapeHtml(normalizedId)}">${escapeHtml(u)}</option>`;
-            }).join('');
-
-            // Update priority filter select from config
-            const priorities = (config.priorities || []);
-            document.getElementById('filterPrioritySelect').innerHTML = `<option value="">${t('filters.select')}</option>` + priorities.map((p, i) => `<option value="${clean(p)}">${displayPriority(p)}</option>`).join('');
+            buildFilterMenus();
         }
 
         // Filter functions
-        function addFilter(type) {
-            let value;
-            if (type === 'tag') {
-                value = document.getElementById('filterTagSelect').value;
-                document.getElementById('filterTagSelect').value = '';
-            } else if (type === 'category') {
-                value = document.getElementById('filterCategorySelect').value;
-                document.getElementById('filterCategorySelect').value = '';
-            } else if (type === 'user') {
-                value = document.getElementById('filterUserSelect').value;
-                document.getElementById('filterUserSelect').value = '';
-            } else if (type === 'priority') {
-                value = document.getElementById('filterPrioritySelect').value;
-                document.getElementById('filterPrioritySelect').value = '';
-            }
+        // Filter menus: one checklist per filter type, so several values per type can be active at once
+        function filterOptions(type) {
+            const { categories, users, tags } = extractUniqueValues();
+            if (type === 'tag') return tags.map(v => ({ value: v, label: escapeHtml(v) }));
+            if (type === 'category') return categories.map(v => ({ value: v, label: escapeHtml(v) }));
+            if (type === 'user') return users.map(u => ({ value: normalizeUserId(u), label: escapeHtml(u) }));
+            return (config.priorities || []).map(p => ({ value: clean(p), label: priorityHtml(p) }));
+        }
 
-            if (value && !activeFilters.find(f => f.type === type && f.value === value)) {
-                activeFilters.push({ type, value });
-                renderFilters();
-                renderKanban();
+        function buildFilterMenus() {
+            ['tag', 'category', 'user', 'priority'].forEach(type => {
+                const menu = document.getElementById('fmenu-' + type);
+                if (!menu) return;
+                const opts = filterOptions(type);
+                menu.innerHTML = opts.length === 0
+                    ? `<div class="fempty">${t('empty.noTasks')}</div>`
+                    : opts.map(o => `<label class="fopt"><input type="checkbox" data-type="${type}" data-value="${escapeHtml(o.value)}" onchange="setFilterValue(this.dataset.type, this.dataset.value, this.checked)"><span>${o.label}</span></label>`).join('');
+            });
+            syncFilterUi();
+        }
+
+        function setFilterValue(type, value, on) {
+            const idx = activeFilters.findIndex(f => f.type === type && f.value === value);
+            if (on && idx < 0) activeFilters.push({ type, value });
+            if (!on && idx >= 0) activeFilters.splice(idx, 1);
+            renderFilters();
+            renderKanban();
+        }
+
+        // Reflect activeFilters in the checklists, the per-filter counts, the Filters badge and "Clear all"
+        function syncFilterUi() {
+            document.querySelectorAll('.fmenu input[type="checkbox"]').forEach(cb => {
+                cb.checked = activeFilters.some(f => f.type === cb.dataset.type && f.value === cb.dataset.value);
+            });
+            document.querySelectorAll('.fdrop').forEach(d => {
+                const n = activeFilters.filter(f => f.type === d.dataset.type).length;
+                d.querySelector('.fcount').textContent = n || '';
+                d.classList.toggle('active', n > 0);
+            });
+            const count = document.getElementById('filterCount');
+            if (count) {
+                count.textContent = activeFilters.length;
+                count.style.display = activeFilters.length ? '' : 'none';
             }
         }
 
@@ -157,65 +154,50 @@
 
         function renderFilters() {
             const container = document.getElementById('activeFilters');
-            const colors = {
-                tag: '#3b82f6',      // Blue
-                category: '#8b5cf6', // Purple
-                user: '#10b981',     // Green
-                priority: '#f59e0b'  // Orange
-            };
 
-            container.innerHTML = activeFilters.map((f, idx) => {
-                const escapedValue = f.value.replace(/'/g, "\\'");
+            const clearAll = activeFilters.length
+                ? `<button class="chip-clear" onclick="clearFilters()">${escapeHtml(t('filters.clearAll'))}</button>`
+                : '';
+            container.innerHTML = clearAll + activeFilters.map((f, idx) => {
+                // Priorities show their dot; users their full name from config
+                let label = escapeHtml(f.value);
+                if (f.type === 'priority') label = priorityHtml(f.value);
+                if (f.type === 'user') label = escapeHtml(getUserFullFormat(f.value));
 
-                // Determine display value based on filter type
-                let displayValue = f.value;
-
-                // For priority filters, display with prefix/emoji from config
-                if (f.type === 'priority' && config.priorities) {
-                    const priority = config.priorities.find(p => clean(p) === f.value);
-                    if (priority) {
-                        displayValue = priority;
-                    }
-                }
-
-                // For user filters, display with full format from config
-                if (f.type === 'user') {
-                    const fullUserFormat = getUserFullFormat(f.value);
-                    displayValue = fullUserFormat;
-                }
-
-                return `
-                <span style="background: ${colors[f.type]}; color: white; padding: 0.35rem 0.75rem; border-radius: 16px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500;">
-                    ${displayPriority(displayValue)}
-                    <button onclick="removeFilter(${idx})" style="background: none; border: none; color: white; cursor: pointer; padding: 0; font-weight: bold; font-size: 1.1rem; line-height: 1;" title="Supprimer ce filtre">✕</button>
-                </span>
-                `;
+                return `<span class="chip" data-type="${f.type}">${label}<button onclick="removeFilter(${idx})" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}">&times;</button></span>`;
             }).join('');
+
+            syncFilterUi();
         }
 
         function matchesFilters(task) {
             // Check active filters (tags, category, user, priority)
+            // Values of the same filter type are alternatives (OR); different types must all match (AND)
             if (activeFilters.length > 0) {
-                const matchesActiveFilters = activeFilters.every(filter => {
-                    if (filter.type === 'tag') {
-                        return task.tags.includes(filter.value) || task.tags.includes('#' + filter.value);
-                    } else if (filter.type === 'category') {
-                        return task.category === filter.value;
-                    } else if (filter.type === 'user') {
-                        // Normalize both the filter value and task assignees for comparison
-                        return task.assignees.some(assignee => normalizeUserId(assignee) === filter.value);
-                    } else if (filter.type === 'priority') {
-                        return task.priority === filter.value;
-                    }
-                    return false;
-                });
+                const types = [...new Set(activeFilters.map(f => f.type))];
+                const matchesActiveFilters = types.every(type =>
+                    activeFilters.filter(f => f.type === type).some(filter => {
+                        if (type === 'tag') {
+                            return task.tags.includes(filter.value) || task.tags.includes('#' + filter.value);
+                        } else if (type === 'category') {
+                            return task.category === filter.value;
+                        } else if (type === 'user') {
+                            // Normalize both the filter value and task assignees for comparison
+                            return task.assignees.some(assignee => normalizeUserId(assignee) === filter.value);
+                        } else if (type === 'priority') {
+                            return task.priority === filter.value;
+                        }
+                        return false;
+                    })
+                );
                 if (!matchesActiveFilters) return false;
             }
 
-            // Check global search term (searches in title, description, and notes)
+            // Check global search term (searches in id, title, description, and notes; "11" finds TASK-011, TASK-111, ...)
             if (globalSearchTerm) {
                 const searchLower = globalSearchTerm.toLowerCase();
                 const matchesSearch =
+                    (task.id && task.id.toLowerCase().includes(searchLower)) ||
                     (task.title && task.title.toLowerCase().includes(searchLower)) ||
                     (task.description && task.description.toLowerCase().includes(searchLower)) ||
                     (task.notes && task.notes.toLowerCase().includes(searchLower));

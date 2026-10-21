@@ -1,5 +1,6 @@
         async function loadArchive() {
             console.log('🗃️ === LOADING ARCHIVE ===');
+            archiveFileHandle = null;
             try {
                 archiveFileHandle = await directoryHandle.getFileHandle('archive.md');
                 console.log('✓ Archive file handle obtained');
@@ -14,32 +15,33 @@
                 // "## ✅ Archiv" vs hardcoded "✅ Archives" mismatch). honorStatusField=true so
                 // an archived task keeps the original column it was in (stored in **Status**),
                 // making restore exact; old archives with no **Status** fall back to 'archived'.
-                loadedArchiveV2 = /<!--\s*Format:\s*v2\s*-->/i.test(content);
-                archivedTasks = parseTaskBlocks(content, 'archived', true);
+                const parsedArchive = parseArchive(content, config.columns);
+                loadedArchiveVersion = parsedArchive.formatVersion;
+                archivedTasks = parsedArchive.tasks;
 
                 console.log('✓ Archive parsed. Total archived tasks:', archivedTasks.length);
 
-                // Auto-migrate a legacy archive.md to the V2 shape (format marker + **Status**
+                // Auto-migrate a older archive.md to the current (v3) shape (format marker + **Status**
                 // per task). Same TOTAL-parse guard as kanban.md: only rewrite when every
                 // "### TASK-" header parsed to exactly one unique task — a malformed/unparsed
                 // archive block must abstain, not be dropped on saveArchive(). Its OWN try/catch:
                 // a failed write must NOT reach the outer catch (which resets archivedTasks = []).
                 const archiveBlockCount = (content.match(/^###\s+TASK-/gm) || []).length;
                 const archiveUnique = new Set(archivedTasks.map(t => t.id)).size;
-                if (!loadedArchiveV2 && archivedTasks.length > 0
+                if (loadedArchiveVersion < 3 && archivedTasks.length > 0
                         && archivedTasks.length === archiveBlockCount && archiveUnique === archiveBlockCount) {
                     try {
                         // Same rule as kanban.md: never overwrite without a confirmed backup.
-                        if (await backupOriginal('archive.md', content)) {
-                            await saveArchive();
-                            console.log('Migrated archive.md to V2 format');
+                        if (await backupOriginal('archive.md', content, loadedArchiveVersion)) {
+                            await writeWholeArchive();
+                            console.log('Migrated archive.md to v3 format');
                         } else {
                             console.warn('Skipped archive.md migration: backup failed. File left unchanged.');
                         }
                     } catch (e) {
                         console.error('Archive migration write failed (kept in memory):', e);
                     }
-                } else if (!loadedArchiveV2 && archivedTasks.length > 0) {
+                } else if (loadedArchiveVersion < 3 && archivedTasks.length > 0) {
                     console.warn(`Skipped archive.md migration: incomplete parse (${archivedTasks.length}/${archiveBlockCount} blocks). File left unchanged.`);
                 }
             } catch (error) {
@@ -48,46 +50,10 @@
             }
         }
 
-        async function saveArchive() {
-            if (!archiveFileHandle) {
-                archiveFileHandle = await directoryHandle.getFileHandle('archive.md', { create: true });
-            }
-
-            let md = `${t('markdown.archiveTitle')}\n<!-- Format: v2 -->\n\n${t('markdown.archiveDesc')}\n\n${t('markdown.archiveSection')}\n\n`;
-            archivedTasks.forEach(task => {
-                md += `### ${task.id} | ${task.title}\n`;
-                md += `**Status**: ${task.status}\n`;
-                let meta = '';
-                if (task.priority) meta += `**Priority**: ${task.priority}`;
-                if (task.category) meta += ` | **Category**: ${task.category}`;
-                if (task.assignees.length > 0) meta += ` | **Assigned**: ${task.assignees.join(', ')}`;
-                if (meta) md += `${meta}\n`;
-
-                // Write dates line
-                let dates = '';
-                if (task.created) dates += `**Created**: ${task.created}`;
-                if (task.started) dates += (dates ? ' | ' : '') + `**Started**: ${task.started}`;
-                if (task.due) dates += (dates ? ' | ' : '') + `**Due**: ${task.due}`;
-                if (task.completed) dates += (dates ? ' | ' : '') + `**Finished**: ${task.completed}`;
-                if (dates) md += `${dates}\n`;
-                if (task.tags.length > 0) md += `**Tags**: ${task.tags.join(' ')}\n`;
-                if (task.description) md += `\n${task.description}\n`;
-                if (task.subtasks.length > 0) {
-                    md += `\n**Subtasks**:\n`;
-                    task.subtasks.forEach(st => md += `- [${st.completed ? 'x' : ' '}] ${st.text}\n`);
-                }
-                if (task.extra) {
-                    md += `\n${task.extra}\n`;
-                }
-                if (task.notes) {
-                    md += `\n**Notes**:\n${task.notes}\n`;
-                }
-                md += `\n`;
-            });
-
-            const writable = await archiveFileHandle.createWritable();
-            await writable.write(md);
-            await writable.close();
+        // The archive is saved together with the board: the difference between the page's state and the
+        // last saved state decides which file(s) change (see 04a-persist.js).
+        function saveArchive() {
+            return autoSave();
         }
 
         function archiveCurrentTask() {
@@ -150,7 +116,7 @@
 
         async function openArchiveModal() {
             console.log('\n📂 === OPENING ARCHIVE MODAL ===');
-            await loadArchive();
+            await reloadFromDisk({ quiet: true }); // the archive may have changed outside
             renderArchiveList();
             document.getElementById('archiveModal').classList.add('active');
             console.log('✓ Archive modal opened');
@@ -173,6 +139,7 @@
 
             const filtered = searchTerm ?
                 archivedTasks.filter(t =>
+                    t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     t.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -183,33 +150,43 @@
 
             if (filtered.length === 0) {
                 console.log('⚠️ No tasks to display - showing empty message');
-                list.innerHTML = `<p style="text-align: center; color: var(--text-secondary, #999); padding: 2rem;">${t('archives.empty')}</p>`;
+                list.innerHTML = `<div class="empty-state">${t('archives.empty')}</div>`;
                 return;
             }
 
             console.log('✓ Rendering', filtered.length, 'tasks');
 
             list.innerHTML = filtered.map(task => `
-                <div class="task-card" onclick="showTaskDetail(archivedTasks.find(t => t.id === '${task.id}'))">
-                    <div style="background: var(--bg); border: 2px solid var(--border, #e2e8f0); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                            <div>
-                                <span style="background: #6b7280; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${task.id}</span>
-                                <strong style="margin-left: 0.5rem; font-size: 1.1rem;">${escapeHtml(task.title)}</strong>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button onclick="event.stopPropagation(); deleteTask('${task.id}', true)" class="btn btn-secondary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; background: #ef4444; color: white;">🗑️</button>
-                                <button onclick="event.stopPropagation(); unarchiveTask('${task.id}')" class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">${t('action.restore')}</button>
-                            </div>
+                <div class="archive-item" style="cursor: pointer;" data-id="${escapeHtml(task.id)}">
+                    <div class="top">
+                        <div>
+                            <span class="task-id">${escapeHtml(task.id)}</span>
+                            <strong style="margin-left: var(--s-2);">${escapeHtml(task.title)}</strong>
                         </div>
-                        ${task.description ? `<p style="color: var(--text-secondary, #666); margin: 0.5rem 0;">${markdownToHtml(task.description)}</p>` : ''}
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem;">
-                            ${task.priority ? `<span style="background: #fbbf24; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">${displayPriority(task.priority)}</span>` : ''}
-                            ${task.category ? `<span style="background: #8b5cf6; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">${escapeHtml(task.category)}</span>` : ''}
-                            ${task.tags.map(t => `<span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">${escapeHtml(t)}</span>`).join('')}
+                        <div style="display: flex; gap: var(--s-2);">
+                            <button data-action="delete" class="btn btn-danger btn-sm" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
+                            <button data-action="restore" class="btn btn-secondary btn-sm">${t('action.restore')}</button>
                         </div>
                     </div>
+                    ${task.description ? `<div class="desc">${markdownToHtml(task.description)}</div>` : ''}
+                    <div class="task-meta">
+                        ${task.priority ? `<span class="badge">${priorityHtml(task.priority)}</span>` : ''}
+                        ${task.category ? `<span class="badge">${escapeHtml(task.category)}</span>` : ''}
+                        ${task.tags.map(t => `<span class="tag">${escapeHtml(t)}</span>`).join('')}
+                    </div>
+                </div>
             `).join('');
+        }
+
+        // One delegated handler: ids are read from data-id, never concatenated into inline JS.
+        function onArchiveListClick(e) {
+            const item = e.target.closest('.archive-item');
+            if (!item) return;
+            const id = item.dataset.id;
+            const action = e.target.closest('[data-action]')?.dataset.action;
+            if (action === 'delete') deleteTask(id, true);
+            else if (action === 'restore') unarchiveTask(id);
+            else showTaskDetail(archivedTasks.find(t => t.id === id));
         }
 
         function unarchiveTask(taskId) {

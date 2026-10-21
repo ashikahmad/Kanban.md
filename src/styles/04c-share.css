@@ -1,0 +1,24 @@
+/* Share dialog: a preview of exactly what leaves the board. */
+.share-row { display: flex; gap: var(--s-2); margin-bottom: var(--s-3); }
+.share-preview { width: 100%; resize: vertical; font-family: var(--mono); font-size: var(--fs-sm); line-height: 1.5; padding: var(--s-3); border: 1px solid var(--c-border-strong); border-radius: var(--r-md); background: var(--c-input); color: var(--c-text); }
+.share-opt { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-3); font-size: var(--fs-sm); color: var(--c-text); cursor: pointer; }
+.share-hint { margin-top: var(--s-3); font-size: var(--fs-sm); color: var(--c-muted); }
+.share-view { display: inline-flex; }
+.share-view .btn { border-radius: 0; padding-inline: var(--s-3); }
+.share-view .btn + .btn { margin-left: -1px; }
+.share-view .btn:first-child { border-top-left-radius: var(--r-md); border-bottom-left-radius: var(--r-md); }
+.share-view .btn:last-child { border-top-right-radius: var(--r-md); border-bottom-right-radius: var(--r-md); }
+.share-view .btn.btn-primary { position: relative; z-index: 1; }
+.share-rendered { max-height: 22rem; overflow: auto; padding: var(--s-3); border: 1px solid var(--c-border-strong); border-radius: var(--r-md); background: var(--c-input); color: var(--c-text); font-size: var(--fs-sm); line-height: 1.5; }
+/* GitHub-like rendering of the shared Markdown */
+.share-rendered h1, .share-rendered h2, .share-rendered h3 { margin: 0 0 var(--s-2); padding-bottom: var(--s-1); border-bottom: 1px solid var(--c-border-strong); font-size: 1.15em; }
+.share-rendered p { margin: 0 0 var(--s-3); }
+.share-rendered ul, .share-rendered ol { margin: 0 0 var(--s-3); padding-left: 1.5em; }
+.share-rendered li.task-list-item, .share-rendered li:has(> input[type=checkbox]) { list-style: none; margin-left: -1.2em; }
+.share-rendered input[type=checkbox] { margin-right: var(--s-2); }
+.share-rendered code { font-family: var(--mono); font-size: .9em; padding: .1em .35em; border-radius: 4px; background: var(--c-border); }
+.share-rendered pre { padding: var(--s-3); border-radius: var(--r-md); background: var(--c-border); overflow: auto; }
+.share-rendered pre code { padding: 0; background: none; }
+.share-rendered hr { border: 0; border-top: 1px solid var(--c-border-strong); margin: var(--s-3) 0; }
+.share-rendered a { color: var(--primary); text-decoration: underline; }
+.share-rendered blockquote { margin: 0 0 var(--s-3); padding-left: var(--s-3); border-left: 3px solid var(--c-border-strong); color: var(--c-muted); }

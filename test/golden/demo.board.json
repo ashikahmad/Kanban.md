@@ -1,0 +1,541 @@
+{
+  "config": {
+    "lastTaskId": 19,
+    "columns": [
+      {
+        "name": "Backlog",
+        "id": "backlog"
+      },
+      {
+        "name": "In Progress",
+        "id": "in-progress"
+      },
+      {
+        "name": "In Review",
+        "id": "review"
+      },
+      {
+        "name": "Done",
+        "id": "done"
+      }
+    ],
+    "categories": [
+      "Frontend",
+      "Backend",
+      "Design",
+      "DevOps",
+      "Docs"
+    ],
+    "users": [
+      "@alice (Alice Martin)",
+      "@bob (Bob Ito)",
+      "@chen (Chen Wei)",
+      "@dana (Dana Okafor)"
+    ],
+    "priorities": [
+      "🔴 Critical",
+      "🟠 High",
+      "🟡 Medium",
+      "🟢 Low"
+    ],
+    "tags": [
+      "bug",
+      "feature",
+      "ui",
+      "api",
+      "perf",
+      "security",
+      "docs"
+    ],
+    "boardTitle": "Orbit Product Board"
+  },
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "Design the onboarding checklist",
+      "status": "backlog",
+      "priority": "Medium",
+      "category": "Design",
+      "assignees": [
+        "@dana"
+      ],
+      "tags": [
+        "#ui",
+        "#feature"
+      ],
+      "created": "2026-10-02",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Short checklist that guides new workspaces through their first three actions.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Sketch three variants"
+        },
+        {
+          "completed": false,
+          "text": "Review with the team"
+        },
+        {
+          "completed": false,
+          "text": "Hand off to frontend"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-002",
+      "title": "Rate limiting for the public API",
+      "status": "backlog",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [
+        "@bob"
+      ],
+      "tags": [
+        "#api",
+        "#security"
+      ],
+      "created": "2026-10-03",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Protect the public endpoints from bursts. Start with per-key limits and a clear 429 response.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Choose limits per plan"
+        },
+        {
+          "completed": false,
+          "text": "Add middleware"
+        },
+        {
+          "completed": false,
+          "text": "Document the headers"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-003",
+      "title": "Weekly summary email",
+      "status": "backlog",
+      "priority": "Low",
+      "category": "Backend",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#feature"
+      ],
+      "created": "2026-10-05",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "A digest of what changed in each workspace over the last seven days.",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-004",
+      "title": "Keyboard shortcuts cheat sheet",
+      "status": "backlog",
+      "priority": "Low",
+      "category": "Frontend",
+      "assignees": [],
+      "tags": [
+        "#ui",
+        "#docs"
+      ],
+      "created": "2026-10-06",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Press ? to see the available shortcuts.",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-005",
+      "title": "Dark mode for the settings pages",
+      "status": "backlog",
+      "priority": "Medium",
+      "category": "Frontend",
+      "assignees": [
+        "@chen"
+      ],
+      "tags": [
+        "#ui"
+      ],
+      "created": "2026-10-07",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Settings still use hard-coded colours. Move them to the shared tokens.",
+      "subtasks": [
+        {
+          "completed": false,
+          "text": "Audit hard-coded colours"
+        },
+        {
+          "completed": false,
+          "text": "Replace with tokens"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-006",
+      "title": "Move image uploads to a CDN",
+      "status": "in-progress",
+      "priority": "High",
+      "category": "DevOps",
+      "assignees": [
+        "@bob",
+        "@chen"
+      ],
+      "tags": [
+        "#perf"
+      ],
+      "created": "2026-09-28",
+      "started": "2026-10-08",
+      "due": "2026-10-22",
+      "completed": "",
+      "description": "Serve user uploads from the CDN to cut load times in Europe and Asia.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Create the bucket and policy"
+        },
+        {
+          "completed": true,
+          "text": "Add signed upload URLs"
+        },
+        {
+          "completed": false,
+          "text": "Migrate existing files"
+        },
+        {
+          "completed": false,
+          "text": "Switch the app to CDN URLs"
+        }
+      ],
+      "notes": "Migration runs in batches of 500 files. Keep the old URLs working for 30 days.",
+      "extra": ""
+    },
+    {
+      "id": "TASK-007",
+      "title": "Fix flicker when switching workspaces",
+      "status": "in-progress",
+      "priority": "Critical",
+      "category": "Frontend",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#bug",
+        "#ui"
+      ],
+      "created": "2026-10-09",
+      "started": "2026-10-12",
+      "due": "2026-10-15",
+      "completed": "",
+      "description": "The sidebar redraws twice on every workspace switch. Most visible on slow devices.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Reproduce on a throttled device"
+        },
+        {
+          "completed": false,
+          "text": "Cache the workspace list"
+        },
+        {
+          "completed": false,
+          "text": "Add a regression test"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-008",
+      "title": "Search across projects",
+      "status": "in-progress",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [
+        "@chen"
+      ],
+      "tags": [
+        "#feature",
+        "#api"
+      ],
+      "created": "2026-09-30",
+      "started": "2026-10-10",
+      "due": "",
+      "completed": "",
+      "description": "One search box that looks through tasks, files and comments in every project you can access.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Index tasks"
+        },
+        {
+          "completed": true,
+          "text": "Index comments"
+        },
+        {
+          "completed": false,
+          "text": "Index files"
+        },
+        {
+          "completed": false,
+          "text": "Ranking and typo tolerance"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-009",
+      "title": "Redesign the empty states",
+      "status": "review",
+      "priority": "Medium",
+      "category": "Design",
+      "assignees": [
+        "@dana"
+      ],
+      "tags": [
+        "#ui"
+      ],
+      "created": "2026-10-01",
+      "started": "2026-10-06",
+      "due": "",
+      "completed": "",
+      "description": "Friendlier empty states with a single clear action.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Dashboard"
+        },
+        {
+          "completed": true,
+          "text": "Projects"
+        },
+        {
+          "completed": true,
+          "text": "Notifications"
+        },
+        {
+          "completed": false,
+          "text": "Final copy review"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-010",
+      "title": "Add two-factor authentication",
+      "status": "review",
+      "priority": "Critical",
+      "category": "Backend",
+      "assignees": [
+        "@bob",
+        "@alice"
+      ],
+      "tags": [
+        "#security",
+        "#feature"
+      ],
+      "created": "2026-09-20",
+      "started": "2026-10-01",
+      "due": "2026-10-23",
+      "completed": "",
+      "description": "Authenticator app support with recovery codes.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "TOTP enrolment"
+        },
+        {
+          "completed": true,
+          "text": "Recovery codes"
+        },
+        {
+          "completed": true,
+          "text": "Admin enforcement setting"
+        },
+        {
+          "completed": false,
+          "text": "Security review sign-off"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-011",
+      "title": "Write the migration guide",
+      "status": "review",
+      "priority": "Low",
+      "category": "Docs",
+      "assignees": [
+        "@alice"
+      ],
+      "tags": [
+        "#docs"
+      ],
+      "created": "2026-10-04",
+      "started": "",
+      "due": "",
+      "completed": "",
+      "description": "Step-by-step guide for teams moving from the old export format.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Draft"
+        },
+        {
+          "completed": false,
+          "text": "Technical review"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-012",
+      "title": "Upgrade to the latest framework version",
+      "status": "done",
+      "priority": "Medium",
+      "category": "Frontend",
+      "assignees": [
+        "@chen"
+      ],
+      "tags": [
+        "#perf"
+      ],
+      "created": "2026-09-10",
+      "started": "2026-09-12",
+      "due": "",
+      "completed": "2026-09-30",
+      "description": "Dependency upgrade and removal of deprecated APIs.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Upgrade packages"
+        },
+        {
+          "completed": true,
+          "text": "Fix breaking changes"
+        },
+        {
+          "completed": true,
+          "text": "Run the full test suite"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-013",
+      "title": "Set up error monitoring",
+      "status": "done",
+      "priority": "High",
+      "category": "DevOps",
+      "assignees": [
+        "@bob"
+      ],
+      "tags": [
+        "#feature"
+      ],
+      "created": "2026-09-08",
+      "started": "2026-09-09",
+      "due": "",
+      "completed": "2026-09-25",
+      "description": "Capture front-end and back-end errors with release tags.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Install the SDK"
+        },
+        {
+          "completed": true,
+          "text": "Alert rules"
+        },
+        {
+          "completed": true,
+          "text": "On-call routing"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-014",
+      "title": "Accessible colour palette",
+      "status": "done",
+      "priority": "Medium",
+      "category": "Design",
+      "assignees": [
+        "@dana"
+      ],
+      "tags": [
+        "#ui"
+      ],
+      "created": "2026-09-05",
+      "started": "2026-09-06",
+      "due": "",
+      "completed": "2026-09-27",
+      "description": "All text and controls reach WCAG AA contrast in light and dark themes.",
+      "subtasks": [
+        {
+          "completed": true,
+          "text": "Audit current colours"
+        },
+        {
+          "completed": true,
+          "text": "New palette"
+        },
+        {
+          "completed": true,
+          "text": "Check every component"
+        }
+      ],
+      "notes": "",
+      "extra": ""
+    },
+    {
+      "id": "TASK-015",
+      "title": "Invite teammates by link",
+      "status": "done",
+      "priority": "High",
+      "category": "Backend",
+      "assignees": [
+        "@alice",
+        "@chen"
+      ],
+      "tags": [
+        "#feature"
+      ],
+      "created": "2026-09-01",
+      "started": "2026-09-02",
+      "due": "",
+      "completed": "2026-09-18",
+      "description": "Shareable invite links that expire after seven days.",
+      "subtasks": [],
+      "notes": "",
+      "extra": ""
+    }
+  ],
+  "formatV2": true
+}

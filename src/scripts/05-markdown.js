@@ -32,6 +32,13 @@
             // Escape HTML tags in remaining text (after extracting code blocks)
             html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+            // Stash `inline code` so the bold/italic rules below leave its content alone
+            const inlineCode = [];
+            html = html.replace(/`([^`]+)`/g, (m, code) => {
+                inlineCode.push(`<code style="background: #2d2d2d; color: #f8f8f2; padding: 0.125rem 0.35rem; border-radius: 3px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.9em;">${code}</code>`);
+                return `__INLINE_CODE_${inlineCode.length - 1}__`;
+            });
+
             // Convert **Bold subsections** with colon (e.g., **Résultat**:)
             html = html.replace(/\*\*([^*]+)\*\*:/g, '<strong style="color: var(--primary); display: block; margin-top: 1rem; margin-bottom: 0.5rem;">$1:</strong>');
 
@@ -41,14 +48,11 @@
             // Convert *Italic*
             html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
-            // Convert `inline code`
-            html = html.replace(/`([^`]+)`/g, '<code style="background: #2d2d2d; color: #f8f8f2; padding: 0.125rem 0.35rem; border-radius: 3px; font-family: \'Consolas\', \'Monaco\', monospace; font-size: 0.9em;">$1</code>');
-
             // Convert links [text](url) — validate URL scheme to block javascript:/data: (XSS)
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
                 const u = url.trim();
                 const safe = /^(https?:|mailto:|#|\/)/i.test(u) ? u : '#';
-                return `<a href="${escapeHtml(safe)}" target="_blank" style="color: var(--primary); text-decoration: underline;">${text}</a>`;
+                return `<a href="${safe.replace(/"/g, '&quot;')}" target="_blank" style="color: var(--primary); text-decoration: underline;">${text}</a>`;
             });
 
             // Convert bullet lists and paragraphs
@@ -97,9 +101,12 @@
 
             html = result.join('\n');
 
-            // Replace code block placeholders with actual code blocks
+            // Restore stashed code (function replacers keep `$` in code literal)
             codeBlocks.forEach((block, index) => {
-                html = html.replace(`__CODE_BLOCK_${index}__`, block);
+                html = html.replace(`__CODE_BLOCK_${index}__`, () => block);
+            });
+            inlineCode.forEach((code, index) => {
+                html = html.replace(`__INLINE_CODE_${index}__`, () => code);
             });
 
             return html;

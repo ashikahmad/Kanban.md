@@ -113,13 +113,15 @@
 
         // Update project selector dropdown
         async function updateProjectSelector() {
+            if (typeof updateOrderingMenu === 'function') updateOrderingMenu();
+            if (typeof updateHousekeepingBar === 'function') updateHousekeepingBar();
             const projects = await loadRecentProjects();
-            const selector = document.getElementById('projectSelector');
+            const selectorBox = document.getElementById('projectDd');
             const renameBtn = document.getElementById('renameProjectBtn');
             const deleteBtn = document.getElementById('deleteProjectBtn');
 
             if (projects.length > 0) {
-                selector.style.display = 'block';
+                selectorBox.style.display = 'block';
 
                 // Only mark as selected if kanban is actually loaded
                 const isKanbanLoaded = document.getElementById('kanbanView').style.display !== 'none';
@@ -135,22 +137,20 @@
                 }
 
                 // Add empty option if no project is loaded
-                let html = '';
-                if (!isKanbanLoaded) {
-                    html = `<option value="" selected>${t('projects.select')}</option>`;
-                }
-
-                html += projects.map((p, idx) => {
-                    const selected = (isKanbanLoaded && p.name === currentProject) ? 'selected' : '';
+                const options = [];
+                if (!isKanbanLoaded) options.push({ value: '', label: t('projects.select') });
+                let selectedValue = '';
+                projects.forEach((p, idx) => {
                     const date = new Date(p.lastAccessed).toLocaleDateString('fr-FR');
                     const displayName = p.customName || p.name;
                     const details = p.customName ? ` (📁 ${p.name})` : '';
-                    return `<option value="${idx}" ${selected}>${displayName}${details} - ${date}</option>`;
-                }).join('');
-
-                selector.innerHTML = html;
+                    if (isKanbanLoaded && p.name === currentProject) selectedValue = String(idx);
+                    options.push({ value: String(idx), label: `${displayName}${details} - ${date}` });
+                });
+                ddSetOptions('projectSelector', options);
+                ddSetValue('projectSelector', selectedValue, true);
             } else {
-                selector.style.display = 'none';
+                selectorBox.style.display = 'none';
                 renameBtn.style.display = 'none';
                 deleteBtn.style.display = 'none';
             }
