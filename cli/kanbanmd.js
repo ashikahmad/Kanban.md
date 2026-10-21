@@ -99,7 +99,8 @@ async function main() {
     }
 
     const READS = ['board', 'list', 'task', 'show', 'config', 'archived', 'backlog', 'stats', 'changes'];
-    if (READS.includes(cmd)) {
+    // `config` alone shows the config; `config <list> a,b,c` writes a list.
+    if (READS.includes(cmd) && !(cmd === 'config' && a.length > 0)) {
         const ws = await readWorkspace(dir);
         const q = { status: flags.status, assignee: flags.assignee, tag: flags.tag, priority: flags.priority, category: flags.category,
             text: flags.text, dueBefore: flags['due-before'], overdue: flags.overdue, limit: flags.limit, offset: flags.offset,

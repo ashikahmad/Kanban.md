@@ -152,6 +152,21 @@ test('cli: board, task, config, archive, stats and changes', () => {
   assert.equal(cli(dir, ['changes', '--since', '2999-01-01T00:00:00Z']).json.changes.length, 0);
 });
 
+test('cli: config shows the config; config <list> values and columns write it', () => {
+  const dir = project();
+  assert.equal(cli(dir, ['config']).json.columns.length, 4);
+  const w = cli(dir, ['config', 'categories', 'Alpha,Beta']);
+  assert.equal(w.json.ok, true);
+  assert.equal(w.json.result.name, 'categories');
+  assert.deepEqual(parseBoard(read(dir)).config.categories, ['Alpha', 'Beta']);
+  assert.equal(cli(dir, ['config', 'tags', 'x,#y']).json.ok, true);
+  assert.deepEqual(parseBoard(read(dir)).config.tags, ['x', 'y']);
+  assert.equal(cli(dir, ['config', 'nonsense', 'a']).json.error.code, 'unknown_config');
+  const cols = parseBoard(read(dir)).config.columns;
+  assert.equal(cli(dir, ['columns', JSON.stringify([...cols, { name: 'Later', id: 'later' }])]).json.ok, true);
+  assert.equal(parseBoard(read(dir)).config.columns.at(-1).id, 'later');
+});
+
 test('cli: sort reorders by id on request', () => {
   const dir = project();
   cli(dir, ['move', 'TASK-001', 'done', '--at-end']);
