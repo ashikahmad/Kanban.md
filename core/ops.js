@@ -336,14 +336,17 @@ const OPS = {
     },
 
     // Explicit sort. Modes:
-    //   blocks    reorder the task blocks in the file by numeric id (the default while no key exists)
-    //   ids       assign keys that reflect id order (the default once ordering is on)
+    //   blocks    reorder the task blocks in the file by numeric id
+    //   ids       assign keys that reflect id order
     //   positions assign keys that reflect the current order (keys, then file position); also how
     //             manual ordering is switched on
     //   clear     remove every key (order falls back to file position)
     sortTasks(ctx, op) {
-        const mode = op.mode || (orderActive(ctx.state.tasks) ? 'ids' : 'blocks');
-        if (!['blocks', 'ids', 'positions', 'clear'].includes(mode)) fail('invalid_field', `Unknown sort mode "${mode}"`, { valid: ['blocks', 'ids', 'positions', 'clear'] });
+        // Sorting rewrites the file wholesale, so the mode is never guessed.
+        const mode = op.mode;
+        const MODES = ['blocks', 'ids', 'positions', 'clear'];
+        if (!mode) fail('missing_field', 'sortTasks needs a mode', { valid: MODES, hint: 'blocks: reorder file blocks by id. ids / positions: write Order keys from id order / current order. clear: remove all Order keys.' });
+        if (!MODES.includes(mode)) fail('invalid_field', `Unknown sort mode "${mode}"`, { valid: MODES });
         if (op.by && op.by !== 'id') fail('invalid_field', `Cannot sort by "${op.by}"`, { valid: ['id'] });
         const dir = op.order === 'desc' ? -1 : 1;
         const num = (t) => parseInt((t.id.match(/(\d+)$/) || [])[1], 10) || 0;

@@ -142,7 +142,8 @@ test('cli: sort reorders by id on request', () => {
   cli(dir, ['move', 'TASK-001', 'done', '--at-end']);
   const before = parseBoard(read(dir)).tasks.map((t) => t.id);
   assert.notDeepEqual(before, [...before].sort());
-  assert.equal(cli(dir, ['sort']).json.ok, true);
+  assert.equal(cli(dir, ['sort']).json.error.code, 'missing_field');
+  assert.equal(cli(dir, ['sort', '--mode', 'blocks']).json.ok, true);
   const after = parseBoard(read(dir)).tasks.map((t) => t.id);
   assert.deepEqual(after, [...after].sort());
 });

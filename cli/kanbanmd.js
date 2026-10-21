@@ -31,9 +31,9 @@ const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
          [--due YYYY-MM-DD] [--description D]
   update <id> --<field> <value> ...                fields: ${TASK_FIELDS.join(', ')}
   move <id> <status> [--before ID | --at-end]       in place by default; a position relocates the block
-  sort [--mode blocks|ids|positions|clear] [--order asc|desc] [--scope board|archive|both]
+  sort --mode blocks|ids|positions|clear [--order asc|desc] [--scope board|archive|both]   (mode is required)
        blocks: reorder file blocks by id.  ids / positions: write Order keys from id order / current order.
-       clear: remove all Order keys.   (default: ids when keys exist, else blocks)
+       clear: remove all Order keys.
   toggle <id> <index|text>        subtask <id> <text>        note <id> <text>
   archive <id>   restore <id>   delete <id>
   config <categories|users|priorities|tags> a,b,c

@@ -309,7 +309,7 @@ function randomOp(R, ws) {
     if (chance(0.3)) f.notes = chance(0.25) ? '' : text();
     return f;
   };
-  if (chance(0.04)) return { type: 'sortTasks', mode: pick(['blocks', 'ids', 'positions', 'clear', undefined]), scope: pick(['board', 'archive', 'both']), order: pick(['asc', 'desc']) };
+  if (chance(0.04)) return { type: 'sortTasks', mode: pick(['blocks', 'ids', 'positions', 'clear']), scope: pick(['board', 'archive', 'both']), order: pick(['asc', 'desc']) };
   const r = R();
   if (r < 0.14) return { type: 'createTask', task: { title: text(1), ...fields() } };
   if (r < 0.38) return { type: 'updateTask', id, set: fields() };
@@ -484,7 +484,7 @@ test('sortTasks orders blocks by numeric id and moves them verbatim', () => {
   ws = { ...ws, board: apply(ws, { type: 'moveTask', id: 'TASK-015', status: 'backlog', before: 'TASK-001' }).board };
   ws = { ...ws, board: apply(ws, { type: 'moveTask', id: 'TASK-007', status: 'in-progress', atEnd: true }).board };
   assert.notDeepEqual(parseBoard(ws.board).tasks.map((t) => t.id), parseBoard(ws.board).tasks.map((t) => t.id).sort());
-  const out = apply(ws, { type: 'sortTasks' });
+  const out = apply(ws, { type: 'sortTasks', mode: 'blocks' });
   const ids = parseBoard(out.board).tasks.map((t) => t.id);
   assert.deepEqual(ids, [...ids].sort());
   const before = blockMap(ws.board), after = blockMap(out.board);
@@ -495,24 +495,34 @@ test('sortTasks orders blocks by numeric id and moves them verbatim', () => {
 
 test('sortTasks compares ids numerically, supports desc, and is a no-op when already sorted', () => {
   const board = fx('edge-extras.kanban').replace('### TASK-004 | Bare task', '### TASK-1000 | Big\n\n### TASK-004 | Bare task');
-  const asc = apply({ board, archive: null }, { type: 'sortTasks' });
+  const asc = apply({ board, archive: null }, { type: 'sortTasks', mode: 'blocks' });
   const ids = parseBoard(asc.board).tasks.map((t) => t.id);
   assert.equal(ids[ids.length - 1], 'TASK-1000', 'TASK-1000 sorts after TASK-004 numerically (alphabetically it would come first)');
-  assert.deepEqual(apply({ board: asc.board, archive: null }, { type: 'sortTasks' }).files, []);
-  const desc = apply({ board: asc.board, archive: null }, { type: 'sortTasks', order: 'desc' });
+  assert.deepEqual(apply({ board: asc.board, archive: null }, { type: 'sortTasks', mode: 'blocks' }).files, []);
+  const desc = apply({ board: asc.board, archive: null }, { type: 'sortTasks', mode: 'blocks', order: 'desc' });
   assert.deepEqual(parseBoard(desc.board).tasks.map((t) => t.id), [...ids].reverse());
   assert.equal(parseBoard(desc.board).tasks[0].id, 'TASK-1000');
 });
 
 test('sortTasks can sort the archive, and both files', () => {
   const ws = { board: fx('demo.kanban'), archive: fx('demo.archive') };
-  const rev = apply(ws, { type: 'sortTasks', scope: 'archive', order: 'desc' });
+  const rev = apply(ws, { type: 'sortTasks', mode: 'blocks', scope: 'archive', order: 'desc' });
   assert.equal(rev.board, ws.board);
   assert.deepEqual(rev.files.map((f) => f.name), ['archive.md']);
-  const both = apply({ board: ws.board, archive: rev.archive }, { type: 'sortTasks', scope: 'both' });
+  const both = apply({ board: ws.board, archive: rev.archive }, { type: 'sortTasks', mode: 'blocks', scope: 'both' });
   const ids = parseArchive(both.archive, []).tasks.map((t) => t.id);
   assert.deepEqual(ids, [...ids].sort());
-  assert.equal(code(() => apply(ws, { type: 'sortTasks', by: 'title' })), 'invalid_field');
+  assert.equal(code(() => apply(ws, { type: 'sortTasks', mode: 'blocks', by: 'title' })), 'invalid_field');
+});
+
+test('sortTasks never guesses: no mode is an error that lists the choices, with or without keys', () => {
+  for (const ws of [demo(), keyed()]) {
+    let err;
+    try { apply(ws, { type: 'sortTasks' }); } catch (e) { err = e; }
+    assert.equal(err.code, 'missing_field');
+    assert.deepEqual(err.valid, ['blocks', 'ids', 'positions', 'clear']);
+    assert.equal(code(() => apply(ws, { type: 'sortTasks', mode: 'sideways' })), 'invalid_field');
+  }
 });
 
 // ---- manual ordering (**Order** keys) ----------------------------------------------------------

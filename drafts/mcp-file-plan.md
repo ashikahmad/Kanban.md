@@ -92,7 +92,7 @@ Two rules keep diffs small and predictable:
 - **Display order.** Within a column, tasks sort by `Order`; tasks without one come after the keyed ones, in file order. With no keys at all this is simply file order. `orderedTasks()` in `core/board.js` is the one definition, used by the CLI, the MCP tools and (Phase 4) the page.
 - **Opting in.** The first manual drag in the page asks "remember manual order?". Yes runs `sortTasks { mode: 'positions' }`: one inserted line per task, once, keys spaced by 1000 in the current order. No keeps today's behaviour (a drop relocates the block). Ordering is "on" whenever any task has a key; there is no separate flag in the file.
 - **While it is on:** a plain move edits only `**Status**` (the card keeps its key, so it lands in the target column where its key says). `before X` writes a key halfway between X and its predecessor, `atEnd` writes the column's maximum plus 1000: each is a status line plus an `Order` line, never a block move. If two neighbours leave no room, the keys are renumbered evenly (one larger diff, rare). New tasks get the next key, so they still go last. A task added by hand with no key sorts last; the next positional op gives it a key. Archive and restore carry the key with the block.
-- **Sorting has two meanings, both explicit** (`sortTasks`): `ids` assigns keys that reflect numeric id order, `positions` assigns keys that reflect the current order (also how ordering is switched on). `clear` removes every key (back to file position). `blocks`, the earlier behaviour, physically reorders blocks by id and is the default while no key exists.
+- **Sorting has two meanings, both explicit** (`sortTasks`): `ids` assigns keys that reflect numeric id order, `positions` assigns keys that reflect the current order (also how ordering is switched on). `clear` removes every key (back to file position). `blocks`, the earlier behaviour, physically reorders blocks by id. The mode is always required: sorting is a file-wide change and is never guessed.
 - **Compatibility.** An older copy of the app does not know the field and would show `**Order**: n` as description text. The current core reads it as metadata. Everything else in the format is unchanged.
 
 ## 6. Write protocol
@@ -129,7 +129,7 @@ CLI and MCP expose the same operations. `kanbanmd get-board --status in-progress
 | `create_task` | id assigned; `created` defaults to today |
 | `update_task` | partial patch; optional `ifMatch` |
 | `move_task` | `status`; edits the **Status** line in place (one-line diff). Optional `before` id or `atEnd` relocates the block on request; same column and no position is a no-op |
-| `sort_tasks` | `mode`: `ids` / `positions` write `Order` keys (see 5.7), `clear` removes them, `blocks` reorders file blocks by id (default before keys exist); `order` asc/desc; no-op if nothing would change |
+| `sort_tasks` | `mode`: `ids` / `positions` write `Order` keys (see 5.7), `clear` removes them, `blocks` reorders file blocks by id; **`mode` is required, never defaulted** (it rewrites the file wholesale); `order` asc/desc; no-op if nothing would change |
 | `toggle_subtask`, `add_subtask`, `append_note` | tiny writes |
 | `archive_task`, `restore_task`, `list_archive` | archive lifecycle |
 | `update_config` | add / rename / remove column (explicit target for orphans), categories, users, tags |
