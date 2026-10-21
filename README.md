@@ -685,15 +685,19 @@ Measured on the example boards (`npm run measure`; tokens estimated as bytes / 4
 - **Keyboard**: **Esc** closes menus and dialogs
 - **Keyboard shortcuts**: Quick navigation (coming soon)
 
-### 10. Manual card order (optional)
+### 10. Share a task
+
+The task details have a **Share** button: a preview of exactly what would be shared (plain text for chat or mail, or the Markdown block that another board can import), checkboxes to leave out notes and assignees, **Copy**, and **Share…** where your browser has a share sheet. Nothing is sent by the app itself.
+
+### 11. Manual card order (optional)
 
 By default a card sits where its block is in the file. The first time you drag a card to a spot, the app asks whether to **remember the order**: if you say yes, each task gets an `**Order**: 3000` line and every later move changes just two lines (no blocks move). Burger menu → **Manual order** switches it on or off, and **Reset order by task id** puts the cards back in id order.
 
-### 11. Housekeeping nudges
+### 12. Housekeeping nudges
 
 A quiet bar under the header suggests keeping the board small: tasks **finished 30+ days ago** (button: *Archive done*, one confirmed step), **backlog tasks older than 90 days** (outlined), a board over **200 tasks**, or a backlog over **100 tasks** (button: *Move backlog to its own file*). *Snooze 7 days* hides it; *Dismiss* hides it until the numbers change. It never acts on its own. Change the numbers (or turn it off) in the burger menu → **Housekeeping**, or with the optional config line `**Housekeeping**: done=done after=30d | backlog=backlog after=90d | max=200` (`off` silences it).
 
-### 12. Backlog file (optional)
+### 13. Backlog file (optional)
 
 For a very large backlog, a task whose status is the backlog column can live in its own **`backlog.md`**, keeping `kanban.md` small and fast. The backlog column becomes a stub with a count; **Open backlog** shows a panel where you can search, send a task to any column, or archive it. Dragging a card onto the stub parks it; changing a task's status moves it between the files. Switch it on with the nudge (past 100 backlog tasks) or burger menu → **Backlog file**. Config line: `**Backlog file**: backlog.md (backlog)`.
 

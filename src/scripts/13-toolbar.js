@@ -30,13 +30,15 @@
             if (e.key !== 'Escape') return;
             closeMenus();
             // Esc and a click on the backdrop close the read-only dialogs (not the edit form, so typing is never lost)
-            if (document.getElementById('taskModal').classList.contains('active')) closeModal();
+            if (document.getElementById('shareModal').classList.contains('active')) closeShareDialog();
+            else if (document.getElementById('taskModal').classList.contains('active')) closeModal();
             else if (document.getElementById('columnsModal').classList.contains('active')) closeColumnsModal();
             else if (document.getElementById('archiveModal').classList.contains('active')) closeArchiveModal();
             else if (document.getElementById('backlogModal').classList.contains('active')) closeBacklogModal();
         });
         document.addEventListener('mousedown', (e) => {
-            if (e.target.id === 'taskModal') closeModal();
+            if (e.target.id === 'shareModal') closeShareDialog();
+            else if (e.target.id === 'taskModal') closeModal();
             else if (e.target.id === 'columnsModal') closeColumnsModal();
             else if (e.target.id === 'archiveModal') closeArchiveModal();
             else if (e.target.id === 'backlogModal') closeBacklogModal();

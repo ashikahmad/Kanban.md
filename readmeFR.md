@@ -688,15 +688,19 @@ Mesuré sur les tableaux d'exemple (`npm run measure` ; jetons estimés à octet
 - **Mode sombre** : Basculement clair/sombre avec détection automatique du système
 - **Raccourcis clavier** : Navigation rapide (à venir)
 
-### 10. Ordre manuel des cartes (optionnel)
+### 10. Partager une tâche
+
+Le détail d'une tâche a un bouton **Partager** : un aperçu exact de ce qui serait partagé (texte brut pour une discussion ou un mail, ou le bloc Markdown qu'un autre tableau peut importer), des cases pour exclure les notes et les assignés, **Copier**, et **Partager…** si votre navigateur propose une feuille de partage. L'application n'envoie rien elle-même.
+
+### 11. Ordre manuel des cartes (optionnel)
 
 Par défaut, une carte reste à l'endroit où se trouve son bloc dans le fichier. La première fois que vous glissez une carte à un endroit précis, l'application demande s'il faut **mémoriser l'ordre** : si oui, chaque tâche reçoit une ligne `**Order**: 3000` et chaque déplacement suivant ne modifie que deux lignes (aucun bloc ne bouge). Menu burger → **Ordre manuel** l'active ou le désactive, et **Réinitialiser l'ordre par identifiant** remet les cartes dans l'ordre des identifiants.
 
-### 11. Rappels de ménage
+### 12. Rappels de ménage
 
 Une barre discrète sous l'en-tête suggère de garder le tableau léger : tâches **terminées depuis plus de 30 jours** (bouton : *Archiver les terminées*, en une étape confirmée), **tâches du backlog de plus de 90 jours** (contour pointillé), un tableau de plus de **200 tâches**, ou un backlog de plus de **100 tâches** (bouton : *Déplacer le backlog dans son propre fichier*). *Reporter 7 jours* la masque ; *Ignorer* la masque jusqu'à ce que les chiffres changent. Elle n'agit jamais d'elle-même. Réglez les seuils (ou désactivez-la) dans le menu burger → **Ménage**, ou avec la ligne de configuration optionnelle `**Housekeeping**: done=done after=30d | backlog=backlog after=90d | max=200` (`off` la désactive).
 
-### 12. Fichier backlog (optionnel)
+### 13. Fichier backlog (optionnel)
 
 Pour un très gros backlog, les tâches dont le statut est la colonne backlog peuvent vivre dans leur propre fichier **`backlog.md`**, ce qui garde `kanban.md` léger et rapide. La colonne backlog devient un cadre avec un compteur ; **Ouvrir le backlog** affiche un panneau pour chercher, envoyer une tâche vers n'importe quelle colonne ou l'archiver. Glisser une carte sur le cadre la range ; changer le statut d'une tâche la déplace entre les fichiers. Activez-le via le rappel (au-delà de 100 tâches de backlog) ou menu burger → **Fichier backlog**. Ligne de configuration : `**Backlog file**: backlog.md (backlog)`.
 

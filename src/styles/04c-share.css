@@ -1,0 +1,5 @@
+/* Share dialog: a preview of exactly what leaves the board. */
+.share-row { display: flex; gap: var(--s-2); margin-bottom: var(--s-3); }
+.share-preview { width: 100%; resize: vertical; font-family: var(--mono); font-size: var(--fs-sm); line-height: 1.5; padding: var(--s-3); border: 1px solid var(--c-border-strong); border-radius: var(--r-md); background: var(--c-input); color: var(--c-text); }
+.share-opt { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-3); font-size: var(--fs-sm); color: var(--c-text); cursor: pointer; }
+.share-hint { margin-top: var(--s-3); font-size: var(--fs-sm); color: var(--c-muted); }

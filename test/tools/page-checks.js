@@ -459,6 +459,78 @@
     window.confirm = realConfirm;
   });
 
+  // ---- share ----
+  const preview = () => document.getElementById('sharePreview').value;
+  const shareOpen = () => document.getElementById('shareModal').classList.contains('active');
+  const withClipboard = (fn) => { const had = Object.getOwnPropertyDescriptor(navigator, 'clipboard'); const box = { text: null };
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (x) => { box.text = x; } } });
+    return fn(box).finally(() => { if (had) Object.defineProperty(navigator, 'clipboard', had); else delete navigator.clipboard; }); };
+
+  await check('share: the detail view has a Share button; the dialog previews exactly what would be sent', async () => {
+    await fresh();
+    const task = tasks.find((t) => t.id === 'TASK-002');
+    task.notes = 'Private note for the team.'; showTaskDetail(task);
+    ok([...document.querySelectorAll('#taskModalActions button')].some((b) => b.textContent === 'Share'), 'button present');
+    openShareDialog();
+    ok(shareOpen(), 'dialog open');
+    ok(preview().startsWith('Rate limiting for the public API\n'), preview().split('\n')[0]);
+    ok(/Subtasks \(0\/3\):\n\[ \] Choose limits per plan/.test(preview()), 'subtasks listed');
+    ok(preview().includes('Private note for the team.') && preview().includes('Assigned @bob'), 'notes and assignees by default');
+    document.getElementById('shareNotes').click(); document.getElementById('shareAssignees').click();
+    ok(!preview().includes('Private note') && !preview().includes('@bob'), 'toggled off, gone from the preview');
+    closeShareDialog(); closeModal();
+  });
+
+  await check('share: Markdown is the board format, without the order key', async () => {
+    await fresh();
+    window.confirm = () => true; await toggleManualOrder(); window.confirm = realConfirm; // every task now has an Order line on disk
+    const task = tasks.find((t) => t.id === 'TASK-002'); showTaskDetail(task); openShareDialog();
+    setShareOption('format', 'markdown');
+    ok(/^### TASK-002 \| Rate limiting for the public API\n\*\*Status\*\*: backlog\n\*\*Priority\*\*: High\n/.test(preview()), preview().slice(0, 120));
+    ok(!preview().includes('**Order**'), 'no order key');
+    closeShareDialog(); closeModal();
+  });
+
+  await check('share: Copy puts the previewed text on the clipboard', async () => {
+    await fresh();
+    await withClipboard(async (box) => {
+      showTaskDetail(tasks.find((t) => t.id === 'TASK-003')); openShareDialog(); setShareOption('format', 'text'); // the dialog remembers the last format
+      await copyShare();
+      eq(box.text, preview()); ok(box.text.startsWith('Weekly summary email'), 'the shared text');
+      ok(/Copied/.test(document.getElementById('notificationText').textContent), 'confirmation shown');
+    });
+    closeShareDialog(); closeModal();
+  });
+
+  await check('share: the system share sheet is offered only where the browser has one, and gets the same text', async () => {
+    await fresh();
+    const had = Object.getOwnPropertyDescriptor(navigator, 'share');
+    showTaskDetail(tasks.find((t) => t.id === 'TASK-003'));
+    Object.defineProperty(navigator, 'share', { configurable: true, value: undefined }); openShareDialog();
+    eq(document.getElementById('shareNativeBtn').style.display, 'none', 'hidden without navigator.share');
+    let got = null;
+    Object.defineProperty(navigator, 'share', { configurable: true, value: async (d) => { got = d; } }); refreshShareDialog();
+    ok(document.getElementById('shareNativeBtn').style.display !== 'none', 'shown with navigator.share');
+    await nativeShare();
+    eq(got.title, 'Weekly summary email'); eq(got.text, preview());
+    Object.defineProperty(navigator, 'share', { configurable: true, value: async () => { const e = new Error('closed'); e.name = 'AbortError'; throw e; } });
+    await nativeShare(); ok(!/Could not copy/.test(document.getElementById('notificationText').textContent), 'closing the sheet is not an error');
+    if (had) Object.defineProperty(navigator, 'share', had); else delete navigator.share;
+    closeShareDialog(); closeModal();
+  });
+
+  await check('share: Esc closes the dialog first, then the detail view; archived tasks can be shared too', async () => {
+    await fresh();
+    showTaskDetail(tasks[0]); openShareDialog();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    ok(!shareOpen() && document.getElementById('taskModal').classList.contains('active'), 'only the dialog closed');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    ok(!document.getElementById('taskModal').classList.contains('active'), 'then the detail');
+    await openArchiveModal(); document.querySelector('#archiveList .archive-item').click();
+    ok([...document.querySelectorAll('#taskModalActions button')].map((b) => b.textContent).join() === 'Share', 'archived view offers just Share');
+    closeModal(); closeArchiveModal();
+  });
+
   window.confirm = realConfirm;
   return JSON.stringify({ passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok), all: results.map((r) => `${r.ok ? 'ok ' : 'FAIL'} ${r.name}`) }, null, 1);
 })()

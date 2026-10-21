@@ -105,6 +105,30 @@
         </div>
     </div>
 
+    <!-- Share a task -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="shareModalTitle">Share task</h2>
+                <button class="close-btn" onclick="closeShareDialog()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-row">
+                    <button type="button" id="shareFormatText" class="btn btn-primary btn-sm" onclick="setShareOption('format', 'text')">Plain text</button>
+                    <button type="button" id="shareFormatMd" class="btn btn-secondary btn-sm" onclick="setShareOption('format', 'markdown')">Markdown</button>
+                </div>
+                <textarea id="sharePreview" class="share-preview" readonly rows="12" spellcheck="false"></textarea>
+                <label id="shareNotesRow" class="share-opt"><input type="checkbox" id="shareNotes" onchange="setShareOption('notes', this.checked)"> <span id="shareNotesLabel">Include notes</span></label>
+                <label id="shareAssigneesRow" class="share-opt"><input type="checkbox" id="shareAssignees" onchange="setShareOption('assignees', this.checked)"> <span id="shareAssigneesLabel">Include assignees</span></label>
+                <p id="shareHint" class="share-hint"></p>
+            </div>
+            <div class="actions">
+                <button type="button" id="shareNativeBtn" class="btn btn-secondary" onclick="nativeShare()" style="display: none;">Share…</button>
+                <button type="button" id="shareCopyBtn" class="btn btn-primary" onclick="copyShare()">Copy</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal New Task -->
     <div id="newTaskModal" class="modal">
         <div class="modal-content">
