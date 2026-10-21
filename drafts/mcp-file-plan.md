@@ -238,6 +238,27 @@ Phases 1 and 4 are the only ones that change existing page behavior.
 5. **Dependencies:** the MCP server needs `@modelcontextprotocol/sdk`; the CLI and core can stay dependency-free. OK to depend on the SDK?
 6. **Activity log location and format:** `.kanban-activity.jsonl` beside the board, or inside a `.kanban/` folder?
 
+## 11a. Phase 3 results: what the read tools cost
+
+Reads are `get_board`, `get_task`, `get_config`, `list_archive`, `get_board_stats` and `get_changes_since`, available as CLI commands (`board`, `task`, `config`, `archived`, `stats`, `changes`) and as an MCP server (`mcp/server.js`, stdio, official SDK, its own `mcp/package.json` so the core, the CLI and the page stay dependency-free). `npm run measure` reproduces the table below from the real code.
+
+Cost of answering a question: tokens for the call and its result, against reading the whole `kanban.md` (estimate: bytes / 4; Claude's tokenizer counts emoji, accents and non-English text higher per byte, so treat these as relative sizes). The 100-task board is the example board's tasks (long descriptions and notes) cloned.
+
+| Question | demo (1,412 tok raw) | examples (3,763 tok raw) | synthetic (20,297 tok raw) |
+|---|---|---|---|
+| What is in a column? | ~205 tok (−85%) | ~236 tok (−94%) | ~1,021 tok (−95%) |
+| Overdue for one person? | ~172 tok (−88%) | ~145 tok (−96%) | ~585 tok (−97%) |
+| Find tasks mentioning a word | ~161 tok (−89%) | ~127 tok (−97%) | ~306 tok (−98%) |
+| Read one task in full | ~137 tok (−90%) | ~295 tok (−92%) | ~282 tok (−99%) |
+| Counts / how are we doing? | ~145 tok (−90%) | ~149 tok (−96%) | ~607 tok (−97%) |
+| List every task (first 50) | ~674 tok (−52%) | ~902 tok (−76%) | ~2,481 tok (−88%) |
+
+Fixed cost per session: the six tool schemas plus the server instructions are about **822 tokens**, against about **4,711 tokens** for the format rules an agent loads today (`AI_WORKFLOW.md` + the skill) that reads no longer need. Writes will still need some guidance, so that second number is the ceiling on what is saved, not a promise.
+
+What keeps it small: summaries instead of blocks, filtering and paging on the server, `fields` to choose columns (id is always kept), empty fields omitted, the archive read only on request, capped overdue and due-soon lists, and short tool descriptions. A test pins the savings (`test/read.test.mjs`), so a change that bloats a response fails the build.
+
+Behavioural notes: `get_board` rows are in display order (manual `Order` keys honoured), carry an `etag` usable as `ifMatch`, and the response carries `rev` (changes with any edit, including the page's). `get_changes_since` only knows edits made through the CLI and the MCP server, so `rev` is the reliable "did anything change?" signal. Reads accept v1/v2 boards (they only report `migrationNeeded`); only writes require v3.
+
 ## 12a. What Phase 2 found
 
 - **The meta line was all or nothing** (fixed by format v3, see 5.8). In v2, `**Priority**` / `**Category**` / `**Assigned**` shared one line and the parser only read them as a group, so a priority without a category was lost on save, in the page too. Ops used to reject that combination (`meta_incomplete`); with one field per line the restriction is gone.

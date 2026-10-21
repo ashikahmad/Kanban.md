@@ -131,15 +131,25 @@ const cli = (dir, args, input) => {
   return { code: r.status, json: JSON.parse(r.stdout) };
 };
 
-test('cli: list and show', () => {
+test('cli: board, task, config, archive, stats and changes', () => {
   const dir = project();
-  const l = cli(dir, ['list', '--status', 'review']);
+  const l = cli(dir, ['board', '--status', 'review']);
   assert.equal(l.json.ok, true);
   assert.ok(l.json.tasks.length > 0 && l.json.tasks.every((t) => t.status === 'review'));
-  assert.deepEqual(Object.keys(l.json.tasks[0]).sort(), ['assignees', 'due', 'id', 'priority', 'status', 'tags', 'title']);
-  const s = cli(dir, ['show', 'TASK-001']);
+  assert.deepEqual(Object.keys(l.json.tasks[0]), ['id', 'title', 'status', 'priority', 'assignees', 'tags', 'etag']);
+  assert.deepEqual(cli(dir, ['list', '--status', 'review']).json.tasks, l.json.tasks, 'list is an alias of board');
+  assert.deepEqual(Object.keys(cli(dir, ['board', '--fields', 'title', '--limit', '1']).json.tasks[0]), ['id', 'title']);
+  const s = cli(dir, ['task', '1']);
   assert.equal(s.json.task.id, 'TASK-001');
-  assert.equal(cli(dir, ['show', 'TASK-999']).json.error.code, 'unknown_task');
+  assert.equal(cli(dir, ['show', 'TASK-001']).json.task.etag, s.json.task.etag);
+  assert.equal(cli(dir, ['task', 'TASK-999']).json.error.code, 'unknown_task');
+  assert.equal(cli(dir, ['config']).json.columns.length, 4);
+  assert.equal(cli(dir, ['archived']).json.total, 4);
+  assert.equal(cli(dir, ['stats']).json.total, 15);
+  cli(dir, ['move', 'TASK-004', 'done']);
+  const ch = cli(dir, ['changes']).json;
+  assert.deepEqual(ch.changes.map((x) => [x.op, x.id]), [['moveTask', 'TASK-004']]);
+  assert.equal(cli(dir, ['changes', '--since', '2999-01-01T00:00:00Z']).json.changes.length, 0);
 });
 
 test('cli: sort reorders by id on request', () => {

@@ -82,6 +82,13 @@ async function logActivity(dir, entry) {
     } catch { /* the activity log is best effort and must never fail a write */ }
 }
 
+// The activity log as parsed entries (oldest first); [] when there is none.
+export async function readActivity(dir) {
+    const text = await readOptional(join(dir, ACTIVITY));
+    if (!text) return [];
+    return text.split('\n').filter(Boolean).flatMap((l) => { try { return [JSON.parse(l)]; } catch { return []; } });
+}
+
 // Apply one op to the project in `dir`. Returns { result, files, diff? }.
 export async function mutate(dir, op, { dryRun = false, retries = 8, actor = 'cli', today, hooks = {}, lockTimeoutMs, lockStaleMs } = {}) {
     const attempt = async () => {

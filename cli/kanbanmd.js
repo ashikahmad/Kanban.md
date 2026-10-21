@@ -3,12 +3,13 @@
 //   kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command> [args]
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseBoard, parseArchive, orderedTasks } from '../core/board.js';
+import { getBoard, getTask, getConfig, listArchive, getStats, summarizeChanges } from '../core/read.js';
+import { etagOf } from '../core/text.js';
 import { BoardError } from '../core/text.js';
 import { TASK_FIELDS } from '../core/ops.js';
-import { readWorkspace, mutate, migrateProject } from '../io/node-fs.js';
+import { readWorkspace, readActivity, mutate, migrateProject } from '../io/node-fs.js';
 
-const BOOL = new Set(['dry-run', 'at-end']);
+const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse']);
 function parseArgs(argv) {
     const flags = {}, pos = [];
     for (let i = 0; i < argv.length; i++) {
@@ -25,8 +26,14 @@ function parseArgs(argv) {
 const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
 
   migrate                                          rewrite kanban.md / archive.md in the current format (backups kept)
-  list [--status ID] [--assignee @x] [--tag t]     summaries of board tasks
-  show <id>                                        one task in full
+  board [filters]     compact task list in display order.  (alias: list)
+  task <id> [--fields a,b]   one task in full, with its etag.  (alias: show)
+  config              valid columns, priorities, categories, users, tags
+  archived [filters] [--reverse]   archived tasks (to archive one: archive <id>)
+  stats               counts by status / assignee / priority, overdue and due soon
+  changes [--since ISO]   edits made through the tools (the page's edits are not logged)
+    filters: --status a,b --assignee @x --tag t --priority P --category C --text "words"
+             --due-before YYYY-MM-DD --overdue --limit N --offset N --fields title,status,progress   (replaces the default columns; id is always kept)
   apply <json | ->                                 apply one op as JSON
   create --title T [--status ID] [--priority P] [--category C] [--assignees a,b] [--tags x,y]
          [--due YYYY-MM-DD] [--description D]
@@ -58,19 +65,20 @@ async function main() {
         return;
     }
 
-    if (cmd === 'list' || cmd === 'show') {
+    const READS = ['board', 'list', 'task', 'show', 'config', 'archived', 'stats', 'changes'];
+    if (READS.includes(cmd)) {
         const ws = await readWorkspace(dir);
-        const b = parseBoard(ws.board);
-        if (cmd === 'list') {
-            const rows = orderedTasks(b.tasks).filter((t) => (!flags.status || t.status === flags.status) && (!flags.assignee || t.assignees.some((x) => x.startsWith(flags.assignee))) && (!flags.tag || t.tags.includes('#' + flags.tag.replace(/^#/, ''))));
-            console.log(JSON.stringify({ ok: true, columns: b.config.columns, tasks: rows.map(summary) }));
-        } else {
-            need(1, 'task id');
-            const all = [...b.tasks.map((t) => ({ ...t, archived: false })), ...(ws.archive ? parseArchive(ws.archive, b.config.columns).tasks.map((t) => ({ ...t, archived: true })) : [])];
-            const t = all.find((x) => x.id === a[0]);
-            if (!t) throw new BoardError('unknown_task', `No task ${a[0]}`);
-            console.log(JSON.stringify({ ok: true, task: t }));
-        }
+        const q = { status: flags.status, assignee: flags.assignee, tag: flags.tag, priority: flags.priority, category: flags.category,
+            text: flags.text, dueBefore: flags['due-before'], overdue: flags.overdue, limit: flags.limit, offset: flags.offset,
+            fields: flags.fields, reverse: flags.reverse };
+        let out;
+        if (cmd === 'board' || cmd === 'list') out = getBoard(ws, q);
+        else if (cmd === 'task' || cmd === 'show') { need(1, 'task id'); out = { task: getTask(ws, a[0], q) }; }
+        else if (cmd === 'config') out = getConfig(ws);
+        else if (cmd === 'archived') out = listArchive(ws, q);
+        else if (cmd === 'stats') out = getStats(ws);
+        else out = summarizeChanges(await readActivity(dir), { since: flags.since, rev: etagOf(ws.board) });
+        console.log(JSON.stringify({ ok: true, ...out }));
         return;
     }
 

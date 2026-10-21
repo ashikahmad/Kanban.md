@@ -7,7 +7,9 @@
   "scripts": {
     "build": "node build.mjs",
     "build:dev": "node build.mjs --dev",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "measure": "node test/tools/measure.mjs",
+    "mcp:install": "npm install --prefix mcp"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0"
