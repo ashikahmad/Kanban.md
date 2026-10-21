@@ -63,7 +63,13 @@
             document.getElementById('shareCopyBtn').textContent = t('share.copy');
             const native = document.getElementById('shareNativeBtn');
             native.textContent = t('share.share');
-            native.style.display = typeof navigator.share === 'function' ? '' : 'none';
+            const canShare = typeof navigator.share === 'function';
+            native.style.display = canShare ? '' : 'none';
+            // Share is the last, primary action where the browser has a share sheet; Copy is then secondary.
+            const copy = document.getElementById('shareCopyBtn');
+            copy.classList.toggle('btn-primary', !canShare);
+            copy.classList.toggle('btn-secondary', canShare);
+            native.classList.add('btn-primary'); native.classList.remove('btn-secondary');
         }
 
         // Clipboard API where the browser allows it, the old selection trick otherwise.
