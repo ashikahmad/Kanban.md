@@ -9,7 +9,8 @@
     "build:dev": "node build.mjs --dev",
     "test": "node --test test/*.test.mjs",
     "measure": "node test/tools/measure.mjs",
-    "mcp:install": "npm install --prefix mcp"
+    "mcp:install": "npm install --prefix mcp",
+    "build:site": "node build-site.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
