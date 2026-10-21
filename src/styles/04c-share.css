@@ -3,3 +3,10 @@
 .share-preview { width: 100%; resize: vertical; font-family: var(--mono); font-size: var(--fs-sm); line-height: 1.5; padding: var(--s-3); border: 1px solid var(--c-border-strong); border-radius: var(--r-md); background: var(--c-input); color: var(--c-text); }
 .share-opt { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-3); font-size: var(--fs-sm); color: var(--c-text); cursor: pointer; }
 .share-hint { margin-top: var(--s-3); font-size: var(--fs-sm); color: var(--c-muted); }
+.share-view { display: inline-flex; gap: 2px; }
+.share-rendered { max-height: 22rem; overflow: auto; padding: var(--s-3); border: 1px solid var(--c-border-strong); border-radius: var(--r-md); background: var(--c-input); color: var(--c-text); font-size: var(--fs-sm); line-height: 1.5; }
+.share-h { margin: 0 0 var(--s-2); font-size: var(--fs-md, 1rem); }
+.share-h span { color: var(--c-muted); font-weight: 500; margin-right: var(--s-1); }
+.share-fields { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--s-3); margin: 0 0 var(--s-3); }
+.share-fields dt { color: var(--c-muted); }
+.share-fields dd { margin: 0; }

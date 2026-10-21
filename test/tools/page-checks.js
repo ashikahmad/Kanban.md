@@ -491,6 +491,19 @@
     closeShareDialog(); closeModal();
   });
 
+  await check('share: Markdown shows rendered by default with a raw toggle; plain text has no toggle', async () => {
+    await fresh();
+    const task = tasks.find((t) => t.id === 'TASK-002'); showTaskDetail(task); openShareDialog();
+    const vis = (id) => document.getElementById(id).style.display !== 'none';
+    setShareOption('format', 'text'); ok(!vis('shareView') && vis('sharePreview') && !vis('shareRendered'), 'text: raw only');
+    setShareOption('format', 'markdown'); setShareOption('view', 'rendered');
+    ok(vis('shareView') && vis('shareRendered') && !vis('sharePreview'), 'rendered shown');
+    ok(!document.getElementById('shareRendered').textContent.includes('**Status**'), 'markup rendered');
+    eq(document.getElementById('sharePreview').value, preview()); ok(preview().startsWith('### TASK-002'), 'raw value kept for Copy');
+    setShareOption('view', 'raw'); ok(vis('sharePreview') && !vis('shareRendered'), 'raw shown');
+    closeShareDialog(); closeModal();
+  });
+
   await check('share: Copy puts the previewed text on the clipboard', async () => {
     await fresh();
     await withClipboard(async (box) => {
