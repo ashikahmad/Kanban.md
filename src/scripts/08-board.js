@@ -15,8 +15,11 @@
             debugInfo.textContent = `Loaded ${tasks.length} tasks\nColumns: ${config.columns.map(c => c.name).join(', ')}`;
             // debugInfo.style.display = 'block'; // Uncomment to show debug info
 
+            const backlogCol = backlogColumnId();
             config.columns.forEach(column => {
+                const isBacklogStub = column.id === backlogCol; // its cards live in the backlog file and have their own panel
                 const columnTasks = orderedTasks(tasks).filter(t => t.status === column.id && matchesFilters(t));
+                const shownCount = isBacklogStub ? tasks.filter(t => t.status === column.id).length : columnTasks.length;
                 console.log(`Column ${column.id}: ${columnTasks.length} tasks`);
 
                 const columnEl = document.createElement('div');
@@ -27,14 +30,14 @@
                     <div class="column-header">
                         <div class="column-title">
                             ${escapeHtml(column.name)}
-                            <span class="column-count">${columnTasks.length}</span>
+                            <span class="column-count">${shownCount}</span>
                         </div>
                         <div class="column-tools">
                             <button class="column-add-btn" aria-label="${escapeHtml(t('taskForm.newTask'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
                         </div>
                     </div>
                     <div class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
-                        ${columnTasks.length === 0 ? `<div class="empty-state">${t('empty.noTasks')}</div>` : ''}
+                        ${!isBacklogStub && columnTasks.length === 0 ? `<div class="empty-state">${t('empty.noTasks')}</div>` : ''}
                     </div>
                 `;
 
@@ -46,10 +49,26 @@
                 addBtn.title = t('taskForm.newTask');
                 addBtn.addEventListener('click', () => openTaskModal(null, column.id));
 
-                columnTasks.forEach(task => {
-                    const taskEl = createTaskElement(task);
-                    taskList.appendChild(taskEl);
-                });
+                if (isBacklogStub) {
+                    const stub = document.createElement('div');
+                    stub.className = 'backlog-stub';
+                    const count = document.createElement('div');
+                    count.className = 'backlog-stub-count';
+                    count.textContent = String(shownCount);
+                    const note = document.createElement('div');
+                    note.className = 'backlog-stub-note';
+                    note.textContent = t('backlog.stub', { file: resolveBacklogFile(config).file });
+                    const open = document.createElement('button');
+                    open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = t('backlog.open');
+                    open.addEventListener('click', openBacklogModal);
+                    stub.append(count, note, open);
+                    taskList.appendChild(stub);
+                } else {
+                    columnTasks.forEach(task => {
+                        const taskEl = createTaskElement(task);
+                        taskList.appendChild(taskEl);
+                    });
+                }
 
                 board.appendChild(columnEl);
             });
@@ -165,7 +184,7 @@
         // at the end of the column). This is an explicit op applied to the file as it is now (see
         // 04a-persist.js); with manual ordering on it writes an Order key instead of relocating a block.
         // Resolves true if the files changed.
-        async function moveTask(taskId, newStatus, beforeTaskId = null) {
+        async function moveTask(taskId, newStatus, beforeTaskId = null, { askOrder = true } = {}) {
             await autoSave(); // flush pending edits first
             const task = tasks.find(t => t.id === taskId);
             if (!task) return false;
@@ -175,11 +194,12 @@
                 : { type: 'moveTask', id: taskId, status, atEnd: true };
             // Would this change anything? (A drop where the card already is must not ask or write.)
             const disk = await readProjectFiles();
-            try { if (!applyOps({ board: disk.board, archive: disk.archive }, [op]).files.length) return false; }
+            try { if (!applyOps({ board: disk.board, archive: disk.archive, backlog: disk.backlog }, [op]).files.length) return false; }
             catch (e) { /* the commit below reports it */ }
             const ops = [op];
             // First manual drop on a board with no Order keys: ask once whether to remember the order.
-            if (!orderingActive() && resolveOrderChoice() === 'on') ops.unshift({ type: 'sortTasks', mode: 'positions' });
+            // (Not for a drop into the backlog column, where positions do not exist, nor when the caller says it is not a reorder.)
+            if (askOrder && status !== backlogColumnId() && !orderingActive() && resolveOrderChoice() === 'on') ops.unshift({ type: 'sortTasks', mode: 'positions' });
             const result = await commit(ops, { explicit: true });
             return result.ok && result.changed;
         }

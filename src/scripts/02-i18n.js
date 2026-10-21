@@ -146,6 +146,24 @@
                 'notif.taskMoved': 'Task moved!',
                 'notif.reloaded': 'Board updated from disk',
                 'hk.menu': 'Housekeeping',
+                'hk.backlog_large': '{count} tasks in the backlog (limit {max})',
+                'hk.splitBtn': 'Move backlog to its own file',
+                'backlog.title': 'Backlog',
+                'backlog.search': 'Search backlog...',
+                'backlog.empty': 'Nothing in the backlog',
+                'backlog.open': 'Open backlog',
+                'backlog.stub': 'Kept in {file}',
+                'backlog.moveTo': 'Move to {name}',
+                'backlog.archive': 'Archive',
+                'backlog.old': 'old',
+                'backlog.menuOn': 'Backlog file: on',
+                'backlog.menuOff': 'Backlog file: off',
+                'backlog.openMenu': 'Open backlog',
+                'backlog.confirmOn': 'Move the {count} task(s) in "{column}" into backlog.md?\n\nThey stay one click away in the Backlog panel, and kanban.md gets smaller.',
+                'backlog.confirmOff': 'Bring the {count} backlog task(s) back into kanban.md?',
+                'backlog.askColumn': 'Which column is the backlog? ({ids})',
+                'backlog.onDone': 'The backlog is now in its own file',
+                'backlog.offDone': 'The backlog is back in kanban.md',
                 'hk.archive_done': '{count} done task(s) finished {days}+ days ago',
                 'hk.stale_backlog': '{count} backlog task(s) older than {days} days (outlined)',
                 'hk.board_large': '{count} tasks on the board (limit {max})',
@@ -357,6 +375,24 @@
                 'notif.taskMoved': 'Tâche déplacée !',
                 'notif.reloaded': 'Tableau mis à jour depuis le disque',
                 'hk.menu': 'Ménage',
+                'hk.backlog_large': '{count} tâches dans le backlog (limite {max})',
+                'hk.splitBtn': 'Déplacer le backlog dans son propre fichier',
+                'backlog.title': 'Backlog',
+                'backlog.search': 'Rechercher dans le backlog...',
+                'backlog.empty': 'Le backlog est vide',
+                'backlog.open': 'Ouvrir le backlog',
+                'backlog.stub': 'Stocké dans {file}',
+                'backlog.moveTo': 'Déplacer vers {name}',
+                'backlog.archive': 'Archiver',
+                'backlog.old': 'ancienne',
+                'backlog.menuOn': 'Fichier backlog : activé',
+                'backlog.menuOff': 'Fichier backlog : désactivé',
+                'backlog.openMenu': 'Ouvrir le backlog',
+                'backlog.confirmOn': 'Déplacer les {count} tâche(s) de « {column} » dans backlog.md ?\n\nElles restent à un clic dans le panneau Backlog, et kanban.md devient plus léger.',
+                'backlog.confirmOff': 'Remettre les {count} tâche(s) du backlog dans kanban.md ?',
+                'backlog.askColumn': 'Quelle colonne est le backlog ? ({ids})',
+                'backlog.onDone': 'Le backlog est maintenant dans son propre fichier',
+                'backlog.offDone': 'Le backlog est de retour dans kanban.md',
                 'hk.archive_done': '{count} tâche(s) terminée(s) depuis plus de {days} jours',
                 'hk.stale_backlog': '{count} tâche(s) du backlog de plus de {days} jours (contour pointillé)',
                 'hk.board_large': '{count} tâches sur le tableau (limite {max})',
@@ -1138,6 +1174,8 @@
 
             const searchInput = document.getElementById('archiveSearch');
             if (searchInput) searchInput.placeholder = t('archives.search');
+            const backlogSearch = document.getElementById('backlogSearch');
+            if (backlogSearch) backlogSearch.placeholder = t('backlog.search');
         }
 
         // Set language and save to localStorage

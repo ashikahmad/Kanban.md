@@ -340,6 +340,125 @@
     window.prompt = realPrompt;
   });
 
+  // ---- backlog file ----
+  const withBacklog = async () => { const proj = await fresh(); proj.log.length = 0; await runOrderOp({ type: 'setBacklogFile', enabled: true, column: 'backlog' }, null); return proj; };
+  const colCards = (id) => document.querySelectorAll(`.kanban-column[data-column-id="${id}"] .task-card`).length;
+  const stubCount = () => { const e = document.querySelector('.kanban-column[data-column-id="backlog"] .backlog-stub-count'); return e && e.textContent; };
+  const panelRows = () => [...document.querySelectorAll('#backlogList .archive-item')].map((r) => r.dataset.id);
+  const clickIn = (id, action, status) => document.querySelector(`#backlogList .archive-item[data-id="${id}"] [data-action="${action}"]${status ? `[data-status="${status}"]` : ''}`).click();
+  const settleUi = () => new Promise((r) => setTimeout(r, 120));
+
+  await check('backlog: enabling moves its tasks into backlog.md; the column becomes a stub with the real count', async () => {
+    const proj = await fresh(); proj.log.length = 0;
+    await runOrderOp({ type: 'setBacklogFile', enabled: true, column: 'backlog' }, null);
+    ok(proj.files['backlog.md'] && /### TASK-001/.test(proj.files['backlog.md']), 'file created with the tasks');
+    ok(!/### TASK-001/.test(proj.files['kanban.md']) && /Backlog file\*\*: backlog\.md \(backlog\)/.test(proj.files['kanban.md']), 'board file lost them and has the config line');
+    eq(proj.log, ['backlog.md', 'kanban.md'], 'the new file is written first');
+    eq(colCards('backlog'), 0, 'no cards in the stub column'); eq(stubCount(), '5', 'stub shows the real count');
+    eq(document.querySelector('.kanban-column[data-column-id="backlog"] .column-count').textContent, '5');
+    ok(colCards('in-progress') > 0, 'other columns are normal');
+  });
+
+  await check('backlog: the panel lists, searches, and promotes a task without asking about ordering', async () => {
+    const proj = await withBacklog();
+    let asked = 0; window.confirm = () => { asked++; return true; };
+    openBacklogModal();
+    eq(panelRows().length, 5); ok(document.getElementById('backlogModalTitle').textContent.includes('(5)'), 'title carries the count');
+    document.getElementById('backlogSearch').value = 'onboarding'; document.getElementById('backlogSearch').dispatchEvent(new Event('input'));
+    eq(panelRows(), ['TASK-001']);
+    document.getElementById('backlogSearch').value = ''; document.getElementById('backlogSearch').dispatchEvent(new Event('input'));
+    proj.log.length = 0;
+    clickIn('TASK-001', 'promote', 'in-progress'); await settleUi();
+    eq(asked, 0, 'no ordering prompt for a promotion');
+    eq(proj.log, ['kanban.md', 'backlog.md'], 'the board is written first when a task comes home');
+    ok(/### TASK-001/.test(proj.files['kanban.md']) && !/### TASK-001/.test(proj.files['backlog.md']), 'moved between files');
+    eq(tasks.find((t) => t.id === 'TASK-001').status, 'in-progress');
+    ok(columnCards('in-progress') >= 1 && document.querySelector('.task-card[data-task-id="TASK-001"]'), 'card is on the board');
+    eq(panelRows().length, 4, 'panel refreshed'); eq(stubCount(), '4');
+    closeBacklogModal(); window.confirm = realConfirm;
+    function columnCards(id) { return colCards(id); }
+  });
+
+  await check('backlog: dropping a card on the stub moves it into the file', async () => {
+    const proj = await withBacklog(); proj.log.length = 0;
+    ok(await moveTask('TASK-006', 'backlog', null), 'moved');
+    eq(proj.log, ['backlog.md', 'kanban.md']);
+    ok(/### TASK-006/.test(proj.files['backlog.md']) && !/### TASK-006/.test(proj.files['kanban.md']));
+    eq(stubCount(), '6'); eq(document.querySelector('.task-card[data-task-id="TASK-006"]'), null, 'no card for it on the board');
+  });
+
+  await check('backlog: a task created in the backlog column goes to the file; editing one writes only the file', async () => {
+    const proj = await withBacklog();
+    openTaskModal(null, 'backlog');
+    document.getElementById('taskTitle').value = 'Parked idea';
+    document.getElementById('newTaskForm').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await settleUi(); await autoSave();
+    ok(/### TASK-020 \| Parked idea/.test(proj.files['backlog.md']) && !/Parked idea/.test(proj.files['kanban.md']), 'created in the backlog file');
+    eq(stubCount(), '6');
+    proj.log.length = 0;
+    openTaskModal(tasks.find((t) => t.id === 'TASK-003'));
+    document.getElementById('taskTitle').value = 'Edited in the backlog';
+    document.getElementById('newTaskForm').dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    await settleUi(); await autoSave();
+    eq(proj.log, ['backlog.md'], 'only the backlog file was written');
+    ok(/Edited in the backlog/.test(proj.files['backlog.md']));
+  });
+
+  await check('backlog: an edit on the board does not touch the backlog file', async () => {
+    const proj = await withBacklog(); proj.log.length = 0;
+    tasks.find((t) => t.id === 'TASK-006').title = 'Board only';
+    await autoSave();
+    eq(proj.log, ['kanban.md']);
+  });
+
+  await check('backlog: archive from the panel (after asking)', async () => {
+    const proj = await withBacklog(); proj.log.length = 0;
+    window.confirm = () => true; openBacklogModal();
+    clickIn('TASK-003', 'archive'); await settleUi();
+    ok(/### TASK-003/.test(proj.files['archive.md']) && !/### TASK-003/.test(proj.files['backlog.md']), 'archived out of the file');
+    eq(proj.log, ['archive.md', 'backlog.md']);
+    eq(panelRows().length, 4); closeBacklogModal(); window.confirm = realConfirm;
+  });
+
+  await check('backlog: an outside edit to backlog.md is picked up and shown', async () => {
+    const proj = await withBacklog();
+    openBacklogModal();
+    H.external(proj, 'backlog.md', proj.files['backlog.md'].replace('Design the onboarding checklist', 'Retitled by an agent'));
+    await pollOnce();
+    eq(tasks.find((t) => t.id === 'TASK-001').title, 'Retitled by an agent');
+    ok(document.getElementById('backlogList').textContent.includes('Retitled by an agent'), 'panel shows it');
+    closeBacklogModal();
+  });
+
+  await check('backlog: switching it off from the menu brings every task home; on again from the menu works', async () => {
+    const proj = await withBacklog();
+    window.confirm = () => true;
+    await toggleBacklogFile();
+    ok(!/Backlog file/.test(proj.files['kanban.md']) && /### TASK-001/.test(proj.files['kanban.md']), 'tasks back in kanban.md, line removed');
+    eq(colCards('backlog'), 5, 'cards are back'); eq(document.querySelector('.backlog-stub'), null);
+    ok(document.getElementById('backlogToggleBtn').querySelector('.mi-label').textContent.includes('off'));
+    await toggleBacklogFile();
+    ok(/Backlog file\*\*: backlog\.md/.test(proj.files['kanban.md']) && /### TASK-001/.test(proj.files['backlog.md']), 'on again');
+    ok(document.getElementById('backlogOpenBtn').style.display !== 'none', 'open item visible');
+    window.confirm = realConfirm;
+  });
+
+  await check('backlog: past 100 tasks the bar offers to split it off; accepting does', async () => {
+    const base = parseBoard(await H.fixture('demo.kanban'));
+    const many = Array.from({ length: 101 }, (_, i) => ({ ...JSON.parse(JSON.stringify(base.tasks[0])), id: 'TASK-' + String(i + 1).padStart(3, '0'), status: 'backlog', created: '2026-10-20', subtasks: [], notes: '' }));
+    const text = generateBoard({ config: { ...base.config, lastTaskId: 101 }, tasks: many });
+    for (const k of ['hk.snooze', 'hk.dismissed']) localStorage.removeItem(`kanbanmd.${k}.fake`);
+    const proj = await H.open({ 'kanban.md': text });
+    ok(barVisible() && /101 tasks in the backlog \(limit 100\)/.test(bar().textContent), bar().textContent);
+    ok(buttons().includes('Move backlog to its own file'), buttons().join(' | '));
+    window.confirm = () => true;
+    [...bar().querySelectorAll('button')].find((b) => b.textContent === 'Move backlog to its own file').click();
+    await new Promise((r) => setTimeout(r, 250));
+    ok(/101/.test(String((proj.files['backlog.md'].match(/^### TASK-/gm) || []).length)) , 'all 101 are in backlog.md');
+    ok(!barVisible() || !/backlog \(limit/.test(bar().textContent), 'nudge is gone once it is on');
+    window.confirm = realConfirm;
+  });
+
   window.confirm = realConfirm;
   return JSON.stringify({ passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok), all: results.map((r) => `${r.ok ? 'ok ' : 'FAIL'} ${r.name}`) }, null, 1);
 })()

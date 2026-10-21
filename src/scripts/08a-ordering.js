@@ -50,4 +50,5 @@
             reset.style.display = open && orderingActive() ? 'inline-flex' : 'none';
             toggle.querySelector('.mi-label').textContent = t(orderingActive() ? 'menu.manualOrderOn' : 'menu.manualOrderOff');
             reset.querySelector('.mi-label').textContent = t('menu.resetOrderById');
+            if (typeof updateBacklogMenu === 'function') updateBacklogMenu();
         }

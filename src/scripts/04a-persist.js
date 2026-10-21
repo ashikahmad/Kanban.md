@@ -5,10 +5,12 @@
         // a one-card edit is a one-card diff. Polling picks up such outside changes and re-renders.
         let persistBase = null;          // { config, tasks, archive, boardText, archiveText } as of the last load/save
         let currentArchiveText = null;   // archive.md text as of the last load/save (null = no file)
+        let currentBacklogText = null;   // the backlog file's text as of the last load/save (null = none)
+        let backlogFileName = 'backlog.md';
         let persistChain = Promise.resolve(true); // saves run one at a time, in order
         let persistBusy = false;
         let pollBusy = false;
-        const lastSeenMtime = { board: null, archive: null };
+        const lastSeenMtime = { board: null, archive: null, backlog: null };
         const jsonClone = (v) => JSON.parse(JSON.stringify(v));
         const PERSIST_LISTS = ['categories', 'users', 'priorities', 'tags'];
 
@@ -17,6 +19,7 @@
         function stateEquals(a, b) {
             return deepEqual(a.tasks, b.tasks) && deepEqual(a.archive, b.archive)
                 && deepEqual(a.config.columns, b.config.columns)
+                && deepEqual(a.config.backlogFile, b.config.backlogFile) && deepEqual(a.config.housekeeping, b.config.housekeeping) // these change what is drawn
                 && PERSIST_LISTS.every((k) => deepEqual(a.config[k], b.config[k]));
         }
 
@@ -34,15 +37,25 @@
                 if (e.name !== 'NotFoundError') throw e;
                 archiveFileHandle = null;
             }
+            // The backlog file, if the board declares one (or a default-named file that exists: the ops refuse to overwrite it).
+            backlogFileName = backlogFileNameOf(board);
+            let backlog = null, backlogMtime = null;
+            try {
+                const kf = await (await directoryHandle.getFileHandle(backlogFileName)).getFile();
+                backlog = await kf.text();
+                backlogMtime = kf.lastModified;
+            } catch (e) { if (e.name !== 'NotFoundError') throw e; }
             lastSeenMtime.board = bf.lastModified;
             lastSeenMtime.archive = archiveMtime;
-            return { board, archive };
+            lastSeenMtime.backlog = backlogMtime;
+            return { board, archive, backlog };
         }
 
         async function writeProjectFile(name, text) {
             let handle;
             if (name === 'kanban.md') handle = kanbanFileHandle;
-            else handle = archiveFileHandle || (archiveFileHandle = await directoryHandle.getFileHandle('archive.md', { create: true }));
+            else if (name === 'archive.md') handle = archiveFileHandle || (archiveFileHandle = await directoryHandle.getFileHandle('archive.md', { create: true }));
+            else handle = await directoryHandle.getFileHandle(name, { create: true }); // the backlog file
             const writable = await handle.createWritable();
             await writable.write(text);
             await writable.close();
@@ -52,6 +65,8 @@
             try {
                 lastSeenMtime.board = (await kanbanFileHandle.getFile()).lastModified;
                 lastSeenMtime.archive = archiveFileHandle ? (await archiveFileHandle.getFile()).lastModified : null;
+                try { lastSeenMtime.backlog = (await (await directoryHandle.getFileHandle(backlogFileName)).getFile()).lastModified; }
+                catch (e) { lastSeenMtime.backlog = null; }
             } catch (e) { /* the next poll will notice */ }
         }
 
@@ -59,28 +74,32 @@
         // Makes `boardText`/`archiveText` the new base. The in-memory state is replaced by what the files
         // say only if it was not edited since `expect` (the snapshot the save started from); otherwise the
         // local edits are kept and simply become the next save's difference. Returns true when replaced.
-        function adoptTexts(boardText, archiveText, { expect = null, force = false } = {}) {
+        // `tasks` holds every live task: the board file's plus the backlog file's (the backlog column renders as a
+        // stub and has its own panel). Which file a task is in is the ops' business, decided by its status.
+        function adoptTexts(boardText, archiveText, backlogText, { expect = null, force = false } = {}) {
             const b = parseBoard(boardText);
             const a = archiveText === null ? { tasks: [], formatVersion: 3 } : parseArchive(archiveText, b.config.columns);
-            const parsed = { config: b.config, tasks: b.tasks, archive: a.tasks };
+            const bc = resolveBacklogFile(b.config);
+            const k = bc && backlogText !== null ? parseBacklog(backlogText, b.config.columns, bc.column) : { tasks: [] };
+            const parsed = { config: b.config, tasks: [...b.tasks, ...k.tasks], archive: a.tasks };
             loadedFormatVersion = b.formatVersion;
             loadedArchiveVersion = a.formatVersion;
             currentKanbanContent = boardText;
             currentArchiveText = archiveText;
-            persistBase = { config: jsonClone(b.config), tasks: jsonClone(b.tasks), archive: jsonClone(a.tasks), boardText, archiveText };
+            currentBacklogText = backlogText;
+            persistBase = { config: jsonClone(b.config), tasks: jsonClone(parsed.tasks), archive: jsonClone(a.tasks), boardText, archiveText, backlogText };
             const untouched = !expect || stateEquals(currentPageState(), expect);
             if (untouched && (force || !stateEquals(currentPageState(), parsed))) {
-                config = b.config; tasks = b.tasks; archivedTasks = a.tasks;
+                config = b.config; tasks = parsed.tasks; archivedTasks = a.tasks;
                 return true;
             }
-            config.housekeeping = b.config.housekeeping; // a policy edit changes nothing else, so it would be missed otherwise
             return false;
         }
 
         // Re-read both files into the base without touching what is on screen (used right after a load).
         async function snapshotFromDisk() {
             const disk = await readProjectFiles();
-            adoptTexts(disk.board, disk.archive);
+            adoptTexts(disk.board, disk.archive, disk.backlog);
             refreshUi(); // the first render ran before there was a base: draw the menu items, the nudge bar and stale cards now
         }
 
@@ -92,6 +111,7 @@
             view.scrollTop = scroll;
             updateOrderingMenu();
             if (document.getElementById('archiveModal').classList.contains('active')) renderArchiveList(document.getElementById('archiveSearch').value);
+            if (document.getElementById('backlogModal').classList.contains('active')) renderBacklogList(document.getElementById('backlogSearch').value);
         }
 
         // ---- saving ----
@@ -123,17 +143,17 @@
             for (let attempt = 0; attempt < 4; attempt++) {
                 const snapshot = jsonClone(currentPageState());
                 const disk = await readProjectFiles();
-                const external = disk.board !== persistBase.boardText || disk.archive !== persistBase.archiveText;
+                const external = disk.board !== persistBase.boardText || disk.archive !== persistBase.archiveText || disk.backlog !== persistBase.backlogText;
                 let out = null, failure = null;
                 if (!unsupported.length) {
-                    try { out = applyOps({ board: disk.board, archive: disk.archive }, ops); }
+                    try { out = applyOps({ board: disk.board, archive: disk.archive, backlog: disk.backlog }, ops); }
                     catch (e) { failure = e; console.warn('Ops not applicable:', e && e.code, e && e.message); }
                 }
                 if (out) {
                     const again = await readProjectFiles(); // did anything move while we worked?
-                    if (again.board !== disk.board || again.archive !== disk.archive) continue;
+                    if (again.board !== disk.board || again.archive !== disk.archive || again.backlog !== disk.backlog) continue;
                     for (const f of out.files) await writeProjectFile(f.name, f.text);
-                    const replaced = adoptTexts(out.board, out.archive, { expect: snapshot });
+                    const replaced = adoptTexts(out.board, out.archive, out.backlog, { expect: snapshot });
                     await refreshMtimes();
                     if (replaced) refreshUi();
                     return { ok: true, changed: out.files.length > 0 };
@@ -167,11 +187,19 @@
             await writeProjectFile('archive.md', text);
             return text;
         }
+        async function writeWholeBacklog() {
+            const bc = resolveBacklogFile(config);
+            if (!bc) return currentBacklogText;
+            const text = generateArchive(tasks.filter((x) => x.status === bc.column), DEFAULT_BACKLOG_STRINGS);
+            await writeProjectFile(bc.file, text);
+            return text;
+        }
         async function writeWholeFiles() {
             const snapshot = jsonClone(currentPageState());
             const archiveText = (archivedTasks.length || archiveFileHandle) ? await writeWholeArchive() : currentArchiveText;
+            const backlogText = await writeWholeBacklog();
             const boardText = await writeWholeBoard();
-            adoptTexts(boardText, archiveText, { expect: snapshot });
+            adoptTexts(boardText, archiveText, backlogText, { expect: snapshot });
             await refreshMtimes();
             return true;
         }
@@ -183,7 +211,7 @@
             const disk = await readProjectFiles();
             if (!stateEquals(currentPageState(), snapshot)) return false; // an edit landed meanwhile: its save will merge
             const before = tasks.slice();
-            adoptTexts(disk.board, disk.archive, { expect: snapshot, force: true });
+            adoptTexts(disk.board, disk.archive, disk.backlog, { expect: snapshot, force: true });
             refreshUi();
 
             // An open edit form whose task changed underneath: ask, never overwrite silently.
@@ -214,9 +242,11 @@
                     if (!archiveFileHandle) archiveFileHandle = await directoryHandle.getFileHandle('archive.md');
                     archiveMtime = (await archiveFileHandle.getFile()).lastModified;
                 } catch (e) { archiveFileHandle = null; }
-                if (bf.lastModified === lastSeenMtime.board && archiveMtime === lastSeenMtime.archive) return;
+                let backlogMtime = null;
+                try { backlogMtime = (await (await directoryHandle.getFileHandle(backlogFileName)).getFile()).lastModified; } catch (e) { /* none */ }
+                if (bf.lastModified === lastSeenMtime.board && archiveMtime === lastSeenMtime.archive && backlogMtime === lastSeenMtime.backlog) return;
                 const disk = await readProjectFiles();
-                if (disk.board === persistBase.boardText && disk.archive === persistBase.archiveText) return; // touched, not changed
+                if (disk.board === persistBase.boardText && disk.archive === persistBase.archiveText && disk.backlog === persistBase.backlogText) return; // touched, not changed
                 await reloadFromDisk();
             } catch (e) {
                 console.warn('Change check skipped:', e && e.message);

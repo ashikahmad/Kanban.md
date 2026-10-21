@@ -18,6 +18,8 @@
                 <button id="orderToggleBtn" class="menu-item" style="display: none;" onclick="closeMenus(); toggleManualOrder()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M3 11l2 2 2-2M11 13V3M9 5l2-2 2 2"/></svg><span class="mi-label">Manual order</span></button>
                 <button id="orderResetBtn" class="menu-item" style="display: none;" onclick="closeMenus(); resetOrderById()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h7M3 8h5M3 12h3M12 5v7M10 10l2 2 2-2"/></svg><span class="mi-label">Reset order by task id</span></button>
                 <button id="housekeepingBtn" class="menu-item" style="display: none;" onclick="closeMenus(); editHousekeepingSettings()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg><span class="mi-label">Housekeeping</span></button>
+                <button id="backlogOpenBtn" class="menu-item" style="display: none;" onclick="closeMenus(); openBacklogModal()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5h12v3H2zM3 6.5v6h10v-6M6.5 9h3"/></svg><span class="mi-label">Open backlog</span></button>
+                <button id="backlogToggleBtn" class="menu-item" style="display: none;" onclick="closeMenus(); toggleBacklogFile()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7l3 3v8H3zM10 2.5v3h3M5.5 9h5M5.5 11.5h5"/></svg><span class="mi-label">Backlog file</span></button>
                 <button id="selectFolderBtn" class="menu-item" onclick="closeMenus()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></svg><span class="mi-label">Folder</span></button>
                 <div class="menu-sep"></div>
                 <button id="renameProjectBtn" class="menu-item" style="display: none;" title="Rename project" onclick="closeMenus(); renameCurrentProject()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg><span class="mi-label">Rename project</span></button>
@@ -208,6 +210,20 @@
             <div class="modal-body">
                 <input type="text" id="archiveSearch" placeholder="Search archives..." style="margin-bottom: var(--s-3);">
                 <div id="archiveList" class="list-rows" onclick="onArchiveListClick(event)" style="max-height: 500px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Backlog file panel -->
+    <div id="backlogModal" class="modal">
+        <div class="modal-content wide">
+            <div class="modal-header">
+                <h2 id="backlogModalTitle">Backlog</h2>
+                <button class="close-btn" onclick="closeBacklogModal()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="backlogSearch" placeholder="Search backlog..." style="margin-bottom: var(--s-3);">
+                <div id="backlogList" class="list-rows" onclick="onBacklogListClick(event)" style="max-height: 500px; overflow-y: auto;"></div>
             </div>
         </div>
     </div>

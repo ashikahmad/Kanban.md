@@ -22,7 +22,7 @@
             hkState = { suggestions: [], staleIds: new Set() };
             if (!kanbanFileHandle || !persistBase) return;
             try {
-                const ws = { board: currentKanbanContent, archive: null };
+                const ws = { board: currentKanbanContent, archive: null, backlog: currentBacklogText };
                 hkState.suggestions = getHousekeeping(ws).suggestions;
                 hkState.staleIds = new Set(staleBacklogIds(ws));
             } catch (e) { console.warn('Housekeeping check skipped:', e && e.message); }
@@ -58,6 +58,8 @@
             };
             const done = sugs.find((s) => s.kind === 'archive_done');
             if (done) add(t('hk.archiveBtn', { count: done.count }), hkArchiveDone, 'btn-primary');
+            const large = sugs.find((s) => s.kind === 'backlog_large');
+            if (large) add(t('hk.splitBtn'), () => hkSplitBacklog(large), 'btn-primary');
             add(t('hk.snooze'), hkSnooze, 'btn-secondary');
             add(t('hk.dismiss'), hkDismiss, 'btn-secondary');
             bar.appendChild(msgs);
@@ -66,12 +68,18 @@
         }
 
         async function hkArchiveDone() {
-            const ids = archiveCandidates({ board: currentKanbanContent, archive: null });
+            const ids = archiveCandidates({ board: currentKanbanContent, archive: null, backlog: currentBacklogText });
             if (!ids.length) return;
             if (!confirm(t('hk.confirmArchive', { count: ids.length }))) return;
             await autoSave();
             const result = await commit([{ type: 'archiveTasks', ids }], { explicit: true });
             if (result.ok) showNotification(t('hk.archived', { count: ids.length }), 'success');
+        }
+
+        // The backlog has outgrown kanban.md: offer to move it to its own file.
+        async function hkSplitBacklog(s) {
+            if (!confirm(t('backlog.confirmOn', { count: s.count, column: s.column }))) return;
+            await runOrderOp({ type: 'setBacklogFile', enabled: true, column: s.column }, 'backlog.onDone');
         }
 
         function hkSnooze() {

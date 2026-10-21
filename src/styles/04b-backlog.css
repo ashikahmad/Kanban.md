@@ -1,0 +1,5 @@
+/* The backlog column when its tasks live in the backlog file: a quiet stub that opens the panel. */
+.backlog-stub { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-3); text-align: center; color: var(--c-muted); border: 1px dashed var(--c-border-strong); border-radius: var(--r-md); }
+.backlog-stub-count { font-size: var(--fs-xl); font-weight: 600; color: var(--c-text); }
+.backlog-stub-note { font-size: var(--fs-sm); }
+.archive-item.hk-stale { border-style: dashed; border-color: var(--c-warn); }

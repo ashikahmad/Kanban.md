@@ -33,11 +33,13 @@
             if (document.getElementById('taskModal').classList.contains('active')) closeModal();
             else if (document.getElementById('columnsModal').classList.contains('active')) closeColumnsModal();
             else if (document.getElementById('archiveModal').classList.contains('active')) closeArchiveModal();
+            else if (document.getElementById('backlogModal').classList.contains('active')) closeBacklogModal();
         });
         document.addEventListener('mousedown', (e) => {
             if (e.target.id === 'taskModal') closeModal();
             else if (e.target.id === 'columnsModal') closeColumnsModal();
             else if (e.target.id === 'archiveModal') closeArchiveModal();
+            else if (e.target.id === 'backlogModal') closeBacklogModal();
         });
 
         // Flag the board as scrolled so the sticky column titles can show a hairline under them
