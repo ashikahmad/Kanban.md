@@ -73,6 +73,7 @@
                 config = b.config; tasks = b.tasks; archivedTasks = a.tasks;
                 return true;
             }
+            config.housekeeping = b.config.housekeeping; // a policy edit changes nothing else, so it would be missed otherwise
             return false;
         }
 
@@ -80,7 +81,7 @@
         async function snapshotFromDisk() {
             const disk = await readProjectFiles();
             adoptTexts(disk.board, disk.archive);
-            updateOrderingMenu();
+            refreshUi(); // the first render ran before there was a base: draw the menu items, the nudge bar and stale cards now
         }
 
         function refreshUi() {

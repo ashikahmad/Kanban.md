@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { parseHousekeepingSpec, formatHousekeepingSpec, resolveHousekeeping, normalizeHousekeeping } from '../core/housekeeping-spec.js';
-import { getHousekeeping, archiveCandidates } from '../core/housekeeping.js';
+import { getHousekeeping, archiveCandidates, staleBacklogIds } from '../core/housekeeping.js';
 import { parseBoard, parseArchive, generateBoard, createDefaultBoardContent } from '../core/board.js';
 import { applyOp } from '../core/ops.js';
 import { getStats, getConfig } from '../core/read.js';
@@ -88,6 +88,13 @@ test('stale_backlog: old by created date, or long past due', () => {
   const s = r.suggestions.find((x) => x.kind === 'stale_backlog');
   assert.deepEqual(s.ids, ['TASK-001', 'TASK-002'].sort((a, b) => (a === 'TASK-001' ? '2026-06-01' : '2026-10-20').localeCompare(b === 'TASK-001' ? '2026-06-01' : '2026-10-20')));
   assert.equal(s.count, 2);
+});
+
+test('staleBacklogIds is the complete list behind the stale_backlog nudge (and empty when off)', () => {
+  const tasks = Array.from({ length: 25 }, (_, i) => task(`TASK-${String(i + 1).padStart(3, '0')}`, { status: 'backlog', created: '2020-01-01' }));
+  assert.equal(staleBacklogIds(ws(tasks), { today: TODAY }).length, 25);
+  assert.equal(getHousekeeping(ws(tasks), { today: TODAY }).suggestions[0].ids.length, 20, 'the nudge lists 20');
+  assert.deepEqual(staleBacklogIds(ws(tasks, { enabled: false }), { today: TODAY }), []);
 });
 
 test('board_large: more tasks than max', () => {

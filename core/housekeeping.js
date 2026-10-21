@@ -51,6 +51,14 @@ export function getHousekeeping(ws, { today = localToday() } = {}) {
     return out;
 }
 
+// Every id the stale-backlog nudge flags (the page highlights those cards).
+export function staleBacklogIds(ws, { today = localToday() } = {}) {
+    const bp = parseBoard(ws.board);
+    const policy = resolveHousekeeping(bp.config);
+    if (!policy.enabled) return [];
+    return candidates(bp, policy, today).backlogStale.map((t) => t.id);
+}
+
 // Every id the "archive done" nudge would archive (the suggestion's own list is capped for display).
 export function archiveCandidates(ws, { today = localToday() } = {}) {
     const bp = parseBoard(ws.board);

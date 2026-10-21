@@ -17,6 +17,7 @@
                 <button id="manageColsBtn" class="menu-item" style="display: none;" onclick="closeMenus()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3h3v10h-3zM6.5 3h3v10h-3zM10.5 3h3v10h-3z"/></svg><span class="mi-label">Columns</span></button>
                 <button id="orderToggleBtn" class="menu-item" style="display: none;" onclick="closeMenus(); toggleManualOrder()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M3 11l2 2 2-2M11 13V3M9 5l2-2 2 2"/></svg><span class="mi-label">Manual order</span></button>
                 <button id="orderResetBtn" class="menu-item" style="display: none;" onclick="closeMenus(); resetOrderById()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h7M3 8h5M3 12h3M12 5v7M10 10l2 2 2-2"/></svg><span class="mi-label">Reset order by task id</span></button>
+                <button id="housekeepingBtn" class="menu-item" style="display: none;" onclick="closeMenus(); editHousekeepingSettings()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg><span class="mi-label">Housekeeping</span></button>
                 <button id="selectFolderBtn" class="menu-item" onclick="closeMenus()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></svg><span class="mi-label">Folder</span></button>
                 <div class="menu-sep"></div>
                 <button id="renameProjectBtn" class="menu-item" style="display: none;" title="Rename project" onclick="closeMenus(); renameCurrentProject()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg><span class="mi-label">Rename project</span></button>
@@ -79,6 +80,7 @@
         </div>
     </header>
     <div id="activeFilters"></div>
+    <div id="housekeepingBar" class="hk-bar" style="display: none;" role="status"></div>
 
     <div class="container">
         <div id="welcomeScreen" class="welcome"></div>

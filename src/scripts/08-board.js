@@ -1,6 +1,7 @@
         function renderKanban() {
             const board = document.getElementById('kanbanBoard');
             board.innerHTML = '';
+            refreshHousekeepingState(); // before the cards are built: stale ones are marked as they are created
 
             console.log('Rendering kanban with', tasks.length, 'tasks');
 
@@ -52,6 +53,7 @@
 
                 board.appendChild(columnEl);
             });
+            updateHousekeepingBar();
         }
 
         // Deadline visibility: classify a task by its **Due** date so the card can surface it.
@@ -79,6 +81,7 @@
         function createTaskElement(task) {
             const taskEl = document.createElement('div');
             taskEl.className = 'task-card';
+            if (hkState.staleIds.has(task.id)) { taskEl.classList.add('hk-stale'); taskEl.title = t('hk.staleCard'); }
             taskEl.draggable = true;
             taskEl.dataset.taskId = task.id;
 

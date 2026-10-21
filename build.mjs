@@ -28,6 +28,7 @@ const PAGE_CORE_EXPORTS = [
   'parseBoard', 'parseArchive', 'generateBoard', 'generateArchive', 'generateTaskBlock', 'normalizeConfig',
   'createDefaultBoardContent', 'createDefaultArchiveContent', 'orderedTasks',
   'diffToOps', 'applyOps', 'deepEqual',
+  'getHousekeeping', 'archiveCandidates', 'staleBacklogIds', 'parseHousekeepingSpec', 'formatHousekeepingSpec',
 ];
 // Reachable as KanbanCore.<name> (for the test harness) but not bound as globals.
 const NAMESPACE_ONLY = ['diffStats'];

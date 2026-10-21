@@ -12,9 +12,9 @@
   const ok = (v, msg) => { if (!v) throw new Error(msg || 'assertion failed'); };
   const lines = (s) => s.split('\n');
   const changedLines = (a, b) => { const d = KanbanCore.diffStats(a, b); return { removed: d.removed, added: d.added }; };
-  async function fresh() {
-    localStorage.removeItem('kanbanmd.orderChoice.fake'); // every check starts with no remembered answer
-    const files = { 'kanban.md': await H.fixture('demo.kanban'), 'archive.md': await H.fixture('demo.archive') };
+  async function fresh(transform = (x) => x) {
+    for (const k of ['orderChoice', 'hk.snooze', 'hk.dismissed']) localStorage.removeItem(`kanbanmd.${k}.fake`); // no remembered answers
+    const files = { 'kanban.md': transform(await H.fixture('demo.kanban')), 'archive.md': await H.fixture('demo.archive') };
     const proj = await H.open(files);          // the page migrates the v2 demo to v3 on load
     proj.log.length = 0;
     return proj;
@@ -260,6 +260,84 @@
     H.external(proj, 'kanban.md', text);
     await pollOnce();
     const after = columnIds('backlog'); eq(after[after.length - 1], first, 'moved to the end'); ok(after[0] !== first);
+  });
+
+  // ---- housekeeping ----
+  const oldDone = (t) => t.replace(/\*\*Finished\*\*: \d{4}-\d{2}-\d{2}/g, '**Finished**: 2020-01-01');
+  const recent = (t) => { const d = new Date(); const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; return t.replace(/\*\*Finished\*\*: \d{4}-\d{2}-\d{2}/g, `**Finished**: ${iso}`); };
+  const bar = () => document.getElementById('housekeepingBar');
+  const barVisible = () => bar().style.display !== 'none' && bar().textContent.trim() !== '';
+  const buttons = () => [...bar().querySelectorAll('button')].map((b) => b.textContent);
+
+  await check('housekeeping: finished tasks left on the board show a bar with the count and three actions', async () => {
+    await fresh(oldDone);
+    ok(barVisible(), 'bar visible');
+    ok(/4 done task\(s\) finished 30\+ days ago/.test(bar().textContent), bar().textContent);
+    eq(buttons(), ['Archive done (4)', 'Snooze 7 days', 'Dismiss']);
+  });
+
+  await check('housekeeping: nothing over a threshold, no bar', async () => {
+    await fresh(recent);
+    ok(!barVisible(), 'hidden');
+  });
+
+  await check('housekeeping: "Archive done" asks, then archives all of them in one edit', async () => {
+    const proj = await fresh(oldDone);
+    proj.log.length = 0;
+    let asked = 0; window.confirm = () => { asked++; return true; };
+    const before = archivedTasks.length;
+    [...bar().querySelectorAll('button')].find((b) => b.textContent.startsWith('Archive done')).click();
+    await new Promise((r) => setTimeout(r, 200)); await autoSave();
+    eq(asked, 1);
+    eq(archivedTasks.length, before + 4, 'four more in the archive');
+    ok(!tasks.some((t) => t.status === 'done'), 'none left in done');
+    eq(proj.log, ['archive.md', 'kanban.md'], 'one write per file, archive first');
+    ok(!barVisible(), 'bar gone');
+    window.confirm = realConfirm;
+  });
+
+  await check('housekeeping: cancelling the confirm archives nothing', async () => {
+    const proj = await fresh(oldDone); proj.log.length = 0;
+    window.confirm = () => false;
+    [...bar().querySelectorAll('button')].find((b) => b.textContent.startsWith('Archive done')).click();
+    await new Promise((r) => setTimeout(r, 100));
+    eq(proj.log, []); ok(barVisible(), 'still shown'); window.confirm = realConfirm;
+  });
+
+  await check('housekeeping: snooze hides it, dismiss hides it until the numbers change', async () => {
+    const proj = await fresh(oldDone);
+    [...bar().querySelectorAll('button')].find((b) => b.textContent === 'Snooze 7 days').click();
+    ok(!barVisible(), 'snoozed'); renderKanban(); ok(!barVisible(), 'still snoozed after a re-render');
+    localStorage.removeItem('kanbanmd.hk.snooze.fake'); renderKanban(); ok(barVisible(), 'back once the snooze is gone');
+    [...bar().querySelectorAll('button')].find((b) => b.textContent === 'Dismiss').click();
+    ok(!barVisible(), 'dismissed'); renderKanban(); ok(!barVisible(), 'stays dismissed');
+    // another old finished task appears (an agent finishes one): the counts differ, so it returns
+    const text = proj.files['kanban.md'].replace(/(### TASK-001 \|[^\n]*\n\*\*Status\*\*: )backlog/, '$1done').replace(/(### TASK-001 \|[^\n]*\n\*\*Status\*\*: done\n)/, '$1**Finished**: 2020-01-01\n');
+    H.external(proj, 'kanban.md', text); await pollOnce();
+    ok(barVisible(), 'returned because the situation changed');
+    ok(/5 done task/.test(bar().textContent), bar().textContent);
+  });
+
+  await check('housekeeping: old backlog tasks are outlined and counted', async () => {
+    await fresh((t) => t.replace(/(### TASK-001 \|[\s\S]*?\*\*Created\*\*: )\d{4}-\d{2}-\d{2}/, '$12020-01-01'));
+    ok(barVisible() && /1 backlog task\(s\) older than 90 days/.test(bar().textContent), bar().textContent);
+    const card = document.querySelector('.task-card[data-task-id="TASK-001"]');
+    ok(card && card.classList.contains('hk-stale'), 'card outlined');
+    ok(!document.querySelector('.task-card[data-task-id="TASK-002"]').classList.contains('hk-stale'), 'others are not');
+  });
+
+  await check('housekeeping: the policy can be edited from the menu (custom, off, reset)', async () => {
+    const proj = await fresh(recent);
+    const realPrompt = window.prompt;
+    window.prompt = () => 'max=3'; await editHousekeepingSettings();
+    ok(proj.files['kanban.md'].includes('**Housekeeping**: max=3'), 'line written');
+    ok(barVisible() && /\d+ tasks on the board \(limit 3\)/.test(bar().textContent), bar().textContent);
+    window.prompt = () => 'off'; await editHousekeepingSettings();
+    ok(proj.files['kanban.md'].includes('**Housekeeping**: off') && !barVisible(), 'off');
+    window.prompt = () => 'reset'; await editHousekeepingSettings();
+    ok(!proj.files['kanban.md'].includes('Housekeeping'), 'line removed');
+    window.prompt = () => null; const before = proj.files['kanban.md']; await editHousekeepingSettings(); eq(proj.files['kanban.md'], before, 'cancel changes nothing');
+    window.prompt = realPrompt;
   });
 
   window.confirm = realConfirm;
