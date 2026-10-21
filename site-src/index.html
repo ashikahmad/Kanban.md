@@ -78,12 +78,17 @@ h2 { font-size: clamp(24px, 3.4vw, 32px); letter-spacing: -0.02em; line-height: 
 .card h3 { font-size: 16px; margin-bottom: 6px; }
 .card p { color: var(--c-muted); font-size: 15px; }
 .card .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--c-accent); margin-right: 8px; vertical-align: 1px; }
-.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.fit { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 14px; padding: 22px 24px 12px; }
+.fit h3 { font-size: 18px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.badge { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 14px; font-weight: 700; }
+.badge.yes { background: var(--c-accent-soft); color: var(--c-accent); }
+.badge.no { background: var(--c-fill); color: var(--c-muted); }
 ul.plain { list-style: none; }
 ul.plain li { padding: 10px 0 10px 28px; position: relative; border-bottom: 1px solid var(--c-border); color: var(--c-muted); }
 ul.plain li:last-child { border-bottom: 0; }
 ul.plain li strong { color: var(--c-text); }
-ul.plain.yes li::before { content: "✓"; position: absolute; left: 4px; color: var(--c-ok); font-weight: 700; }
+ul.plain.yes li::before { content: "✓"; position: absolute; left: 4px; color: var(--c-accent); font-weight: 700; }
 ul.plain.no li::before { content: "–"; position: absolute; left: 6px; color: var(--c-faint); font-weight: 700; }
 
 ol.steps { list-style: none; counter-reset: s; display: grid; gap: 12px; margin-bottom: 20px; }
@@ -129,23 +134,23 @@ footer p + p { margin-top: 8px; }
     <div class="pillars">
       <div class="pillar">
         <div class="ico"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9.5" r="2.5"/><path d="M2.5 19c.6-3 2.8-5 5.5-5s4.9 2 5.5 5M14 14.3c.8-.3 1.5-.4 2.5-.4 2.2 0 4 1.5 5 4.1"/></svg></div>
-        <h3>You and your agent, building together</h3>
-        <p>One board, two kinds of teammate. You work in the browser, your AI assistant works from the command line, and both edit the same files without stepping on each other.</p>
+        <h3>You and your agent, together</h3>
+        <p>One board. You use the browser, your agent uses the command line.</p>
       </div>
       <div class="pillar">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M4 20V5M4 5h12l-2 3.5L16 12H4"/><path d="M9 20h11"/></svg></div>
-        <h3>A real roadmap for your agent</h3>
-        <p>Columns, priorities and subtasks tell the agent what to do next. It reads a few hundred tokens instead of the whole board: about 1,000 instead of 20,000 for a 100-task board.</p>
+        <h3>A roadmap your agent follows</h3>
+        <p>Columns and priorities show what's next, for a fraction of the tokens.</p>
       </div>
       <div class="pillar">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M2 12s3.7-6.5 10-6.5S22 12 22 12s-3.7 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
-        <h3>Watch the work as it happens</h3>
-        <p>Cards move and subtasks tick off in front of you within a couple of seconds. Real progress, easy to guide, and every change is in git.</p>
+        <h3>Watch the work happen</h3>
+        <p>Cards move and tasks tick off within seconds. Guide as you go.</p>
       </div>
       <div class="pillar">
         <div class="ico"><svg viewBox="0 0 24 24"><path d="M3.5 6.5a2 2 0 0 1 2-2H10l2 2.5h6.5a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/></svg></div>
         <h3>You own everything</h3>
-        <p>Plain Markdown in your own folder. No proprietary format, no account, no server, nothing leaves your machine. Open it in any editor, any time.</p>
+        <p>Plain Markdown in your folder. No account, nothing leaves your machine.</p>
       </div>
     </div>
 
@@ -168,8 +173,8 @@ footer p + p { margin-top: 8px; }
     <section>
       <h2>Where it fits</h2>
       <div class="two">
-        <div>
-          <h3 style="margin-bottom:6px">Where it shines</h3>
+        <div class="fit">
+          <h3><span class="badge yes">✓</span>Where it shines</h3>
           <ul class="plain yes">
             <li><strong>Developers</strong> who want tasks next to their code, in the same repository and the same pull requests.</li>
             <li><strong>Small teams</strong> who share a board through git.</li>
@@ -177,8 +182,8 @@ footer p + p { margin-top: 8px; }
             <li><strong>People who like owning their data</strong> and being able to open it in a text editor.</li>
           </ul>
         </div>
-        <div>
-          <h3 style="margin-bottom:6px">What it is not for</h3>
+        <div class="fit">
+          <h3><span class="badge no">–</span>What it is not for</h3>
           <ul class="plain no">
             <li><strong>Not a hosted service.</strong> No accounts, permissions, notifications or live co-editing. Teams share a board through git or a synced folder.</li>
             <li><strong>Not a server or an API.</strong> Agents use the CLI and the MCP server; there is no HTTP API.</li>
