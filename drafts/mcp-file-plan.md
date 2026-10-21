@@ -314,3 +314,7 @@ So size does not hurt an agent that uses the tools (flat cost, milliseconds even
 | Too many tools inflate context | eats the savings | start small, measure |
 | Agent edits the file by hand anyway | back to unpredictable | still safe: parse guards and per-task patches tolerate it; docs say tools first |
 | Windows rename-over-open-file | write fails | retry with backoff |
+
+## 14. Progress log (steps executed after the plan was agreed; scope reviewed after each)
+
+**Step 1: bundle the whole core into the page.** `build.mjs` bundles `core/index.js` with esbuild (dev dependency only) into one `KanbanCore` namespace; only an explicit list of names is bound as page globals (the page already owns names like `dueStatus`). `test/tools/page-harness.js` is a fake in-memory project folder (with modification times and an "external writer") for checking the page from the browser pane. Verified: all 7 fixture boards migrate through the page to output identical to the goldens. *Scope review:* the page grew from 122 KB to 158 KB; the entry will be trimmed to what the page uses once the later steps settle. No change to the plan.

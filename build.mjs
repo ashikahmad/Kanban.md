@@ -5,6 +5,7 @@
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { minify } from 'html-minifier-terser';
+import { buildSync } from 'esbuild';
 
 const dev = process.argv.includes('--dev');
 
@@ -19,9 +20,23 @@ function concatDir(dir, ext) {
 }
 
 const css = concatDir('src/styles', '.css');
-// core/board.js is an ES module so Node (CLI, MCP server, tests) can import it. The page uses
-// classic scripts, so it is inlined first with the `export` keywords dropped.
-const core = `/* ===== core/board.js ===== */\n${readFileSync('core/board.js', 'utf8').replace(/^export /gm, '').trim()}`;
+// The core (core/*.js) is ES modules so Node (CLI, MCP server, tests) imports it directly. For the
+// page it is bundled into one namespace (esbuild, dev dependency only; the output stays a single
+// dependency-free HTML file), and only the names listed here are bound as page globals: the page
+// already owns names such as dueStatus, so binding everything would collide.
+const PAGE_CORE_EXPORTS = [
+  'parseBoard', 'parseArchive', 'generateBoard', 'generateArchive', 'generateTaskBlock', 'normalizeConfig',
+  'createDefaultBoardContent', 'createDefaultArchiveContent', 'orderedTasks',
+];
+const coreModule = await import('./core/index.js');
+for (const name of PAGE_CORE_EXPORTS) {
+  if (!(name in coreModule)) throw new Error(`build: core does not export "${name}"`);
+}
+const bundled = buildSync({
+  entryPoints: ['core/index.js'], bundle: true, format: 'iife', globalName: 'KanbanCore',
+  target: 'es2020', write: false, legalComments: 'none',
+}).outputFiles[0].text;
+const core = `/* ===== core (bundled) ===== */\n${bundled.trim()}\nconst { ${PAGE_CORE_EXPORTS.join(', ')} } = KanbanCore;`;
 const js = `${core}\n\n${concatDir('src/scripts', '.js')}`;
 
 // Function replacers so $ / ${...} inside css/js are inserted literally.
