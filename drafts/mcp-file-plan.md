@@ -267,6 +267,39 @@ Behavioural notes: `get_board` rows are in display order (manual `Order` keys ho
 - **The fallback path is rare.** Across 2,400 random ops on four fixtures the one-block regeneration never fired; it exists for layouts like dates on separate lines, metadata inside a description, or two Subtasks sections, and has its own targeted tests.
 - **Priority values** are the cleaned config entries (`🔴 Critical` is stored as `Critical`); with v3 they may be several words.
 
+## 12b. Keeping the working file small (proposal, not built)
+
+**Does size matter? Measured.** Synthetic boards cloned from the example tasks (about 800 bytes per task):
+
+| Tasks | File | Raw read for an agent | `get_board` page (50) | read: parse + list | one edit (patch + verify) | page: render all cards |
+|---|---|---|---|---|---|---|
+| 100 | 78 KB | ~20k tok | ~2.4k tok | 1 ms | 2 ms | 6 ms |
+| 1,000 | 775 KB | ~198k tok | ~2.4k tok | 11 ms | 19 ms | 103 ms (23k DOM nodes) |
+| 5,000 | 3.9 MB | ~993k tok | ~2.4k tok | 54 ms | 100 ms | (3,000 tasks: 268 ms per render, 69k nodes) |
+
+So size does not hurt an agent that uses the tools (flat cost, milliseconds even at 5,000). It hurts: an agent that reads the file raw anyway (a 1,000-task file does not fit in a context), the page beyond roughly 1,000 tasks (it rebuilds every card on each change and filter keystroke), git diffs and merges, and a human scrolling a long file. Nudging is therefore about hygiene and the fallback path, not tool-path performance.
+
+**1. Housekeeping nudges (cheap, recommended).** One optional config line, thresholds editable by hand, in the page, or by `update_config`:
+
+```
+**Housekeeping**: done=done after=30d | backlog=backlog after=90d | max=200
+```
+
+- *done*: tasks in the named column whose `Finished` date is older than N days (undated done tasks are counted separately, since a task has no timestamp to age).
+- *backlog*: tasks in the named column created more than N days ago, or past their due date by that long.
+- *max*: warn when the board holds more than N tasks.
+- Nudge only, never automatic. Delivery: a `housekeeping` block in `get_board_stats` and `get_config` (present only when something is over a threshold, so it costs nothing otherwise); `kanbanmd housekeeping [--apply]`; a dismissible banner in the page with Archive / Snooze 7 days / Dismiss (snooze kept in localStorage per project); the server instructions tell an agent to mention it to the user, not to act.
+- Needs one write op: bulk archive (`archiveTasks { ids }` or `{ column, olderThanDays }`) so a clean-up is one verified edit and one diff, with `dry_run` as usual. (Belongs with the Phase 5 write tools.)
+
+**2. A separate backlog file (opt-in, larger).** Treat `backlog.md` as a second side store next to `archive.md`: same v3 block format, same verified ops, ids still unique across all files.
+
+- Config: `**Backlog file**: backlog.md` plus the column it holds. Moving a task into that column writes it to `backlog.md`; moving it out brings it back. Same status, same `Order` keys.
+- Reads: `get_board` is unchanged (it lists the main file); `list_backlog` filters and pages the backlog; `get_task` finds a task in any file; stats count all three.
+- Page: the backlog column becomes a count that opens a Backlog panel (search, promote), the way Archives works today. Rendering a lazily loaded column in the board itself is possible but is a separate, larger piece of work.
+- Cost: every op that locates a task, allocates an id or sorts has to know a third file; migration and the activity log cover it too. Worth it only for boards whose backlog is in the hundreds; most boards are served by nudge 1 plus archiving.
+
+**Suggested order:** Phase 4 (page on the core), Phase 5 (write tools, with bulk archive and `housekeeping`), then the backlog file as its own phase, built only if it is wanted after the nudges have been used.
+
 ## 13. Risks
 
 | Risk | Impact | Mitigation |
