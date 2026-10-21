@@ -113,6 +113,7 @@
 
         // Update project selector dropdown
         async function updateProjectSelector() {
+            if (typeof updateOrderingMenu === 'function') updateOrderingMenu();
             const projects = await loadRecentProjects();
             const selectorBox = document.getElementById('projectDd');
             const renameBtn = document.getElementById('renameProjectBtn');

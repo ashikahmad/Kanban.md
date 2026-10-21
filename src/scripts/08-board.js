@@ -170,7 +170,14 @@
             const op = beforeTaskId
                 ? { type: 'moveTask', id: taskId, status, before: beforeTaskId }
                 : { type: 'moveTask', id: taskId, status, atEnd: true };
-            const result = await commit([op], { explicit: true });
+            // Would this change anything? (A drop where the card already is must not ask or write.)
+            const disk = await readProjectFiles();
+            try { if (!applyOps({ board: disk.board, archive: disk.archive }, [op]).files.length) return false; }
+            catch (e) { /* the commit below reports it */ }
+            const ops = [op];
+            // First manual drop on a board with no Order keys: ask once whether to remember the order.
+            if (!orderingActive() && resolveOrderChoice() === 'on') ops.unshift({ type: 'sortTasks', mode: 'positions' });
+            const result = await commit(ops, { explicit: true });
             return result.ok && result.changed;
         }
 

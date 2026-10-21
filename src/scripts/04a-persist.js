@@ -80,6 +80,7 @@
         async function snapshotFromDisk() {
             const disk = await readProjectFiles();
             adoptTexts(disk.board, disk.archive);
+            updateOrderingMenu();
         }
 
         function refreshUi() {
@@ -88,6 +89,7 @@
             const scroll = view.scrollTop;
             renderKanban();
             view.scrollTop = scroll;
+            updateOrderingMenu();
             if (document.getElementById('archiveModal').classList.contains('active')) renderArchiveList(document.getElementById('archiveSearch').value);
         }
 

@@ -187,6 +187,80 @@
     ok(proj.files['kanban.md'].includes('TASK-020 | Edited from the form'), 'edit saved');
   });
 
+  // ---- manual order ----
+  const columnIds = (colId) => [...document.querySelectorAll(`.kanban-column[data-column-id="${colId}"] .task-card`)].map((c) => c.dataset.taskId);
+  const keyLines = (text) => (text.match(/^\*\*Order\*\*:/gm) || []).length;
+  const resetChoice = () => localStorage.removeItem('kanbanmd.orderChoice.fake');
+
+  await check('first drop asks once; "no" relocates the block and is remembered', async () => {
+    const proj = await fresh(); resetChoice();
+    let asked = 0; window.confirm = () => { asked++; return false; };
+    ok(await moveTask('TASK-001', 'in-progress', 'TASK-007'), 'moved');
+    eq(asked, 1, 'asked once');
+    eq(keyLines(proj.files['kanban.md']), 0, 'no keys written');
+    const ids = tasks.map((t) => t.id); ok(ids.indexOf('TASK-001') === ids.indexOf('TASK-007') - 1, 'block relocated before the anchor');
+    ok(await moveTask('TASK-002', 'in-progress', null), 'second drop moved');
+    eq(asked, 1, 'not asked again');
+    eq(localStorage.getItem('kanbanmd.orderChoice.fake'), 'off');
+    window.confirm = realConfirm;
+  });
+
+  await check('first drop asks once; "yes" turns manual order on, then a drop is a two-line diff', async () => {
+    const proj = await fresh(); resetChoice();
+    let asked = 0; window.confirm = () => { asked++; return true; };
+    const order = tasks.map((t) => t.id);
+    ok(await moveTask('TASK-001', 'in-progress', 'TASK-007'), 'moved');
+    eq(asked, 1);
+    eq(keyLines(proj.files['kanban.md']), tasks.length, 'every task has a key');
+    eq(tasks.map((t) => t.id), order, 'no block moved');
+    ok(orderingActive(), 'active');
+    const col = columnIds('in-progress'); ok(col.indexOf('TASK-001') === col.indexOf('TASK-007') - 1, `rendered before the anchor: ${col}`);
+    const before = proj.files['kanban.md'];
+    ok(await moveTask('TASK-002', 'in-progress', 'TASK-001'), 'second drop');
+    eq(asked, 1, 'not asked again');
+    const d = changedLines(before, proj.files['kanban.md']); ok(d.removed <= 2 && d.added <= 2, `two-line diff ${JSON.stringify(d)}`);
+    const col2 = columnIds('in-progress'); ok(col2.indexOf('TASK-002') === col2.indexOf('TASK-001') - 1, 'rendered in key order');
+    window.confirm = realConfirm;
+  });
+
+  await check('a drop where the card already is neither asks nor writes', async () => {
+    const proj = await fresh(); resetChoice();
+    let asked = 0; window.confirm = () => { asked++; return true; };
+    const col = columnIds('in-progress');
+    const moved = await moveTask(col[col.length - 1], 'in-progress', null);
+    eq(moved, false); eq(asked, 0); eq(proj.log, [], 'nothing written');
+    window.confirm = realConfirm;
+  });
+
+  await check('menu: switch on, reset by id, switch off', async () => {
+    const proj = await fresh(); resetChoice();
+    window.confirm = () => true;
+    await toggleManualOrder();
+    ok(orderingActive() && keyLines(proj.files['kanban.md']) === tasks.length, 'on');
+    ok(document.getElementById('orderToggleBtn').querySelector('.mi-label').textContent.includes('on'), 'label says on');
+    ok(document.getElementById('orderResetBtn').style.display !== 'none', 'reset item visible');
+    await moveTask('TASK-015', 'backlog', 'TASK-001');
+    await resetOrderById();
+    const shown = orderedTasks(tasks).map((t) => t.id); eq(shown, [...shown].sort(), 'id order');
+    await toggleManualOrder();
+    ok(!orderingActive() && keyLines(proj.files['kanban.md']) === 0, 'off, keys removed');
+    eq(localStorage.getItem('kanbanmd.orderChoice.fake'), 'off');
+    ok(document.getElementById('orderResetBtn').style.display === 'none', 'reset item hidden');
+    window.confirm = realConfirm;
+  });
+
+  await check('an outside change of keys re-renders the new order', async () => {
+    const proj = await fresh(); resetChoice();
+    window.confirm = () => true; await toggleManualOrder(); window.confirm = realConfirm;
+    const col = columnIds('backlog'); const first = col[0], last = col[col.length - 1];
+    let text = proj.files['kanban.md'];
+    // an agent gives the first card of the column the highest key
+    text = text.replace(new RegExp(`(### ${first} \\|[^\\n]*\\n\\*\\*Status\\*\\*: [^\\n]*\\n\\*\\*Order\\*\\*: )\\d+`), '$1999999');
+    H.external(proj, 'kanban.md', text);
+    await pollOnce();
+    const after = columnIds('backlog'); eq(after[after.length - 1], first, 'moved to the end'); ok(after[0] !== first);
+  });
+
   window.confirm = realConfirm;
   return JSON.stringify({ passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok), all: results.map((r) => `${r.ok ? 'ok ' : 'FAIL'} ${r.name}`) }, null, 1);
 })()
