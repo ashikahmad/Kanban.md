@@ -2,3 +2,6 @@ node_modules/
 *.log
 .DS_Store
 .playwright-mcp/
+.kanban.lock/
+.kanban-activity.jsonl
+.*.tmp

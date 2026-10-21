@@ -56,7 +56,7 @@ How it is built: `core/` is plain ES module code. `build.mjs` inlines it into `k
 
 **5.2 Validate.** `validateTask` / `validateOp` check status against column ids, priority/category/user/tag against config where the app already restricts them, `YYYY-MM-DD` dates, no `##`/`###` in descriptions, unique ids. These replace most of the prose rules in `AI_WORKFLOW.md`. Errors are `{code, message, hint, valid?}`, e.g. `unknown_status` with the list of valid ids.
 
-**5.3 Ops.** A closed set of small operations, each pure: `(state, op) -> {state', changes}`. The same set is what the page emits, what the CLI parses and what MCP tools map to. Rules the UI applies today (auto `Started` / `Finished` dates on column moves, defaults like `Created`) are extracted into ops so no front end can differ.
+**5.3 Ops.** A closed set of small operations, each pure: `(state, op) -> {state', changes}`. The same set is what the page emits, what the CLI parses and what MCP tools map to. Rules the UI applies today are extracted into ops so no front end can differ: `Created` defaults to today on create, a move with no anchor lands after the last task of the target column, restoring into a column that no longer exists falls back to the first column. (Phase 2 check: the UI sets `Started` / `Finished` only from the edit form, never on a move, so ops do not invent date rules either.)
 
 **5.4 Patch.** Each op maps to the smallest text edit:
 
@@ -91,7 +91,8 @@ Two rules keep diffs small and predictable:
 > Diagram: see **Write protocol** in [mcp-file-diagrams.md](mcp-file-diagrams.md#write-protocol).
 
 - **Granularity of conflict.** The lock is per task (`etag`), not per file. Two writers on different tasks both succeed; a same-task race returns `conflict` with the current task so the agent can retry cheaply.
-- **Optimistic, not locking.** `ifMatch` is optional. Without it the op applies to the latest content (fine for additive ops like `append_note`).
+- **Two layers, because a hash check alone is not enough.** Writers that go through the shared Node port (CLI, MCP server, any number of processes) take turns with an exclusive lock directory (`.kanban.lock`, created with `mkdir`, broken if stale), so their read-modify-write cycles never interleave. The page cannot take that lock, so before each rename every file that was read is re-read and its hash compared; if a foreign writer moved it, the op is recomputed from the fresh content. A hash check alone was tried first and lost 27 of 36 concurrent creates in the test, because the write and fsync leave a window of milliseconds. Only a foreign write landing between the last check and the rename (microseconds) remains, and `ifMatch` covers callers that need certainty beyond that.
+- **`ifMatch` is optional.** Without it the op applies to the latest content (fine for additive ops like `append_note`).
 - **Archive moves touch two files.** Write the archive first, then remove from the board. A crash in between leaves the task in both files (visible and removable), never in neither. A startup check reports duplicates.
 - **Ids.** `create_task` takes `max(Last Task ID, highest id in board and archive) + 1` inside the same read-patch-write.
 - **Atomic write.** Temp file in the same directory + `rename`. On Windows rename can fail while another process holds the file; retry with backoff.
@@ -118,7 +119,7 @@ CLI and MCP expose the same operations. `kanbanmd get-board --status in-progress
 | `get_config` | column ids + names, categories, users, priorities, tags |
 | `create_task` | id assigned; `created` defaults to today |
 | `update_task` | partial patch; optional `ifMatch` |
-| `move_task` | `status`, optional `before` id; applies the UI's date rules |
+| `move_task` | `status`, optional `before` id, optional `atEnd` / `keepPosition`; same column and no anchor is a no-op |
 | `toggle_subtask`, `add_subtask`, `append_note` | tiny writes |
 | `archive_task`, `restore_task`, `list_archive` | archive lifecycle |
 | `update_config` | add / rename / remove column (explicit target for orphans), categories, users, tags |
@@ -199,9 +200,17 @@ Phases 1 and 4 are the only ones that change existing page behavior.
 1. **Tool granularity** (about ten fine-grained tools vs fewer broad ones): start fine-grained, measure, merge if heavy?
 2. **Distribution:** script in this repo only, or also an npm package?
 3. **Multi-project:** one server per project folder (matches stdio, simplest), or one server over several?
-4. **Position semantics:** is "status change keeps file position" an acceptable default for `move_task`, with a block move only when `before` is given? (File order is the rank within a column.)
+4. **Position semantics (Phase 2 default, please confirm):** `move_task` follows the page: a move into another column lands after the last task of that column, which usually relocates the block (a larger diff than one line). `keepPosition: true` changes only the `**Status**` line (a one-line diff), and the card then takes the rank its position in the file implies. Which should be the default for agents?
 5. **Dependencies:** the MCP server needs `@modelcontextprotocol/sdk`; the CLI and core can stay dependency-free. OK to depend on the SDK?
 6. **Activity log location and format:** `.kanban-activity.jsonl` beside the board, or inside a `.kanban/` folder?
+
+## 12a. What Phase 2 found
+
+- **The meta line is all or nothing.** `**Priority**` / `**Category**` / `**Assigned**` live on one line and the parser only reads them as a group. A task with a priority but no category (or the reverse) loses the value on save, in the page too. Ops reject that combination with `meta_incomplete` instead of losing data. Worth fixing in the parser separately (read each field independently).
+- **Mixed line endings exist in the wild.** `examples/kanban.md` (migrated by the app) has 152 CRLF lines among 505. The parser keeps CRLF inside notes and preserved sections but trims it in descriptions. Blocks therefore move verbatim, and are re-terminated only when the destination file is uniformly the other style.
+- **A hash check is not a lock.** See section 6: concurrent processes lost updates until writers were serialized.
+- **The fallback path is rare.** Across 2,400 random ops on four fixtures the one-block regeneration never fired; it exists for layouts like dates on separate lines, metadata inside a description, or two Subtasks sections, and has its own targeted tests.
+- **Priority values** are the cleaned config entries (`🔴 Critical` is stored as `Critical`) and must be a single word, because that is all the parser reads.
 
 ## 13. Risks
 

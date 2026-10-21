@@ -65,6 +65,7 @@ sequenceDiagram
     participant P as Page
 
     A->>C: move_task(TASK-014, done, ifMatch=etag)
+    C->>F: take .kanban.lock (mkdir, exclusive)
     C->>F: read latest bytes, hash H1
     C->>C: parse, locate TASK-014, check etag
     alt etag differs
@@ -72,14 +73,16 @@ sequenceDiagram
     else etag matches
         C->>C: validate, build patch (1 line)
         C->>C: verify (re-parse, untouched bytes equal)
+        C->>F: stage temp file (write, fsync)
         C->>F: re-read hash, must still equal H1
-        alt file changed meanwhile
-            C->>C: retry from step 2, bounded
+        alt a writer outside the lock (the page) changed it
+            C->>C: discard temp, recompute from fresh content
         else unchanged
-            C->>F: write temp file, fsync, rename over target
-            C-->>A: ok, id, rev, changed fields
+            C->>F: rename temp over target
+            C-->>A: ok, id, etag, changed fields
         end
     end
+    C->>F: release lock
     Note over P,F: Page polls lastModified (~2 s, only while visible)
     P->>F: sees change, re-parse and re-render
     P->>P: if that card is open in the form, offer reload or keep mine

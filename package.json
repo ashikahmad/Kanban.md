@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Single-file Markdown Kanban task manager — built from src/ into one self-contained, dependency-free kanbanmd.html",
+  "description": "Single-file Markdown Kanban task manager \u2014 built from src/ into one self-contained, dependency-free kanbanmd.html",
   "scripts": {
     "build": "node build.mjs",
     "build:dev": "node build.mjs --dev",
@@ -11,5 +11,8 @@
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0"
+  },
+  "bin": {
+    "kanbanmd": "cli/kanbanmd.js"
   }
 }
