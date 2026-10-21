@@ -2,7 +2,7 @@
 
 This file contains general guidelines for all AI assistants (Claude, ChatGPT, Copilot, Gemini, etc.) using this Markdown task management system.
 
-A human uses the board in the browser (`kanbanmd.html`) **at the same time** as you. Your edits appear on their screen within a couple of seconds, and theirs reach you through the same files. Work in small, targeted edits so neither of you overwrites the other.
+A human uses the board in the browser (the `kanbanmd.html` app; a project may keep its copy under another name) **at the same time** as you. Your edits appear on their screen within a couple of seconds, and theirs reach you through the same files. Work in small, targeted edits so neither of you overwrites the other.
 
 ---
 
