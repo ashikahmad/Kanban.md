@@ -17,6 +17,7 @@ const readJson = (dir, name) => JSON.parse(read(dir, name));
 const viaJson = (v) => {
   const j = JSON.parse(JSON.stringify(v));
   delete j.formatVersion; // added after the golden files were captured
+  if (j.config && j.config.housekeeping === null) delete j.config.housekeeping; // ditto (optional policy line)
   for (const t of j.tasks || []) if (t.order === null) delete t.order;
   return j;
 };

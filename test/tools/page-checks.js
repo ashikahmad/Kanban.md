@@ -13,6 +13,7 @@
   const lines = (s) => s.split('\n');
   const changedLines = (a, b) => { const d = KanbanCore.diffStats(a, b); return { removed: d.removed, added: d.added }; };
   async function fresh() {
+    localStorage.removeItem('kanbanmd.orderChoice.fake'); // every check starts with no remembered answer
     const files = { 'kanban.md': await H.fixture('demo.kanban'), 'archive.md': await H.fixture('demo.archive') };
     const proj = await H.open(files);          // the page migrates the v2 demo to v3 on load
     proj.log.length = 0;

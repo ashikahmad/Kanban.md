@@ -1,3 +1,5 @@
+import { parseHousekeepingSpec, formatHousekeepingSpec } from './housekeeping-spec.js';
+
 // Slugify a column name/heading to an id (lowercase, drop emoji/punctuation, dash spaces).
 // MUST stay identical to the id derivation used when a column has no explicit (id), so that
 // slug(heading) === column.id holds. NOTE: \w (no /u flag) strips accents — "Terminé" → "termin"
@@ -17,6 +19,7 @@ export function parseBoard(content) {
         users: [],
         priorities: [],
         tags: [],
+        housekeeping: null, // optional "**Housekeeping**:" policy (see housekeeping-spec.js); null = defaults
         boardTitle: 'Kanban Board'
     };
 
@@ -86,6 +89,9 @@ export function parseBoard(content) {
         if (prioritiesMatch) {
             config.priorities = prioritiesMatch[1].split('|').map(p => p.trim()).filter(Boolean);
         }
+
+        const hkMatch = configText.match(/\*\*Housekeeping\*\*:\s*(.+)/);
+        if (hkMatch) config.housekeeping = parseHousekeepingSpec(hkMatch[1].trim());
 
         // Parse tags
         const tagsMatch = configText.match(/\*\*Tags\*\*:\s*(.+)/);
@@ -440,6 +446,7 @@ export function generateBoard({ config, tasks }) {
     md += `**Users**: ${cfg.users.join(', ')}\n\n`;
     md += `**Priorities**: ${cfg.priorities.join(' | ')}\n\n`;
     md += `**Tags**: ${cfg.tags.map(t => '#' + t).join(' ')}\n\n`;
+    if (cfg.housekeeping) md += `**Housekeeping**: ${formatHousekeepingSpec(cfg.housekeeping)}\n\n`;
     md += `---\n\n`;
 
     md += `## Tasks\n\n`;

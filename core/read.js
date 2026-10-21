@@ -9,6 +9,11 @@
 import { parseBoard, parseArchive, orderedTasks } from './board.js';
 import { BoardError, etagOf } from './text.js';
 import { Doc, blocksOf } from './patch.js';
+import { localToday, dayNumber } from './dates.js';
+import { getHousekeeping } from './housekeeping.js';
+import { resolveHousekeeping } from './housekeeping-spec.js';
+
+export { localToday };
 
 export const TASK_VIEW_FIELDS = ['id', 'title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due',
     'completed', 'description', 'subtasks', 'notes', 'extra', 'progress', 'etag'];
@@ -22,18 +27,6 @@ const list = (v) => (v === undefined || v === null || v === '' ? [] : Array.isAr
 const norm = (s) => String(s).trim().toLowerCase();
 // "@bob (Bob Ito)" -> "bob"
 const userKey = (u) => norm(u).replace(/^@/, '').replace(/[\s(].*$/, '');
-
-export function localToday() {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-const dayNumber = (iso) => {
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
-    if (!m) return null;
-    const t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
-    const d = new Date(t);
-    return d.getUTCFullYear() === +m[1] && d.getUTCMonth() === +m[2] - 1 && d.getUTCDate() === +m[3] ? t / 86400000 : null;
-};
 
 // Same rule as the page's deadline badge: 'overdue' (due before today), 'soon' (within 2 days,
 // today included), or null. A task with a Finished date is never flagged.
@@ -173,6 +166,7 @@ export function getConfig(ws) {
         users: c.users,
         priorities: c.priorities.map(clean),
         tags: c.tags,
+        housekeeping: resolveHousekeeping(bp.config),
         manualOrder: bp.tasks.some((t) => t.order !== null),
         tasks: bp.tasks.length,
         archived: ap.tasks.length,
@@ -204,6 +198,7 @@ export function getStats(ws, { today = localToday() } = {}) {
         .sort((a, b) => a.due.localeCompare(b.due));
     const row = (t) => ({ id: t.id, title: t.title, due: t.due, status: t.status });
     const overdue = flagged('overdue'), soon = flagged('soon');
+    const hk = getHousekeeping(ws, { today });
     return {
         rev: etagOf(ws.board),
         today,
@@ -217,6 +212,7 @@ export function getStats(ws, { today = localToday() } = {}) {
         ...(overdue.length > STATS_LIST_CAP && { overdueTotal: overdue.length }),
         dueSoon: soon.slice(0, STATS_LIST_CAP).map(row),
         ...(soon.length > STATS_LIST_CAP && { dueSoonTotal: soon.length }),
+        ...(hk.suggestions.length && { housekeeping: hk.suggestions }),
     };
 }
 

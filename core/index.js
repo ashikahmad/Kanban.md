@@ -6,3 +6,5 @@ export * from './migrate.js';
 export * from './ops.js';
 export * from './read.js';
 export * from './changes.js';
+export * from './housekeeping-spec.js';
+export * from './housekeeping.js';

@@ -7,6 +7,7 @@
 // every result by re-parsing it, so a disagreement between the two aborts the write.
 import { splitLines, stripEol, lineEol, detectEol, toEol } from './text.js';
 import { generateBoard, generateTaskBlock } from './board.js';
+import { formatHousekeepingSpec } from './housekeeping-spec.js';
 
 export class Doc {
     constructor(text) {
@@ -376,7 +377,7 @@ export function setLastTaskId(doc, n) {
     else insertLines(doc, Math.min(1, doc.lines.length), ['', comment]);
 }
 
-const CONFIG_LABELS = { columns: 'Columns', categories: 'Categories', users: 'Users', priorities: 'Priorities', tags: 'Tags' };
+const CONFIG_LABELS = { columns: 'Columns', categories: 'Categories', users: 'Users', priorities: 'Priorities', tags: 'Tags', housekeeping: 'Housekeeping' };
 
 function configRange(doc) {
     const h = doc.lines.findIndex((l) => stripEol(l).startsWith('## ⚙️ Configuration'));
@@ -410,10 +411,24 @@ export function setConfigLine(doc, key, value, fullConfig) {
     insertLines(doc, range.to, [...(blockBefore ? [''] : []), `**${label}**: ${value}`, '']);
 }
 
+// Remove one config line (and the blank line after it). No-op when absent.
+export function removeConfigLine(doc, key) {
+    const range = configRange(doc);
+    if (!range) return;
+    const re = new RegExp(`\\*\\*${CONFIG_LABELS[key]}\\*\\*:\\s*(.+)`);
+    for (let i = range.from; i < range.to; i++) {
+        if (re.test(stripEol(doc.lines[i]))) {
+            removeLines(doc, i, i + (i + 1 < doc.lines.length && isBlank(doc.lines[i + 1]) ? 2 : 1));
+            return;
+        }
+    }
+}
+
 export const configValueText = {
     columns: (v) => v.map((c) => `${c.name} (${c.id})`).join(' | '),
     categories: (v) => v.join(', '),
     users: (v) => v.join(', '),
     priorities: (v) => v.join(' | '),
     tags: (v) => v.map((t) => '#' + t).join(' '),
+    housekeeping: (v) => formatHousekeepingSpec(v),
 };

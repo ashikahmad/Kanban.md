@@ -10,11 +10,12 @@
 import { parseBoard, parseArchive, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks } from './board.js';
 import { BoardError, firstDifference, etagOf, stripEol, toEol } from './text.js';
 import { CURRENT_VERSION } from './migrate.js';
+import { normalizeHousekeeping, formatHousekeepingSpec } from './housekeeping-spec.js';
 import * as P from './patch.js';
 
 export const DEFAULT_ARCHIVE_STRINGS = { title: '# Task Archive', desc: '> Archived tasks', section: '## ✅ Archives' };
 export const TASK_FIELDS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
-export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'sortTasks', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
+export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'sortTasks', 'archiveTasks', 'setHousekeeping', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
 const CONFIG_LISTS = ['categories', 'users', 'priorities', 'tags'];
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
@@ -425,6 +426,14 @@ const OPS = {
         return { id: t.id, kind: 'archive', order: ['archive', 'board'] };
     },
 
+    // Several tasks to the archive in one verified edit (a clean-up is one diff). All or nothing.
+    archiveTasks(ctx, op) {
+        const ids = [...new Set((Array.isArray(op.ids) ? op.ids : []).map(String))];
+        if (!ids.length) fail('missing_field', 'archiveTasks needs a non-empty "ids" array');
+        for (const id of ids) OPS.archiveTask(ctx, { type: 'archiveTask', id });
+        return { ids, count: ids.length, kind: 'archive', order: ['archive', 'board'] };
+    },
+
     restoreTask(ctx, op) {
         const found = findTask(ctx, op.id);
         if (found.kind !== 'archive') fail('not_archived', `${found.task.id} is not archived`);
@@ -447,6 +456,36 @@ const OPS = {
         if (found.kind === 'board') ctx.state.tasks = ctx.state.tasks.filter((x) => x !== found.task);
         else ctx.state.archive = ctx.state.archive.filter((x) => x !== found.task);
         return { id: found.task.id, kind: found.kind };
+    },
+
+    // The "**Housekeeping**:" policy. { off: true } turns the nudges off, { reset: true } removes the line (defaults).
+    setHousekeeping(ctx, op) {
+        const cols = ctx.state.config.columns.map((c) => c.id);
+        if (op.reset) {
+            ctx.state.config.housekeeping = null;
+            P.removeConfigLine(ctx.board, 'housekeeping');
+            return { name: 'housekeeping' };
+        }
+        const h = op.off ? { enabled: false } : { enabled: true };
+        const side = (key) => {
+            const v = op[key];
+            if (v === undefined) return;
+            if (typeof v !== 'object' || v === null) fail('invalid_field', `${key} must be { column, afterDays }`);
+            if (v.column !== undefined && !cols.includes(v.column)) fail('unknown_status', `Unknown column "${v.column}"`, { valid: cols });
+            if (v.afterDays !== undefined && (!Number.isInteger(v.afterDays) || v.afterDays < 1)) fail('invalid_field', `${key}.afterDays must be a whole number of days, 1 or more`);
+            h[key] = { ...(v.column !== undefined && { column: v.column }), ...(v.afterDays !== undefined && { afterDays: v.afterDays }) };
+        };
+        if (!op.off) {
+            side('done'); side('backlog');
+            if (op.max !== undefined) {
+                if (!Number.isInteger(op.max) || op.max < 1) fail('invalid_field', 'max must be a whole number, 1 or more');
+                h.max = op.max;
+            }
+        }
+        const norm = normalizeHousekeeping(h);
+        ctx.state.config.housekeeping = norm;
+        P.setConfigLine(ctx.board, 'housekeeping', formatHousekeepingSpec(norm), normalizeConfig(ctx.state.config));
+        return { name: 'housekeeping' };
     },
 
     setConfigList(ctx, op) {

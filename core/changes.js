@@ -99,6 +99,7 @@ export function diffToOps(base, next) {
         if (!deepEqual(base.config[name], next.config[name])) ops.push({ type: 'setConfigList', name, values: next.config[name] });
     }
     if (base.config.boardTitle !== next.config.boardTitle) unsupported.push('the board title changed');
+    if (!deepEqual(base.config.housekeeping, next.config.housekeeping)) unsupported.push('the housekeeping settings changed');
 
     return { ops, unsupported };
 }

@@ -5,11 +5,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { getBoard, getTask, getConfig, listArchive, getStats, summarizeChanges } from '../core/read.js';
 import { etagOf } from '../core/text.js';
+import { getHousekeeping, archiveCandidates } from '../core/housekeeping.js';
+import { parseHousekeepingSpec } from '../core/housekeeping-spec.js';
 import { BoardError } from '../core/text.js';
 import { TASK_FIELDS } from '../core/ops.js';
 import { readWorkspace, readActivity, mutate, migrateProject } from '../io/node-fs.js';
 
-const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse']);
+const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse', 'apply']);
 function parseArgs(argv) {
     const flags = {}, pos = [];
     for (let i = 0; i < argv.length; i++) {
@@ -25,6 +27,8 @@ function parseArgs(argv) {
 
 const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
 
+  housekeeping [--apply] [--set SPEC|off|reset]   what to archive or review; --apply archives the finished ones in one edit;
+                      --set "done=done after=30d | backlog=backlog after=90d | max=200" edits the policy
   migrate                                          rewrite kanban.md / archive.md in the current format (backups kept)
   board [filters]     compact task list in display order.  (alias: list)
   task <id> [--fields a,b]   one task in full, with its etag.  (alias: show)
@@ -59,6 +63,27 @@ async function main() {
     const need = (n, what) => { if (a.length < n) throw new BoardError('usage', `Missing ${what}`, { hint: 'Run kanbanmd --help' }); };
 
     if (!cmd || cmd === 'help' || flags.help !== undefined) { console.log(HELP); return; }
+
+    if (cmd === 'housekeeping') {
+        if (flags.set !== undefined) {
+            const spec = String(flags.set).trim();
+            const h = parseHousekeepingSpec(spec) || {};
+            const op = spec === 'reset' ? { type: 'setHousekeeping', reset: true }
+                : spec.toLowerCase() === 'off' ? { type: 'setHousekeeping', off: true }
+                : { type: 'setHousekeeping', done: h.done, backlog: h.backlog, max: h.max };
+            console.log(JSON.stringify({ ok: true, ...(await mutate(dir, op, opt)) }));
+            return;
+        }
+        const ws = await readWorkspace(dir);
+        if (flags.apply) {
+            const ids = archiveCandidates(ws);
+            if (!ids.length) { console.log(JSON.stringify({ ok: true, archived: 0, note: 'nothing to archive' })); return; }
+            console.log(JSON.stringify({ ok: true, archived: ids.length, ...(await mutate(dir, { type: 'archiveTasks', ids }, opt)) }));
+            return;
+        }
+        console.log(JSON.stringify({ ok: true, ...getHousekeeping(ws) }));
+        return;
+    }
 
     if (cmd === 'migrate') {
         console.log(JSON.stringify({ ok: true, ...(await migrateProject(dir, { dryRun: opt.dryRun, actor: opt.actor })) }));

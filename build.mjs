@@ -29,13 +29,17 @@ const PAGE_CORE_EXPORTS = [
   'createDefaultBoardContent', 'createDefaultArchiveContent', 'orderedTasks',
   'diffToOps', 'applyOps', 'deepEqual',
 ];
+// Reachable as KanbanCore.<name> (for the test harness) but not bound as globals.
+const NAMESPACE_ONLY = ['diffStats'];
 const coreModule = await import('./core/index.js');
 for (const name of PAGE_CORE_EXPORTS) {
   if (!(name in coreModule)) throw new Error(`build: core does not export "${name}"`);
 }
+// The entry is generated from the list above, so only what the page binds (and what that needs) is
+// bundled: the read-side queries, for instance, never reach the page.
 const bundled = buildSync({
-  entryPoints: ['core/index.js'], bundle: true, format: 'iife', globalName: 'KanbanCore',
-  target: 'es2020', write: false, legalComments: 'none',
+  stdin: { contents: `export { ${[...PAGE_CORE_EXPORTS, ...NAMESPACE_ONLY].join(', ')} } from './core/index.js';`, resolveDir: process.cwd(), loader: 'js' },
+  bundle: true, format: 'iife', globalName: 'KanbanCore', target: 'es2020', write: false, legalComments: 'none',
 }).outputFiles[0].text;
 const core = `/* ===== core (bundled) ===== */\n${bundled.trim()}\nconst { ${PAGE_CORE_EXPORTS.join(', ')} } = KanbanCore;`;
 const js = `${core}\n\n${concatDir('src/scripts', '.js')}`;
