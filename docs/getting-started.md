@@ -4,8 +4,8 @@ Kanban.md is one HTML file. You open it in a browser, point it at a folder, and 
 
 ## Requirements
 
-- A Chromium-based desktop browser: Chrome 86+, Edge 86+, Opera 72+ or Brave 1.17+. The app needs the File System Access API.
-- Firefox and Safari are not supported, and neither are iOS/iPadOS. Android has limited support. (Any browser can [view a board from the web](using-the-board.md#viewing-a-board-from-the-web), read-only.)
+- To edit boards, a Chromium-based desktop browser: Chrome 86+, Edge 86+, Opera 72+ or Brave 1.17+. Opening a folder needs the File System Access API.
+- Firefox, Safari and iOS/iPadOS cannot open folders, so they cannot edit boards; Android has limited support. Any browser can still [view a board from the web](using-the-board.md#viewing-a-board-from-the-web), read-only.
 - Windows, macOS and Linux all work.
 
 ## Install in three steps

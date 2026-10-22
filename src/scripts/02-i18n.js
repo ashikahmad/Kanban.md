@@ -46,7 +46,7 @@
                 'welcome.step3': 'The app automatically loads kanban.md',
                 'welcome.step4': 'Manage your tasks visually with Kanban',
                 'welcome.step5': 'Changes are saved to Markdown files',
-                'welcome.browserWarning': 'Supported browsers: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Editing a folder needs Chrome 86+, Edge 86+ or Opera 72+. Any browser can view a board from a web address, read-only.',
 
                 // Task detail modal
                 'taskDetail.title': 'Task Details',
@@ -237,7 +237,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ WARNING: Permanently delete task "{title}"?\n\nThis action cannot be undone.\n\nIf you want to keep it in history, use "Archive" instead.',
 
                 // Alerts
-                'alert.browserNotSupported': 'Your browser does not support the File System Access API.\n\nPlease use Chrome 86+, Edge 86+ or Opera 72+.',
+                'alert.browserNotSupported': 'This browser cannot open local folders, so boards cannot be edited here.\n\nYou can still view a board from a web address, read-only (menu → Open from a web address…).\n\nTo edit your own boards, use Chrome 86+, Edge 86+ or Opera 72+.',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': 'New subtask...',
@@ -304,7 +304,7 @@
                 'welcome.step3': 'L\'application charge automatiquement kanban.md',
                 'welcome.step4': 'Gérez vos tâches visuellement avec le Kanban',
                 'welcome.step5': 'Les modifications sont sauvegardées dans les fichiers Markdown',
-                'welcome.browserWarning': 'Navigateurs supportés : Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Modifier un dossier nécessite Chrome 86+, Edge 86+ ou Opera 72+. Tout navigateur peut afficher un tableau depuis une adresse web, en lecture seule.',
 
                 // Task detail modal
                 'taskDetail.title': 'Détails de la tâche',
@@ -495,7 +495,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ ATTENTION : Supprimer définitivement la tâche "{title}" ?\n\nCette action est irréversible.\n\nSi vous voulez la conserver dans l\'historique, utilisez plutôt "Archiver".',
 
                 // Alerts
-                'alert.browserNotSupported': 'Votre navigateur ne supporte pas la File System Access API.\n\nVeuillez utiliser Chrome 86+, Edge 86+ ou Opera 72+.',
+                'alert.browserNotSupported': 'Ce navigateur ne peut pas ouvrir de dossiers locaux : les tableaux ne peuvent donc pas être modifiés ici.\n\nVous pouvez tout de même afficher un tableau depuis une adresse web, en lecture seule (menu → Ouvrir depuis une adresse web…).\n\nPour modifier vos propres tableaux, utilisez Chrome 86+, Edge 86+ ou Opera 72+.',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': 'Nouvelle sous-tâche...',
@@ -562,7 +562,7 @@
                 'welcome.step3': 'Die App lädt automatisch kanban.md',
                 'welcome.step4': 'Verwalten Sie Ihre Aufgaben grafisch mit Kanban',
                 'welcome.step5': 'Änderungen werden als Markdown-Datei gespeichert',
-                'welcome.browserWarning': 'Unterstützte Browser: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Zum Bearbeiten eines Ordners braucht es Chrome 86+, Edge 86+ oder Opera 72+. Jeder Browser kann ein Board von einer Webadresse schreibgeschützt anzeigen.',
 
                 // Task detail modal
                 'taskDetail.title': 'Aufgabendetails',
@@ -684,7 +684,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ WARNUNG: Aufgabe "{title}" endgültig löschen?\n\nDies kann nicht rückgängig gemacht werden.\n\nWenn die Aufgabe in der Historie vorgehalten werden soll, klicken Sie stattdessen auf "Archivieren".',
 
                 // Alerts
-                'alert.browserNotSupported': 'Ihr Browser unterstützt die File System Access API nicht.\n\Bitte Chrome 86+, Edge 86+ oder Opera 72+ nutzen.',
+                'alert.browserNotSupported': 'Dieser Browser kann keine lokalen Ordner öffnen, daher lassen sich Boards hier nicht bearbeiten.\n\nSie können ein Board aber von einer Webadresse schreibgeschützt anzeigen (Menü → Von Webadresse öffnen…).\n\nZum Bearbeiten eigener Boards bitte Chrome 86+, Edge 86+ oder Opera 72+ nutzen.',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': 'Neue Unteraufgabe...',
@@ -750,7 +750,7 @@
                 'welcome.step3': '应用将自动加载 kanban.md',
                 'welcome.step4': '通过看板可视化地管理任务',
                 'welcome.step5': '更改将保存到 Markdown 文件中',
-                'welcome.browserWarning': '支持的浏览器: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': '编辑文件夹需要 Chrome 86+、Edge 86+ 或 Opera 72+。任何浏览器都可以从网址以只读方式查看看板。',
 
                 // Task detail modal
                 'taskDetail.title': '任务详情',
@@ -872,7 +872,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ 警告: 永久删除任务 "{title}"?\n\n此操作无法撤销.\n\n若希望保留历史记录, 请改用“归档”功能.',
 
                 // Alerts
-                'alert.browserNotSupported': '您的浏览器不支持文件系统访问 API.\n\n请使用 Chrome 86+、 Edge 86+ 或 Opera 72+.',
+                'alert.browserNotSupported': '此浏览器无法打开本地文件夹，因此不能在这里编辑看板。\n\n您仍可以从网址以只读方式查看看板（菜单 → 从网址打开…）。\n\n要编辑自己的看板，请使用 Chrome 86+、Edge 86+ 或 Opera 72+。',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': '新的子任务...',
@@ -1118,7 +1118,7 @@
                     <li>${t('welcome.step4')}</li>
                     <li>${t('welcome.step5')}</li>
                 </ol>
-                <p class="note">${t('welcome.browserWarning')}</p>
+                <p class="note${'showDirectoryPicker' in window ? '' : ' warn'}">${t('welcome.browserWarning')}</p>
             </div>
                 `;
             }
@@ -1305,11 +1305,6 @@
         // Update static texts after DOM loads
         document.addEventListener('DOMContentLoaded', updateStaticTexts);
 
-        // Check if File System Access API is supported
-        // (Not for a board from the web: viewing it needs no folder access.)
-        if (!('showDirectoryPicker' in window) && !new URLSearchParams(location.search).has('board')) {
-            alert(t('alert.browserNotSupported'));
-        }
 
         // IndexedDB for persisting directory handles (multiple projects)
         const DB_NAME = 'TaskManagerDB';

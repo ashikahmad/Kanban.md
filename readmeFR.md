@@ -37,7 +37,7 @@ Kanban.md transforme deux fichiers Markdown, `kanban.md` et `archive.md`, en un 
 
 - **Pas un service hébergé.** Pas de comptes, de permissions, de notifications ni de co-édition en direct. Les équipes partagent un tableau via git ou un dossier synchronisé.
 - **Pas un serveur ni une API.** Les agents utilisent la CLI et le serveur MCP ; il n'y a pas d'API HTTP.
-- **Pas pour tous les navigateurs.** Il faut un navigateur de bureau basé sur Chromium (Chrome, Edge, Opera, Brave). Firefox, Safari et iOS ne sont pas pris en charge (ils peuvent tout de même afficher un tableau publié sur le web, en lecture seule).
+- **La modification demande un navigateur Chromium.** Ouvrir et modifier un dossier nécessite un navigateur de bureau basé sur Chromium (Chrome, Edge, Opera, Brave). Firefox, Safari et iOS peuvent tout de même afficher un tableau publié sur le web, en lecture seule.
 - **Pas un outil de reporting.** Pas encore de graphiques ni de suivi du temps.
 
 ## Installation et premier lancement
