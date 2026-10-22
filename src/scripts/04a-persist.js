@@ -10,7 +10,7 @@
         let persistChain = Promise.resolve(true); // saves run one at a time, in order
         let persistBusy = false;
         let pollBusy = false;
-        const lastSeenMtime = { board: null, archive: null, backlog: null };
+        const lastSeenVersion = { board: null, archive: null, backlog: null }; // source.version() of each file as last seen
         const jsonClone = (v) => JSON.parse(JSON.stringify(v));
         const PERSIST_LISTS = ['categories', 'users', 'priorities', 'tags'];
 
@@ -25,49 +25,30 @@
 
         // ---- reading and writing the project files ----
         async function readProjectFiles() {
-            const bf = await kanbanFileHandle.getFile();
-            const board = await bf.text();
-            let archive = null, archiveMtime = null;
-            try {
-                if (!archiveFileHandle) archiveFileHandle = await directoryHandle.getFileHandle('archive.md');
-                const af = await archiveFileHandle.getFile();
-                archive = await af.text();
-                archiveMtime = af.lastModified;
-            } catch (e) {
-                if (e.name !== 'NotFoundError') throw e;
-                archiveFileHandle = null;
-            }
+            const b = await source.read('kanban.md');
+            if (!b) { const e = new Error('kanban.md is missing'); e.name = 'NotFoundError'; throw e; }
+            const a = await source.read('archive.md');
             // The backlog file, if the board declares one (or a default-named file that exists: the ops refuse to overwrite it).
-            backlogFileName = backlogFileNameOf(board);
-            let backlog = null, backlogMtime = null;
-            try {
-                const kf = await (await directoryHandle.getFileHandle(backlogFileName)).getFile();
-                backlog = await kf.text();
-                backlogMtime = kf.lastModified;
-            } catch (e) { if (e.name !== 'NotFoundError') throw e; }
-            lastSeenMtime.board = bf.lastModified;
-            lastSeenMtime.archive = archiveMtime;
-            lastSeenMtime.backlog = backlogMtime;
-            return { board, archive, backlog };
+            backlogFileName = backlogFileNameOf(b.text);
+            // A read-only source is never written, so it only needs the backlog file when the board declares one.
+            const k = source.writable || /\*\*Backlog file\*\*:/.test(b.text) ? await source.read(backlogFileName) : null;
+            lastSeenVersion.board = b.version;
+            lastSeenVersion.archive = a ? a.version : null;
+            lastSeenVersion.backlog = k ? k.version : null;
+            return { board: b.text, archive: a ? a.text : null, backlog: k ? k.text : null };
         }
 
         async function writeProjectFile(name, text) {
-            let handle;
-            if (name === 'kanban.md') handle = kanbanFileHandle;
-            else if (name === 'archive.md') handle = archiveFileHandle || (archiveFileHandle = await directoryHandle.getFileHandle('archive.md', { create: true }));
-            else handle = await directoryHandle.getFileHandle(name, { create: true }); // the backlog file
-            const writable = await handle.createWritable();
-            await writable.write(text);
-            await writable.close();
+            await source.write(name, text);
         }
 
-        async function refreshMtimes() {
-            try {
-                lastSeenMtime.board = (await kanbanFileHandle.getFile()).lastModified;
-                lastSeenMtime.archive = archiveFileHandle ? (await archiveFileHandle.getFile()).lastModified : null;
-                try { lastSeenMtime.backlog = (await (await directoryHandle.getFileHandle(backlogFileName)).getFile()).lastModified; }
-                catch (e) { lastSeenMtime.backlog = null; }
-            } catch (e) { /* the next poll will notice */ }
+        async function readVersions() {
+            return { board: await source.version('kanban.md'), archive: await source.version('archive.md'), backlog: await source.version(backlogFileName) };
+        }
+
+        async function refreshVersions() {
+            try { Object.assign(lastSeenVersion, await readVersions()); }
+            catch (e) { /* the next poll will notice */ }
         }
 
         // ---- adopting what is on disk ----
@@ -121,7 +102,7 @@
         }
 
         async function persistNow() {
-            if (!kanbanFileHandle || !persistBase) return false;
+            if (!source || !source.writable || !persistBase) return false;
             persistBusy = true;
             try {
                 const { ops, unsupported } = diffToOps(persistBase, currentPageState());
@@ -140,6 +121,7 @@
         // are not a diff of the page state, so when they cannot be applied nothing is rewritten.
         // Returns { ok, changed }.
         async function commit(ops, { unsupported = [], explicit = false } = {}) {
+            if (!source || !source.writable) return { ok: false, changed: false }; // a read-only board is never written
             for (let attempt = 0; attempt < 4; attempt++) {
                 const snapshot = jsonClone(currentPageState());
                 const disk = await readProjectFiles();
@@ -154,7 +136,7 @@
                     if (again.board !== disk.board || again.archive !== disk.archive || again.backlog !== disk.backlog) continue;
                     for (const f of out.files) await writeProjectFile(f.name, f.text);
                     const replaced = adoptTexts(out.board, out.archive, out.backlog, { expect: snapshot });
-                    await refreshMtimes();
+                    await refreshVersions();
                     if (replaced) refreshUi();
                     return { ok: true, changed: out.files.length > 0 };
                 }
@@ -196,11 +178,11 @@
         }
         async function writeWholeFiles() {
             const snapshot = jsonClone(currentPageState());
-            const archiveText = (archivedTasks.length || archiveFileHandle) ? await writeWholeArchive() : currentArchiveText;
+            const archiveText = (archivedTasks.length || currentArchiveText !== null) ? await writeWholeArchive() : currentArchiveText;
             const backlogText = await writeWholeBacklog();
             const boardText = await writeWholeBoard();
             adoptTexts(boardText, archiveText, backlogText, { expect: snapshot });
-            await refreshMtimes();
+            await refreshVersions();
             return true;
         }
 
@@ -233,18 +215,12 @@
         }
 
         async function pollOnce() {
-            if (document.visibilityState !== 'visible' || !kanbanFileHandle || !persistBase || persistBusy || pollBusy) return;
+            // Not for a read-only source: a board from the web is not reloaded yet.
+            if (document.visibilityState !== 'visible' || !source || !source.writable || !persistBase || persistBusy || pollBusy) return;
             pollBusy = true;
             try {
-                const bf = await kanbanFileHandle.getFile();
-                let archiveMtime = null;
-                try {
-                    if (!archiveFileHandle) archiveFileHandle = await directoryHandle.getFileHandle('archive.md');
-                    archiveMtime = (await archiveFileHandle.getFile()).lastModified;
-                } catch (e) { archiveFileHandle = null; }
-                let backlogMtime = null;
-                try { backlogMtime = (await (await directoryHandle.getFileHandle(backlogFileName)).getFile()).lastModified; } catch (e) { /* none */ }
-                if (bf.lastModified === lastSeenMtime.board && archiveMtime === lastSeenMtime.archive && backlogMtime === lastSeenMtime.backlog) return;
+                const now = await readVersions();
+                if (now.board === lastSeenVersion.board && now.archive === lastSeenVersion.archive && now.backlog === lastSeenVersion.backlog) return;
                 const disk = await readProjectFiles();
                 if (disk.board === persistBase.boardText && disk.archive === persistBase.archiveText && disk.backlog === persistBase.backlogText) return; // touched, not changed
                 await reloadFromDisk();

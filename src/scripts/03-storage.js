@@ -125,10 +125,10 @@
 
                 // Only mark as selected if kanban is actually loaded
                 const isKanbanLoaded = document.getElementById('kanbanView').style.display !== 'none';
-                const currentProject = (isKanbanLoaded && directoryHandle) ? directoryHandle.name : '';
+                const currentProject = (isKanbanLoaded && folderHandle()) ? folderHandle().name : '';
 
-                // Show/hide rename and delete buttons
-                if (isKanbanLoaded) {
+                // Show/hide rename and delete buttons (they act on the open folder)
+                if (isKanbanLoaded && folderHandle()) {
                     renameBtn.style.display = 'inline-flex';
                     deleteBtn.style.display = 'inline-flex';
                 } else {
@@ -136,9 +136,9 @@
                     deleteBtn.style.display = 'none';
                 }
 
-                // Add empty option if no project is loaded
+                // Add empty option if no project is loaded (a web board is not one of them)
                 const options = [];
-                if (!isKanbanLoaded) options.push({ value: '', label: t('projects.select') });
+                if (!currentProject) options.push({ value: '', label: t('projects.select') });
                 let selectedValue = '';
                 projects.forEach((p, idx) => {
                     const date = new Date(p.lastAccessed).toLocaleDateString('fr-FR');
@@ -165,10 +165,10 @@
 
                     // Verify permission
                     if (await verifyPermission(project.handle)) {
-                        directoryHandle = project.handle;
+                        useSource(folderSource(project.handle));
 
                         // Update last accessed time and save
-                        await saveDirectoryHandle(directoryHandle);
+                        await saveDirectoryHandle(project.handle);
 
                         // Load the project
                         await loadKanbanFile();
@@ -196,18 +196,19 @@
 
         // Rename current project
         async function renameCurrentProject() {
-            if (!directoryHandle) return;
+            const folder = folderHandle();
+            if (!folder) return;
 
             try {
                 const projects = await loadRecentProjects();
-                const currentProject = projects.find(p => p.name === directoryHandle.name);
+                const currentProject = projects.find(p => p.name === folder.name);
 
                 if (currentProject) {
                     const currentName = currentProject.customName || currentProject.name;
                     const newName = prompt(t('prompt.renameProject'), currentName);
 
                     if (newName !== null && newName.trim() !== currentName) {
-                        await saveDirectoryHandle(directoryHandle, newName.trim());
+                        await saveDirectoryHandle(folder, newName.trim());
                         showNotification(t('notif.projectRenamed'), 'success');
                     }
                 }
@@ -219,18 +220,19 @@
 
         // Delete current project from recent list
         async function deleteCurrentProject() {
-            if (!directoryHandle) return;
+            const folder = folderHandle();
+            if (!folder) return;
 
             try {
                 const projects = await loadRecentProjects();
-                const currentProject = projects.find(p => p.name === directoryHandle.name);
+                const currentProject = projects.find(p => p.name === folder.name);
 
                 if (currentProject) {
                     const displayName = currentProject.customName || currentProject.name;
 
                     if (confirm(t('confirm.deleteProject', {name: displayName}))) {
                         // Remove from projects list
-                        const updatedProjects = projects.filter(p => p.name !== directoryHandle.name);
+                        const updatedProjects = projects.filter(p => p.name !== folder.name);
 
                         // Save updated list to IndexedDB
                         const db = await openDB();
@@ -244,8 +246,7 @@
                         });
 
                         // Clear current project and show welcome screen
-                        directoryHandle = null;
-                        kanbanFileHandle = null;
+                        useSource(null);
                         tasks = [];
 
                         document.getElementById('kanbanView').style.display = 'none';
@@ -276,7 +277,7 @@
                     console.log('Verifying permissions...');
                     if (await verifyPermission(savedHandle)) {
                         console.log('Permission granted, loading kanban file...');
-                        directoryHandle = savedHandle;
+                        useSource(folderSource(savedHandle));
                         await loadKanbanFile();
 
                         document.getElementById('welcomeScreen').style.display = 'none';
@@ -304,7 +305,9 @@
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async () => {
-            await tryRestorePreviousDirectory();
+            const param = boardParam();
+            if (param !== null) await openBoardParam(param); // a board from the web (03b-web-board.js)
+            else await tryRestorePreviousDirectory();
 
             // Add event listener for project selector
             document.getElementById('projectSelector').addEventListener('change', async (e) => {
@@ -320,12 +323,13 @@
             try {
                 // Start in last used directory if available
                 const options = {};
-                if (directoryHandle) {
-                    options.startIn = directoryHandle;
+                if (folderHandle()) {
+                    options.startIn = folderHandle();
                 }
 
-                directoryHandle = await window.showDirectoryPicker(options);
-                await saveDirectoryHandle(directoryHandle); // Save for next time
+                const picked = await window.showDirectoryPicker(options);
+                useSource(folderSource(picked));
+                await saveDirectoryHandle(picked); // Save for next time
                 await loadKanbanFile();
 
                 document.getElementById('welcomeScreen').style.display = 'none';

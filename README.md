@@ -35,7 +35,7 @@ Kanban.md turns two Markdown files, `kanban.md` and `archive.md`, into an intera
 
 - **Not a hosted service.** No accounts, permissions, notifications or live co-editing. Teams share a board through git or a synced folder.
 - **Not a server or an API.** Agents use the CLI and the MCP server; there is no HTTP API.
-- **Not for every browser.** It needs a Chromium-based desktop browser (Chrome, Edge, Opera, Brave). Firefox, Safari and iOS are not supported.
+- **Not for every browser.** It needs a Chromium-based desktop browser (Chrome, Edge, Opera, Brave). Firefox, Safari and iOS are not supported (they can still view a board from the web, read-only).
 - **Not a reporting tool.** There are no charts or time tracking yet.
 
 ## Install and first run
@@ -71,7 +71,7 @@ The same operations are available from the shell as the `kanbanmd` CLI (`node cl
 
 ## What's next
 
-The project's own work is tracked on its own board: [`board/kanban.md`](board/kanban.md) shows what is done, in progress, planned, and what ideas we are weighing. Items tagged `#good-first-issue` and `#need-help` are good places to start if you'd like to contribute. Bugs and requests are welcome as GitHub issues.
+The project's own work is tracked on its own board: [`board/kanban.md`](board/kanban.md) shows what is done, in progress, planned, and what ideas we are weighing. You can also [view it in the app](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md), read-only. Items tagged `#good-first-issue` and `#need-help` are good places to start if you'd like to contribute. Bugs and requests are welcome as GitHub issues.
 
 ## License and credit
 

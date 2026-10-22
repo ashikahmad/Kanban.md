@@ -33,7 +33,8 @@
             const q = term.trim().toLowerCase();
             const rows = q ? all.filter((x) => [x.id, x.title, x.description, x.category, ...x.tags].join(' ').toLowerCase().includes(q)) : all;
             if (!rows.length) { list.innerHTML = `<div class="empty-state">${escapeHtml(t('backlog.empty'))}</div>`; return; }
-            const targets = config.columns.filter((c) => c.id !== col);
+            const editable = !readOnly();
+            const targets = editable ? config.columns.filter((c) => c.id !== col) : [];
             list.innerHTML = rows.map((task) => `
                 <div class="archive-item${hkState.staleIds.has(task.id) ? ' hk-stale' : ''}" style="cursor: pointer;" data-id="${escapeHtml(task.id)}">
                     <div class="top">
@@ -43,7 +44,7 @@
                         </div>
                         <div style="display: flex; gap: var(--s-2); flex-wrap: wrap; justify-content: flex-end;">
                             ${targets.map((c) => `<button data-action="promote" data-status="${escapeHtml(c.id)}" class="btn btn-secondary btn-sm" title="${escapeHtml(t('backlog.moveTo', { name: c.name }))}">&rarr; ${escapeHtml(c.name)}</button>`).join('')}
-                            <button data-action="archive" class="btn btn-secondary btn-sm">${escapeHtml(t('backlog.archive'))}</button>
+                            ${editable ? `<button data-action="archive" class="btn btn-secondary btn-sm">${escapeHtml(t('backlog.archive'))}</button>` : ''}
                         </div>
                     </div>
                     ${task.description ? `<div class="desc">${markdownToHtml(task.description)}</div>` : ''}
@@ -79,6 +80,7 @@
 
         // Turn the backlog file on (its column's tasks move into it) or off (they come home).
         async function toggleBacklogFile() {
+            if (readOnly()) return; // a board from the web is never changed
             const current = resolveBacklogFile(config);
             if (current) {
                 if (!confirm(t('backlog.confirmOff', { count: backlogTasksNow().length, file: current.file }))) return;
@@ -99,9 +101,9 @@
             const toggle = document.getElementById('backlogToggleBtn');
             const open = document.getElementById('backlogOpenBtn');
             if (!toggle || !open) return;
-            const loaded = !!(kanbanFileHandle && persistBase);
+            const loaded = boardLoaded();
             const on = loaded && !!backlogColumnId();
-            toggle.style.display = loaded ? 'inline-flex' : 'none';
+            toggle.style.display = loaded && !readOnly() ? 'inline-flex' : 'none';
             open.style.display = on ? 'inline-flex' : 'none';
             toggle.querySelector('.mi-label').textContent = t(on ? 'backlog.menuOn' : 'backlog.menuOff');
             open.querySelector('.mi-label').textContent = t('backlog.openMenu');

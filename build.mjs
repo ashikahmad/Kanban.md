@@ -32,6 +32,7 @@ const PAGE_CORE_EXPORTS = [
   'getHousekeeping', 'archiveCandidates', 'staleBacklogIds', 'parseHousekeepingSpec', 'formatHousekeepingSpec',
   'resolveBacklogFile', 'parseBacklog', 'backlogFileNameOf', 'DEFAULT_BACKLOG_STRINGS',
   'taskToPlainText', 'taskToMarkdown',
+  'resolveBoardUrl', 'boardFileUrl', 'looksLikeBoard',
 ];
 // Reachable as KanbanCore.<name> (for the test harness) but not bound as globals.
 const NAMESPACE_ONLY = ['diffStats'];

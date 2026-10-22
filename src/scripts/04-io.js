@@ -1,10 +1,10 @@
         async function loadKanbanFile() {
-            archiveFileHandle = null; // never keep another project's handle
             persistBase = null;
             try {
-                kanbanFileHandle = await directoryHandle.getFileHandle('kanban.md');
-                const file = await kanbanFileHandle.getFile();
-                currentKanbanContent = await file.text();
+                const board = await source.read('kanban.md');
+                if (!board && source.writable) return await createDefaultFiles();
+                if (!board) throw new Error('kanban.md not found');
+                currentKanbanContent = board.text;
 
                 console.log('File loaded, size:', currentKanbanContent.length);
                 parseMarkdown(currentKanbanContent);
@@ -23,7 +23,9 @@
                 // pathological slug collision where one task is parsed twice while another is missed
                 // (counts stay equal but the rewrite would drop the missed task). Provably 1:1.
                 const uniqueParsed = new Set(tasks.map(t => t.id)).size;
-                if (loadedFormatVersion < 3 && tasks.length === blockCount && uniqueParsed === blockCount) {
+                // A read-only source is shown as it is: an older file is read fine, it just stays older.
+                if (!source.writable) { /* nothing to migrate */ }
+                else if (loadedFormatVersion < 3 && tasks.length === blockCount && uniqueParsed === blockCount) {
                     // Only overwrite once the original is safely backed up — a failed backup must
                     // abort the migration, never leave the file rewritten without a recovery copy.
                     const fromVersion = loadedFormatVersion;
@@ -37,42 +39,30 @@
                 }
                 await snapshotFromDisk(); // the base every later save is a difference against
             } catch (error) {
-                // Only create default files if the file truly doesn't exist
-                if (error.name === 'NotFoundError') {
-                    showNotification(t('notif.initializingFolder'), 'success');
-                    console.log('kanban.md not found, creating default files...');
+                // Permissions, a read error, etc.: say so and never overwrite.
+                showNotification(t('notif.loadError') || 'Erreur lors du chargement du fichier', 'error');
+                console.error('Error loading kanban.md:', error);
+            }
+        }
 
-                    try {
-                        // Create kanban.md
-                        currentKanbanContent = createDefaultBoardContent();
-                        kanbanFileHandle = await directoryHandle.getFileHandle('kanban.md', { create: true });
-                        const writable = await kanbanFileHandle.createWritable();
-                        await writable.write(currentKanbanContent);
-                        await writable.close();
+        // A folder with no kanban.md: start it with an empty board and archive.
+        async function createDefaultFiles() {
+            showNotification(t('notif.initializingFolder'), 'success');
+            console.log('kanban.md not found, creating default files...');
+            try {
+                currentKanbanContent = createDefaultBoardContent();
+                await source.write('kanban.md', currentKanbanContent);
+                await source.write('archive.md', createDefaultArchiveContent(archiveStrings()));
 
-                        // Create archive.md
-                        const archiveContent = createDefaultArchiveContent(archiveStrings());
-                        const archiveFileHandle = await directoryHandle.getFileHandle('archive.md', { create: true });
-                        const archiveWritable = await archiveFileHandle.createWritable();
-                        await archiveWritable.write(archiveContent);
-                        await archiveWritable.close();
+                showNotification(t('notif.filesInitialized'), 'success');
 
-                        showNotification(t('notif.filesInitialized'), 'success');
-
-                        parseMarkdown(currentKanbanContent);
-                        updateAutocomplete();
-                        renderKanban();
-                        archiveFileHandle = null;
-                        await snapshotFromDisk();
-                    } catch (createError) {
-                        showNotification(t('notif.filesError'), 'error');
-                        console.error(createError);
-                    }
-                } else {
-                    // Different error (permissions, read error, etc.) - show error and don't overwrite
-                    showNotification(t('notif.loadError') || 'Erreur lors du chargement du fichier', 'error');
-                    console.error('Error loading kanban.md:', error);
-                }
+                parseMarkdown(currentKanbanContent);
+                updateAutocomplete();
+                renderKanban();
+                await snapshotFromDisk();
+            } catch (createError) {
+                showNotification(t('notif.filesError'), 'error');
+                console.error(createError);
             }
         }
 
@@ -83,11 +73,8 @@
         async function backupOriginal(name, content, fromVersion = 1) {
             try {
                 const backupName = name.replace(/\.md$/, `.v${fromVersion}-backup.md`);
-                try { await directoryHandle.getFileHandle(backupName); return true; } catch (e) { /* none yet → create */ }
-                const fh = await directoryHandle.getFileHandle(backupName, { create: true });
-                const w = await fh.createWritable();
-                await w.write(content);
-                await w.close();
+                if (await source.version(backupName) !== null) return true; // already there
+                await source.write(backupName, content);
                 console.log('Backup written:', backupName);
                 return true;
             } catch (e) {

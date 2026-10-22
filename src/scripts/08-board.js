@@ -16,6 +16,7 @@
             // debugInfo.style.display = 'block'; // Uncomment to show debug info
 
             const backlogCol = backlogColumnId();
+            const editable = !readOnly();
             config.columns.forEach(column => {
                 const isBacklogStub = column.id === backlogCol; // its cards live in the backlog file and have their own panel
                 const columnTasks = orderedTasks(tasks).filter(t => t.status === column.id && matchesFilters(t));
@@ -33,7 +34,7 @@
                             <span class="column-count">${shownCount}</span>
                         </div>
                         <div class="column-tools">
-                            <button class="column-add-btn" aria-label="${escapeHtml(t('taskForm.newTask'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>
+                            ${editable ? `<button class="column-add-btn" aria-label="${escapeHtml(t('taskForm.newTask'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>` : ''}
                         </div>
                     </div>
                     <div class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)">
@@ -46,8 +47,10 @@
                 // Bind the per-column "+" handler in JS (no inline onclick) so the
                 // column id is passed as a value, never concatenated into HTML.
                 const addBtn = columnEl.querySelector('.column-add-btn');
-                addBtn.title = t('taskForm.newTask');
-                addBtn.addEventListener('click', () => openTaskModal(null, column.id));
+                if (addBtn) {
+                    addBtn.title = t('taskForm.newTask');
+                    addBtn.addEventListener('click', () => openTaskModal(null, column.id));
+                }
 
                 if (isBacklogStub) {
                     const stub = document.createElement('div');
@@ -101,7 +104,8 @@
             const taskEl = document.createElement('div');
             taskEl.className = 'task-card';
             if (hkState.staleIds.has(task.id)) { taskEl.classList.add('hk-stale'); taskEl.title = t('hk.staleCard'); }
-            taskEl.draggable = true;
+            const editable = !readOnly();
+            taskEl.draggable = editable;
             taskEl.dataset.taskId = task.id;
 
             // Deadline accent on the card border (red overdue / orange due-soon).
@@ -128,7 +132,7 @@
                 <div class="task-header">
                     ${task.priority ? `${priorityIcon(task.priority, `data-filter="priority" data-filter-value="${escapeHtml(task.priority)}" title="${escapeHtml(priorityLabel(task.priority))}" role="img" aria-label="${escapeHtml(priorityLabel(task.priority))}"`)}` : ''}
                     <span class="task-id">${escapeHtml(task.id)}</span>
-                    <button class="task-edit-btn" data-edit-task="1" title="${escapeHtml(t('taskDetail.edit'))}" aria-label="${escapeHtml(t('taskDetail.edit'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg></button>
+                    ${editable ? `<button class="task-edit-btn" data-edit-task="1" title="${escapeHtml(t('taskDetail.edit'))}" aria-label="${escapeHtml(t('taskDetail.edit'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg></button>` : ''}
                 </div>
                 <div class="task-title">${escapeHtml(task.title)}</div>
                 ${task.description ? `<div class="task-description">${markdownToHtml(task.description)}</div>` : ''}
@@ -151,9 +155,9 @@
                 el.addEventListener('click', (e) => { e.stopPropagation(); clickToFilter(el.dataset.filter, el.dataset.filterValue); });
             });
 
-            taskEl.addEventListener('dragstart', drag);
+            if (editable) taskEl.addEventListener('dragstart', drag);
             taskEl.addEventListener('click', () => showTaskDetail(task));
-            attachTouchDrag(taskEl);
+            if (editable) attachTouchDrag(taskEl);
 
             return taskEl;
         }
@@ -185,6 +189,7 @@
         // 04a-persist.js); with manual ordering on it writes an Order key instead of relocating a block.
         // Resolves true if the files changed.
         async function moveTask(taskId, newStatus, beforeTaskId = null, { askOrder = true } = {}) {
+            if (readOnly()) return false;
             await autoSave(); // flush pending edits first
             const task = tasks.find(t => t.id === taskId);
             if (!task) return false;
@@ -206,6 +211,7 @@
 
         function drop(event) {
             event.preventDefault();
+            if (readOnly()) return;
             const taskId = event.dataTransfer.getData('taskId');
 
             // Find the target column's task list

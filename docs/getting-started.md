@@ -5,7 +5,7 @@ Kanban.md is one HTML file. You open it in a browser, point it at a folder, and 
 ## Requirements
 
 - A Chromium-based desktop browser: Chrome 86+, Edge 86+, Opera 72+ or Brave 1.17+. The app needs the File System Access API.
-- Firefox and Safari are not supported, and neither are iOS/iPadOS. Android has limited support.
+- Firefox and Safari are not supported, and neither are iOS/iPadOS. Android has limited support. (Any browser can [view a board from the web](using-the-board.md#viewing-a-board-from-the-web), read-only.)
 - Windows, macOS and Linux all work.
 
 ## Install in three steps
@@ -86,5 +86,6 @@ There is no importer. The format is plain Markdown, so a short script (or an AI 
 ## Privacy and permissions
 
 - Nothing is sent over the network. There is no telemetry, no analytics, no account and no CDN: the whole app is in the one HTML file and works offline.
+- The app downloads something only when you open a [board from the web](using-the-board.md#viewing-a-board-from-the-web) with `?board=`, and only from the address you give. For another site it asks first.
 - The page asks for exactly two things: read and write access to the folder you pick, and IndexedDB to remember your recent projects in your browser.
 - The source is readable in the HTML file, and in `src/`.

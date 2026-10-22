@@ -20,13 +20,27 @@
 ## Tasks
 
 ### TASK-001 | Read-only board from a URL
-**Status**: ideas  
+**Status**: in-progress  
 **Priority**: Low  
 **Category**: App  
 **Created**: 2026-10-22  
+**Started**: 2026-10-22  
 **Tags**: #app #site  
 
-Open a public board (for example this one) with ?board=<url-to-kanban.md> and view it without any edit controls. Needs CORS-friendly hosting such as raw GitHub or GitHub Pages. Would be the first feature that makes a network request, so it must be opt-in.
+Open a public board with ?board=<url-to-kanban.md> and view it read-only. Built on a data-source layer: a folder source reads and writes the project folder as today; a web source reads kanban.md, archive.md and the backlog file from the URL and is always read-only. The same layer later carries browser storage (TASK-004) and Save as folder project (TASK-003). Design: drafts/github-pages-plan.md.
+
+Decisions: same-origin URLs load at once, other hosts ask first; ?board= in the query string; no Reload button or polling for now; remote images in notes are allowed. Works without the File System Access API, so read-only boards also open in Firefox and Safari.
+
+**Subtasks**:
+- [x] PR 1: data-source layer and FolderSource, no behaviour change (existing page tests pass, contract test on an in-memory source)
+- [x] PR 2: WebSource and ?board= (relative URLs, same-origin loads at once, other hosts ask first)
+- [x] PR 2: read-only UI driven by source.writable (no drag, edit, delete, archive, columns, housekeeping; filters, search, archive view and Share kept) and banner
+- [x] PR 2: errors (404, CORS, HTML instead of Markdown with github.com blob to raw rewrite, not a board) and a security pass on rendering untrusted files
+- [x] PR 2: tests with a fake fetch; strings in English and French (German and Chinese fall back to English, see TASK-018)
+- [x] PR 3: site links to the project and demo boards, docs
+
+**Notes**:
+Built on branch plan/read-only-url-board in three commits (data sources, web board, site and docs). The security pass found and fixed one injection: the code block label in task text was inserted unescaped. Waiting on review; move to Done once merged.
 
 ### TASK-002 | Sample boards menu in the app
 **Status**: ideas  

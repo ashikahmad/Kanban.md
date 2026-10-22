@@ -1,4 +1,5 @@
         function openColumnsModal() {
+            if (readOnly()) return; // a board from the web is never changed
             const modal = document.getElementById('columnsModal');
             const list = document.getElementById('columnsList');
             list.innerHTML = config.columns.map((col, idx) => `
@@ -67,6 +68,7 @@
 
         // Task edit/create modal
         function openTaskModal(task = null, defaultColumnId = null) {
+            if (readOnly()) return;
             isEditMode = !!task;
             const modal = document.getElementById('newTaskModal');
             const form = document.getElementById('newTaskForm');

@@ -1,12 +1,13 @@
         async function loadArchive() {
             console.log('🗃️ === LOADING ARCHIVE ===');
-            archiveFileHandle = null;
             try {
-                archiveFileHandle = await directoryHandle.getFileHandle('archive.md');
-                console.log('✓ Archive file handle obtained');
-                const file = await archiveFileHandle.getFile();
-                console.log('✓ Archive file loaded, size:', file.size, 'bytes');
-                const content = await file.text();
+                const file = await source.read('archive.md');
+                if (!file) {
+                    console.log('No archive.md');
+                    archivedTasks = [];
+                    return;
+                }
+                const content = file.text;
                 console.log('✓ Archive content read, length:', content.length, 'characters');
                 console.log('Archive content preview:', content.substring(0, 500));
 
@@ -28,7 +29,8 @@
                 // a failed write must NOT reach the outer catch (which resets archivedTasks = []).
                 const archiveBlockCount = (content.match(/^###\s+TASK-/gm) || []).length;
                 const archiveUnique = new Set(archivedTasks.map(t => t.id)).size;
-                if (loadedArchiveVersion < 3 && archivedTasks.length > 0
+                if (!source.writable) { /* shown as it is */ }
+                else if (loadedArchiveVersion < 3 && archivedTasks.length > 0
                         && archivedTasks.length === archiveBlockCount && archiveUnique === archiveBlockCount) {
                     try {
                         // Same rule as kanban.md: never overwrite without a confirmed backup.
@@ -57,6 +59,7 @@
         }
 
         function archiveCurrentTask() {
+            if (readOnly()) return; // a board from the web is never changed
             if (!currentDetailTask) return;
             if (confirm(t('confirm.archiveTask', {title: currentDetailTask.title}))) {
                 // Remove from active tasks
@@ -75,11 +78,13 @@
         }
 
         function deleteCurrentTask() {
+            if (readOnly()) return;
             if (!currentDetailTask) return;
             deleteTask(currentDetailTask.id, false);
         }
 
         function deleteTask(taskId, fromArchive = false) {
+            if (readOnly()) return;
             const taskList = fromArchive ? archivedTasks : tasks;
             const task = taskList.find(t => t.id === taskId);
 
@@ -156,6 +161,7 @@
 
             console.log('✓ Rendering', filtered.length, 'tasks');
 
+            const editable = !readOnly();
             list.innerHTML = filtered.map(task => `
                 <div class="archive-item" style="cursor: pointer;" data-id="${escapeHtml(task.id)}">
                     <div class="top">
@@ -163,10 +169,10 @@
                             <span class="task-id">${escapeHtml(task.id)}</span>
                             <strong style="margin-left: var(--s-2);">${escapeHtml(task.title)}</strong>
                         </div>
-                        <div style="display: flex; gap: var(--s-2);">
+                        ${editable ? `<div style="display: flex; gap: var(--s-2);">
                             <button data-action="delete" class="btn btn-danger btn-sm" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
                             <button data-action="restore" class="btn btn-secondary btn-sm">${t('action.restore')}</button>
-                        </div>
+                        </div>` : ''}
                     </div>
                     ${task.description ? `<div class="desc">${markdownToHtml(task.description)}</div>` : ''}
                     <div class="task-meta">
@@ -190,6 +196,7 @@
         }
 
         function unarchiveTask(taskId) {
+            if (readOnly()) return;
             const idx = archivedTasks.findIndex(t => t.id === taskId);
             if (idx >= 0) {
                 const task = archivedTasks.splice(idx, 1)[0];

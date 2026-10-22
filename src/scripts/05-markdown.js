@@ -11,7 +11,7 @@
             // Use very flexible regex to capture all code block formats
             const codeBlocks = [];
             html = html.replace(/```([^\n`]*)\n?([\s\S]*?)```/g, (match, language, code) => {
-                const lang = (language || '').trim() || 'text';
+                const lang = escapeHtml((language || '').trim() || 'text'); // the label is board text too
                 const placeholder = `\n__CODE_BLOCK_${codeBlocks.length}__\n`;
 
                 // Remove trailing newline if present
@@ -52,7 +52,7 @@
             html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m, text, url) => {
                 const u = url.trim();
                 const safe = /^(https?:|mailto:|#|\/)/i.test(u) ? u : '#';
-                return `<a href="${safe.replace(/"/g, '&quot;')}" target="_blank" style="color: var(--primary); text-decoration: underline;">${text}</a>`;
+                return `<a href="${safe.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); text-decoration: underline;">${text}</a>`;
             });
 
             // Convert bullet lists and paragraphs

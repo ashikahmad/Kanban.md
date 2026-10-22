@@ -37,7 +37,7 @@ Useful starting points in `src/`:
 
 ## How we run this project
 
-The project's own work is tracked on a Kanban.md board, in [`board/`](../board/kanban.md): what is done, what is in progress, what is planned, and ideas we are considering. You can read it right on GitHub, or open the `board/` folder in the app.
+The project's own work is tracked on a Kanban.md board, in [`board/`](../board/kanban.md): what is done, what is in progress, what is planned, and ideas we are considering. You can read it right on GitHub, [view it read-only in the hosted app](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md), or open the `board/` folder in the app.
 
 - **Issues and the board have different jobs.** Use GitHub issues to report bugs and request things. The board is where maintainers record direction; a good idea from an issue can be promoted into it.
 - **Look for `#good-first-issue` and `#need-help`** tags if you want to contribute.

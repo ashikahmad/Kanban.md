@@ -77,6 +77,8 @@ Boards here are ~100 KB of markdown, so localStorage would physically work. Inde
 
 ### 5.1 Storage adapter (the seam)
 
+> Superseded by the data-source interface in `drafts/github-pages-plan.md` ("Data sources"), built first for the read-only URL board (TASK-001). Browser storage becomes a `'browser'` source on that interface. The sketch below is kept for history.
+
 New file `src/scripts/03a-backends.js`. One interface, two implementations:
 
 ```

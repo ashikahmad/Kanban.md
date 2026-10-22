@@ -51,10 +51,50 @@ Preferred: a GitHub Actions workflow that builds a `site/` folder and deploys it
 
 ## Later phases (depend on app features, not part of the first PR)
 
-1. **Read-only board from a URL** (`?board=<url>`). A new feature in the app: fetch `kanban.md` (and a sibling `archive.md`), parse with the existing pure `core/`, render with all edit controls and autosave disabled. It is the first network request the app would make, so it must be opt-in and documented. Board idea on `board/kanban.md`.
+1. **Read-only board from a URL** (`?board=<url>`). Built on data sources, see [Data sources](#data-sources-for-the-read-only-url-board) below. Planned as TASK-001 on `board/kanban.md`.
 2. **Sample boards menu** in the app that opens the demo board and the project board through the read-only URL feature.
 3. **Convert a read-only or browser board to a folder project** ("Save as folder project"; one time, no sync).
 4. **Shared task viewer / editor / exporter page.** Opens a task block shared from the app's Share dialog, and lets you view, tweak, and export it.
+
+## Data sources (for the read-only URL board)
+
+Where a board comes from is a data source. A folder source reads and writes the project folder, as the app does today. A web source reads from a URL and is always read-only. The page asks the source what it can do instead of keeping a separate read-only flag.
+
+```js
+DataSource {
+  kind: 'folder' | 'web' | 'browser'      // 'browser' later (TASK-004, drafts/browser-storage-plan.md)
+  label                                   // folder name, or host/path
+  writable: boolean                       // web: always false
+  read(name)    -> Promise<string|null>   // null = not found
+  version(name) -> Promise<token|null>    // folder: lastModified; web: unused for now
+  write(name, text) -> Promise<void>      // web: throws
+}
+```
+
+The interface works on file names because saving already does (`readProjectFiles` / `writeProjectFile` in `04a-persist.js`, for `kanban.md`, `archive.md` and the backlog file). This replaces the `Backend` sketch in `drafts/browser-storage-plan.md` §5.1, which predates live sync.
+
+- **`FolderSource(dirHandle)`**: the existing `getFileHandle` / `createWritable` code, moved. The state holds one `source` instead of `directoryHandle`, `kanbanFileHandle` and `archiveFileHandle`.
+- **`WebSource(url)`**: resolves `kanban.md`, `archive.md` (missing is fine) and the backlog file the board names, against the board URL. Fetches with `credentials: 'omit'`, `referrerPolicy: 'no-referrer'` and a size cap. Only `http:` and `https:`.
+- **Loading** is the same for every source. Migration, backups and default-file creation run only when `source.writable`.
+- **Saving** (`persistNow` / `commit`) returns early when `!source.writable`: one check covers every write path.
+- **UI**: `body.readonly` plus conditional rendering in the board, task detail, columns, toolbar, housekeeping and backlog scripts. No drag, edit, delete, archive, column or ordering controls; filters, search, the archive view, theme, language and Share stay. A banner shows "Read-only · host/path · Open a folder instead".
+- **Recent projects** store a source record; records without `kind` are folders. Web boards are not added to the list for now.
+- **Browsers**: a web source needs no File System Access API, so the unsupported-browser block applies only without `?board=`. Read-only boards then open in Firefox and Safari too.
+
+Decisions:
+
+- `?board=<url>` in the query string. Relative URLs resolve against the page, so the site links to `app/?board=../board/kanban.md`.
+- Same-origin URLs load at once. Other hosts show "Load a board from *host*? [Load] [Cancel]" first. Without the parameter the app makes no request.
+- No Reload button and no polling for now; `version()` leaves room for either later.
+- Remote images in notes are allowed. Links still get `rel="noopener noreferrer"` and `javascript:` URLs are blocked; every render path must escape text from the file.
+
+Errors, each with its own message: not found (404); blocked by CORS (suggest raw GitHub or GitHub Pages); HTML instead of Markdown (a `github.com/.../blob/...` link is rewritten to `raw.githubusercontent.com`); not a board.
+
+Steps:
+
+1. Data-source layer and `FolderSource`, no behaviour change. Existing page tests pass unchanged; a contract test runs against an in-memory source.
+2. `WebSource`, `?board=`, the read-only UI and banner, errors, the security pass, tests with a fake `fetch`, strings in every language.
+3. Site links to the project and demo boards, and docs. This unblocks the sample boards menu (TASK-002); Save as folder project (TASK-003) becomes "read from one source, write to a new `FolderSource`".
 
 ## Why separate
 

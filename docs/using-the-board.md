@@ -73,6 +73,17 @@ The app picks up changes made outside it (an AI agent, the `kanbanmd` CLI, a tex
 
 Because edits are written as minimal patches, changing one card touches only that card's lines. Git diffs stay small and readable.
 
+## Viewing a board from the web
+
+Add `?board=` and the address of a `kanban.md` to the app's address to open that board read-only. This project's own board, for example: [`app/?board=../board/kanban.md`](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md).
+
+- **Read-only.** You can browse, search, filter, open the archive and share a task. Nothing can be added, moved, edited or archived, and nothing is saved. A bar under the header shows where the board comes from; **Open a folder** there switches to one of your own projects.
+- **The address** can be relative to the app (`../board/kanban.md`), a folder (`../board/` means the `kanban.md` in it), or a full `https://` address. A link to a file's page on github.com is turned into the raw file. `archive.md`, and the backlog file if the board names one, are read from the same folder when they exist.
+- **Other sites ask first.** A board on the same site as the app opens at once. For a board on any other site, the app asks before downloading it, and contacts that site only if you agree. No cookies or referrer are sent.
+- **The site has to allow it.** Browsers let a page read another site's files only when that site allows it (CORS). Raw GitHub files (`raw.githubusercontent.com`) and GitHub Pages do. Pages behind a sign-in do not.
+- **Any browser.** Viewing needs no folder access, so it also works in Firefox and Safari.
+- The board is downloaded once, when the page opens. Reload the page to see later changes.
+
 ## Optional features
 
 **Manual card order.** By default a card sits wherever its block is in the file. The first time you drag a card to a specific spot, the app asks whether to remember the order. If you say yes, each task gets an `**Order**: 3000` line and every later move changes just two lines. Burger menu → **Manual order** turns it on or off, and **Reset order by task id** restores id order.
