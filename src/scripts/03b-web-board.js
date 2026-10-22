@@ -99,7 +99,8 @@
                 if (ro) {
                     const badge = document.createElement('span');
                     badge.className = 'source-badge';
-                    badge.textContent = t('web.readOnly');
+                    badge.innerHTML = '<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
+                    badge.append(t('web.readOnly'));
                     const link = document.createElement('a');
                     link.className = 'source-link';
                     link.href = source.href || '#';
@@ -110,6 +111,7 @@
                         const open = document.createElement('button');
                         open.type = 'button'; open.className = 'btn btn-secondary btn-sm';
                         open.textContent = t('web.openFolder');
+                        open.title = t('web.openFolderHint');
                         open.addEventListener('click', () => document.getElementById('selectFolderBtn').click());
                         bar.appendChild(open);
                     }

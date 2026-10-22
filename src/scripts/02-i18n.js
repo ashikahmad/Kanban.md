@@ -11,6 +11,7 @@
                 'header.renameProject': 'Rename project',
                 'header.deleteProject': 'Remove project from list',
                 'header.folder': 'Folder',
+                'header.home': 'Kanban.md website',
                 'header.newTask': 'Task',
                 'header.archives': 'Archives',
                 'header.columns': 'Columns',
@@ -157,7 +158,8 @@
                 'share.copyFailed': 'Could not copy: select the text and copy it yourself',
                 'share.hint': 'Only what you see above is shared, and nothing leaves your browser until you send it. Markdown is the board file format, so another board can import it.',
                 'web.readOnly': 'Read-only',
-                'web.openFolder': 'Open a folder',
+                'web.openFolder': 'Open a local folder',
+                'web.openFolderHint': 'Pick a folder on this device to edit a board of your own. This board stays read-only.',
                 'web.confirmTitle': 'Open a board from another site?',
                 'web.confirmText': 'The board will be downloaded from {host} and shown read-only. Nothing is saved, and nothing is sent to that site except the request for the files.',
                 'web.confirmOpen': 'Open board',
@@ -264,6 +266,7 @@
                 'header.renameProject': 'Renommer le projet',
                 'header.deleteProject': 'Retirer le projet de la liste',
                 'header.folder': 'Dossier',
+                'header.home': 'Site de Kanban.md',
                 'header.newTask': 'Tâche',
                 'header.archives': 'Archives',
                 'header.columns': 'Colonnes',
@@ -410,7 +413,8 @@
                 'share.copyFailed': 'Copie impossible : sélectionnez le texte et copiez-le vous-même',
                 'share.hint': 'Seul ce que vous voyez ci-dessus est partagé, et rien ne quitte votre navigateur avant que vous l\'envoyiez. Le Markdown est le format de fichier du tableau : un autre tableau peut l\'importer.',
                 'web.readOnly': 'Lecture seule',
-                'web.openFolder': 'Ouvrir un dossier',
+                'web.openFolder': 'Ouvrir un dossier local',
+                'web.openFolderHint': 'Choisissez un dossier sur cet appareil pour modifier votre propre tableau. Ce tableau reste en lecture seule.',
                 'web.confirmTitle': 'Ouvrir un tableau d\'un autre site ?',
                 'web.confirmText': 'Le tableau sera téléchargé depuis {host} et affiché en lecture seule. Rien n\'est enregistré, et rien n\'est envoyé à ce site à part la demande des fichiers.',
                 'web.confirmOpen': 'Ouvrir le tableau',
@@ -517,6 +521,7 @@
                 'header.renameProject': 'Projekt umbenennen',
                 'header.deleteProject': 'Projekt aus Liste entfernen',
                 'header.folder': 'Ordner',
+                'header.home': 'Kanban.md-Website',
                 'header.newTask': 'Aufgabe',
                 'header.archives': 'Archiv',
                 'header.columns': 'Spalten',
@@ -701,6 +706,7 @@
                 'header.renameProject': '重命名项目',
                 'header.deleteProject': '从列表中移除项目',
                 'header.folder': '文件夹',
+                'header.home': 'Kanban.md 网站',
                 'header.newTask': '任务',
                 'header.archives': '归档',
                 'header.columns': '列设置',
@@ -1047,6 +1053,7 @@
             document.getElementById('deleteProjectBtn').title = t('header.deleteProject');
             document.querySelector('#deleteProjectBtn .mi-label').textContent = t('header.deleteProject');
             document.querySelector('#selectFolderBtn .mi-label').textContent = t('header.folder');
+            document.querySelector('#homeLink .mi-label').textContent = t('header.home');
             document.getElementById('newTaskBtn').textContent = t('header.newTask');
             document.querySelector('#archiveBtn .mi-label').textContent = t('header.archives');
             document.querySelector('#manageColsBtn .mi-label').textContent = t('header.columns');

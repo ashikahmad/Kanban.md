@@ -634,6 +634,10 @@
     ok([...document.querySelectorAll('#subtasksList input')].every((i) => i.disabled), 'subtask boxes disabled');
     eq(document.querySelectorAll('#subtasksList .del, #newSubtaskInput').length, 0, 'no subtask delete or add');
     closeModal();
+    showTaskDetail(tasks.find((x) => !x.subtasks.length));
+    eq(document.querySelectorAll('#subtasksList').length, 0, 'no subtasks section when there are none');
+    closeModal();
+    ok(document.querySelector('#sourceBar .source-badge svg'), 'banner badge has the lock icon');
     await openArchiveModal();
     eq(document.querySelectorAll('#archiveList [data-action]').length, 0, 'archive: no restore or delete');
     closeArchiveModal();
@@ -717,6 +721,7 @@
     setLanguage('en');
     freshStart('?board=/docs/demo/kanban.md'); await openBoardParam(boardParam());
     setLanguage('fr'); ok(document.getElementById('sourceBar').innerText.includes('Lecture seule'), 'banner in French');
+    eq(document.querySelector('#homeLink .mi-label').textContent, 'Site de Kanban.md', 'menu website link in French');
     eq(document.querySelectorAll('#taskModalActions button').length, 0, 'no edit buttons from the language refresh');
     setLanguage('en');
   });
