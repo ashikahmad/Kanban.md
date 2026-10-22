@@ -3,6 +3,7 @@
 This folder is the Kanban.md project's own board: what is done, what is in progress, what is planned, and ideas under consideration. It uses the same format as any Kanban.md project.
 
 - **Read it on GitHub:** [`kanban.md`](kanban.md).
+- **View it in the app, read-only:** [ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md).
 - **Open it in the app:** open `kanbanmd.html`, choose this `board/` folder.
 
 | Column | Meaning |

@@ -126,8 +126,8 @@ footer p + p { margin-top: 8px; }
       <p class="lead">Kanban.md turns two Markdown files into an interactive board. The whole app is one HTML file that runs in your browser and reads and writes your folder directly. No server, no account, no database. Humans use the browser, AI agents use the command line, and both edit the same files.</p>
       <div class="cta">
         <a class="btn primary" id="open-app" href="app/">Open the app</a>
-        <a class="btn" href="@REPO@/tree/master/docs/demo">Get the demo board</a>
-        <a class="btn" href="@REPO@/blob/master/board/kanban.md">See our own board</a>
+        <a class="btn" href="app/?board=../demo/kanban.md">See the demo board</a>
+        <a class="btn" href="app/?board=../board/kanban.md">See our own board</a>
       </div>
       <p class="note" id="browser-note">Works in Chrome, Edge, Opera and Brave on desktop. Your files stay on your machine.</p>
     </div>
@@ -187,7 +187,7 @@ footer p + p { margin-top: 8px; }
           <ul class="plain no">
             <li><strong>Not a hosted service.</strong> No accounts, permissions, notifications or live co-editing. Teams share a board through git or a synced folder.</li>
             <li><strong>Not a server or an API.</strong> Agents use the CLI and the MCP server; there is no HTTP API.</li>
-            <li><strong>Not for every browser.</strong> It needs a Chromium-based desktop browser. Firefox, Safari and iOS are not supported.</li>
+            <li><strong>Not for every browser.</strong> It needs a Chromium-based desktop browser. Firefox, Safari and iOS are not supported, though they can still view the demo and project boards read-only.</li>
             <li><strong>Not a reporting tool.</strong> There are no charts or time tracking yet.</li>
           </ul>
         </div>
@@ -200,7 +200,7 @@ footer p + p { margin-top: 8px; }
       <ol class="steps">
         <li><a href="app/">Open the app</a> in Chrome, Edge, Opera or Brave.</li>
         <li>Pick a folder. If it is empty, the app creates <code>kanban.md</code> and <code>archive.md</code> for you.</li>
-        <li>Want to look around first? Download the <a href="@REPO@/tree/master/docs/demo"><code>docs/demo</code></a> folder and pick that for a sample board with dummy tasks.</li>
+        <li>Want to look around first? <a href="app/?board=../demo/kanban.md">Open the demo board</a> read-only, in any browser. To try editing it, download the <a href="@REPO@/tree/master/docs/demo"><code>docs/demo</code></a> folder and pick that.</li>
       </ol>
       <p class="note">Prefer a local copy? Download <a href="@REPO@/blob/master/kanbanmd.html"><code>kanbanmd.html</code></a> and open it in your browser. More options are in <a href="@REPO@/blob/master/docs/getting-started.md">Getting started</a>. Your browser may ask again for folder permission each session.</p>
     </section>
@@ -223,7 +223,7 @@ claude mcp add kanban -- node /path/to/Kanban.md/mcp/server.js --dir /path/to/yo
         <a href="@REPO@/blob/master/docs/git-and-teams.md">Git and teams</a>
         <a href="@REPO@/blob/master/docs/development.md">Development</a>
         <a href="@REPO@/blob/master/docs/about-this-fork.md">About this fork</a>
-        <a href="@REPO@/blob/master/board/kanban.md">Project board</a>
+        <a href="app/?board=../board/kanban.md">Project board</a>
         <a href="@REPO@">Repository</a>
       </div>
     </section>
@@ -238,7 +238,7 @@ claude mcp add kanban -- node /path/to/Kanban.md/mcp/server.js --dir /path/to/yo
   if (!('showDirectoryPicker' in window)) {
     var n = document.getElementById('browser-note');
     n.className = 'note warn';
-    n.textContent = 'This browser cannot open local folders. Kanban.md needs Chrome, Edge, Opera or Brave on a desktop computer.';
+    n.textContent = 'This browser cannot open local folders. Kanban.md needs Chrome, Edge, Opera or Brave on a desktop computer. You can still look at the demo board and our own board.';
   }
 </script>
 </body>

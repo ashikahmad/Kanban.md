@@ -37,7 +37,7 @@ Kanban.md transforme deux fichiers Markdown, `kanban.md` et `archive.md`, en un 
 
 - **Pas un service hébergé.** Pas de comptes, de permissions, de notifications ni de co-édition en direct. Les équipes partagent un tableau via git ou un dossier synchronisé.
 - **Pas un serveur ni une API.** Les agents utilisent la CLI et le serveur MCP ; il n'y a pas d'API HTTP.
-- **Pas pour tous les navigateurs.** Il faut un navigateur de bureau basé sur Chromium (Chrome, Edge, Opera, Brave). Firefox, Safari et iOS ne sont pas pris en charge.
+- **Pas pour tous les navigateurs.** Il faut un navigateur de bureau basé sur Chromium (Chrome, Edge, Opera, Brave). Firefox, Safari et iOS ne sont pas pris en charge (ils peuvent tout de même afficher un tableau publié sur le web, en lecture seule).
 - **Pas un outil de reporting.** Pas encore de graphiques ni de suivi du temps.
 
 ## Installation et premier lancement
@@ -75,7 +75,7 @@ La documentation détaillée est en anglais :
 
 ## Et ensuite ?
 
-Le travail du projet est suivi sur son propre tableau : [`board/kanban.md`](board/kanban.md) montre ce qui est fait, en cours, prévu, et les idées à l'étude. Les éléments marqués `#good-first-issue` et `#need-help` sont de bons points de départ si vous voulez contribuer. Les bugs et les demandes sont les bienvenus sous forme d'issues GitHub.
+Le travail du projet est suivi sur son propre tableau : [`board/kanban.md`](board/kanban.md) montre ce qui est fait, en cours, prévu, et les idées à l'étude. Vous pouvez aussi [le voir dans l'application](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md), en lecture seule. Les éléments marqués `#good-first-issue` et `#need-help` sont de bons points de départ si vous voulez contribuer. Les bugs et les demandes sont les bienvenus sous forme d'issues GitHub.
 
 ## Licence et crédits
 
