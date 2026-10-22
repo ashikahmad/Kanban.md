@@ -17,6 +17,6 @@ for (const f of ['kanban.md', 'archive.md']) {
   cpSync(`board/${f}`, `${OUT}/board/${f}`);
   cpSync(`docs/demo/${f}`, `${OUT}/demo/${f}`);
 }
-cpSync('docs/images/app-overview-dark.jpg', `${OUT}/images/app-overview-dark.jpg`);
+for (const f of ['board-light', 'board-dark', 'board-light-narrow', 'board-dark-narrow']) cpSync(`docs/images/${f}.jpg`, `${OUT}/images/${f}.jpg`);
 writeFileSync(`${OUT}/.nojekyll`, '');
 console.log(`Built ${OUT}/ (landing page, app, board, demo)`);

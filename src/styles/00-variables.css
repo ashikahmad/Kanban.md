@@ -42,6 +42,8 @@
             --shadow-pop: 0 10px 30px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(15, 23, 42, 0.06);
             --c-code-bg: var(--c-fill);
             --c-code-text: #171A1F;
+            /* Logo: an accent tile in light mode, a card-coloured tile in dark mode */
+            --logo-tile: #2F5BEA; --logo-ring: transparent; --logo-hash: #C9D6FF; --logo-tall: #FFFFFF; --logo-short: #9BB3FF;
 
             /* Priority dots */
             --priority-default: #8B93A1;
@@ -87,6 +89,7 @@
             --c-overlay: rgba(0, 0, 0, 0.55);
             --shadow-pop: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.07);
             --c-code-text: #E8EAEE;
+            --logo-tile: #1B1F26; --logo-ring: #343B47; --logo-hash: #7B9BFF; --logo-tall: #E8EAEE; --logo-short: #7B9BFF;
             --priority-default: #707988;
             --priority-red: #EF6B6B;
             --priority-orange: #FF8A3D;
