@@ -1,5 +1,5 @@
 // Build the GitHub Pages site into site/ (run `npm run build` first; it needs kanbanmd.html).
-//   npm run build:site  -> site/ (landing page, the app at app/ and kanbanmd.html, the project board, the demo board, screenshots)
+//   npm run build:site  -> site/ (landing page, the app, the project board, the demo board, screenshots)
 // Serve it with `python3 -m http.server` inside site/. Every link is relative, so the site works at any base path.
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 
@@ -13,11 +13,10 @@ mkdirSync(`${OUT}/app`, { recursive: true });
 
 writeFileSync(`${OUT}/index.html`, readFileSync('site-src/index.html', 'utf8').replaceAll('@REPO@', REPO));
 cpSync('kanbanmd.html', `${OUT}/app/index.html`);
-cpSync('kanbanmd.html', `${OUT}/kanbanmd.html`); // the same app under its file name, for links that use it
 for (const f of ['kanban.md', 'archive.md']) {
   cpSync(`board/${f}`, `${OUT}/board/${f}`);
   cpSync(`docs/demo/${f}`, `${OUT}/demo/${f}`);
 }
 cpSync('docs/images/app-overview-dark.jpg', `${OUT}/images/app-overview-dark.jpg`);
 writeFileSync(`${OUT}/.nojekyll`, '');
-console.log(`Built ${OUT}/ (landing page, app, kanbanmd.html, board, demo)`);
+console.log(`Built ${OUT}/ (landing page, app, board, demo)`);
