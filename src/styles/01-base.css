@@ -238,6 +238,7 @@
         .welcome { text-align: center; padding: var(--s-6) var(--s-4); }
         .welcome h2 { font-size: var(--fs-xl); margin-bottom: var(--s-2); }
         .welcome p { color: var(--c-muted); margin-bottom: var(--s-5); }
+        .welcome .welcome-alt { margin: var(--s-2) 0 0; }
         .welcome-card { margin: var(--s-5) auto 0; padding: var(--s-5); background: var(--c-card); border: 1px solid var(--c-border); border-radius: var(--r-md); max-width: 560px; text-align: left; }
         .welcome-card h3 { font-size: var(--fs-md); margin-bottom: var(--s-3); }
         .welcome-card ol { margin-left: var(--s-5); color: var(--c-muted); display: flex; flex-direction: column; gap: var(--s-1); }

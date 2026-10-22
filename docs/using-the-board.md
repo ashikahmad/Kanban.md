@@ -75,7 +75,7 @@ Because edits are written as minimal patches, changing one card touches only tha
 
 ## Viewing a board from the web
 
-Add `?board=` and the address of a `kanban.md` to the app's address to open that board read-only. This project's own board, for example: [`app/?board=../board/kanban.md`](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md).
+Add `?board=` and the address of a `kanban.md` to the app's address to open that board read-only. This project's own board, for example: [`app/?board=../board/kanban.md`](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md). You can also pick **Open from a web address…** in the burger menu (or the link under **Get Started**) and paste the address: a `kanban.md` file, its folder, or a GitHub link to it.
 
 - **Read-only.** You can browse, search, filter, open the archive and share a task. Nothing can be added, moved, edited or archived, and nothing is saved. A bar under the header shows where the board comes from; **Open a local folder** there switches to a project folder on your device, to edit a board of your own.
 - **The address** can be relative to the app (`../board/kanban.md`), a folder (`../board/` means the `kanban.md` in it), or a full `https://` address. A link to a file's page on github.com is turned into the raw file. `archive.md`, and the backlog file if the board names one, are read from the same folder when they exist.
@@ -102,7 +102,7 @@ Add `?board=` and the address of a `kanban.md` to the app's address to open that
 
 ## The top bar
 
-- **☰ Burger menu** (left): Archives, Columns, Folder, Rename project, Remove project from list, Language, a link to the Kanban.md website, and the optional features above.
+- **☰ Burger menu** (left): Archives, Columns, Folder, Open from a web address, Rename project, Remove project from list, Language, a link to the Kanban.md website, and the optional features above.
 - **Project switcher**, **search** and **filters**.
 - **+ Task** creates a task.
 - **◐ Theme** (right).

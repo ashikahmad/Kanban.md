@@ -21,6 +21,20 @@
             await updateProjectSelector();
         }
 
+        // Burger menu / start screen: ask for an address, then load the page with ?board= so it opens the way a
+        // shared link does (another site still asks first). Back returns to the previous board.
+        function openBoardFromUrl() {
+            const current = source && source.kind === 'web' ? source.href : '';
+            const text = prompt(t('prompt.boardUrl'), current);
+            if (text === null || !text.trim()) return;
+            const place = resolveBoardUrl(text, location.href);
+            if (!place) { alert(t('web.error.invalid')); return; }
+            const url = new URL(location.href);
+            url.search = '';
+            url.searchParams.set('board', place.href);
+            location.assign(url.href);
+        }
+
         async function openWebBoard(place) {
             const src = webSource(place);
             try {

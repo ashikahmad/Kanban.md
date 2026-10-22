@@ -736,6 +736,19 @@
     ok(document.querySelectorAll('.column-add-btn').length > 0 && [...document.querySelectorAll('.task-card')].every((c) => c.draggable), 'edit controls back');
   });
 
+  await check('web board: the menu asks for an address and refuses a bad one', async () => {
+    freshStart();
+    const realPrompt = window.prompt, realAlert = window.alert; let alerted = '', asked = 0;
+    window.alert = (m) => { alerted = m; };
+    try {
+      window.prompt = () => { asked++; return null; }; openBoardFromUrl();
+      window.prompt = () => { asked++; return 'ftp://example.com/kanban.md'; }; openBoardFromUrl();
+    } finally { window.prompt = realPrompt; window.alert = realAlert; }
+    eq(asked, 2, 'asked twice'); eq(alerted, t('web.error.invalid'), 'bad address refused');
+    eq(boardParam(), null, 'stayed on the page');
+    ok(shown('openUrlBtn') && document.querySelector('#welcomeScreen .welcome-alt button'), 'menu item and start-screen button');
+  });
+
   await check('board text cannot inject HTML through a code block label; links open safely', async () => {
     const html = markdownToHtml('```<img src=x onerror=alert(1)>\ncode\n```\n[site](https://example.com)');
     ok(!/<img/i.test(html), 'label escaped');

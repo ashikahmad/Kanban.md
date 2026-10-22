@@ -11,6 +11,9 @@
                 'header.renameProject': 'Rename project',
                 'header.deleteProject': 'Remove project from list',
                 'header.folder': 'Folder',
+                'header.openUrl': 'Open from a web address…',
+                'prompt.boardUrl': 'Address of a board (its kanban.md file or folder, or a GitHub link):',
+                'welcome.openUrl': 'Or open a board from a web address',
                 'header.home': 'Kanban.md website',
                 'header.newTask': 'Task',
                 'header.archives': 'Archives',
@@ -266,6 +269,9 @@
                 'header.renameProject': 'Renommer le projet',
                 'header.deleteProject': 'Retirer le projet de la liste',
                 'header.folder': 'Dossier',
+                'header.openUrl': 'Ouvrir depuis une adresse web…',
+                'prompt.boardUrl': 'Adresse d\'un tableau (son fichier kanban.md ou son dossier, ou un lien GitHub) :',
+                'welcome.openUrl': 'Ou ouvrir un tableau depuis une adresse web',
                 'header.home': 'Site de Kanban.md',
                 'header.newTask': 'Tâche',
                 'header.archives': 'Archives',
@@ -521,6 +527,9 @@
                 'header.renameProject': 'Projekt umbenennen',
                 'header.deleteProject': 'Projekt aus Liste entfernen',
                 'header.folder': 'Ordner',
+                'header.openUrl': 'Von Webadresse öffnen…',
+                'prompt.boardUrl': 'Adresse eines Boards (seine kanban.md-Datei oder sein Ordner, oder ein GitHub-Link):',
+                'welcome.openUrl': 'Oder ein Board von einer Webadresse öffnen',
                 'header.home': 'Kanban.md-Website',
                 'header.newTask': 'Aufgabe',
                 'header.archives': 'Archiv',
@@ -706,6 +715,9 @@
                 'header.renameProject': '重命名项目',
                 'header.deleteProject': '从列表中移除项目',
                 'header.folder': '文件夹',
+                'header.openUrl': '从网址打开…',
+                'prompt.boardUrl': '看板地址（其 kanban.md 文件或文件夹，或 GitHub 链接）：',
+                'welcome.openUrl': '或从网址打开看板',
                 'header.home': 'Kanban.md 网站',
                 'header.newTask': '任务',
                 'header.archives': '归档',
@@ -1053,6 +1065,7 @@
             document.getElementById('deleteProjectBtn').title = t('header.deleteProject');
             document.querySelector('#deleteProjectBtn .mi-label').textContent = t('header.deleteProject');
             document.querySelector('#selectFolderBtn .mi-label').textContent = t('header.folder');
+            document.querySelector('#openUrlBtn .mi-label').textContent = t('header.openUrl');
             document.querySelector('#homeLink .mi-label').textContent = t('header.home');
             document.getElementById('newTaskBtn').textContent = t('header.newTask');
             document.querySelector('#archiveBtn .mi-label').textContent = t('header.archives');
@@ -1095,6 +1108,7 @@
             <button onclick="document.getElementById('selectFolderBtn').click()" class="btn btn-primary" style="height: 40px; padding: 0 var(--s-5);">
                 ${t('welcome.start')}
             </button>
+            <p class="welcome-alt"><button type="button" class="btn btn-ghost" onclick="openBoardFromUrl()">${t('welcome.openUrl')}</button></p>
             <div class="welcome-card">
                 <h3>${t('welcome.howItWorks')}</h3>
                 <ol>
