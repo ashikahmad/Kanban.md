@@ -11,6 +11,10 @@
                 'header.renameProject': 'Rename project',
                 'header.deleteProject': 'Remove project from list',
                 'header.folder': 'Folder',
+                'header.openUrl': 'Open from a web address…',
+                'prompt.boardUrl': 'Address of a board (its kanban.md file or folder, or a GitHub link):',
+                'welcome.openUrl': 'Or open a board from a web address',
+                'header.home': 'Kanban.md website',
                 'header.newTask': 'Task',
                 'header.archives': 'Archives',
                 'header.columns': 'Columns',
@@ -42,7 +46,7 @@
                 'welcome.step3': 'The app automatically loads kanban.md',
                 'welcome.step4': 'Manage your tasks visually with Kanban',
                 'welcome.step5': 'Changes are saved to Markdown files',
-                'welcome.browserWarning': 'Supported browsers: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Editing a folder needs Chrome 86+, Edge 86+ or Opera 72+. Any browser can view a board from a web address, read-only.',
 
                 // Task detail modal
                 'taskDetail.title': 'Task Details',
@@ -157,7 +161,8 @@
                 'share.copyFailed': 'Could not copy: select the text and copy it yourself',
                 'share.hint': 'Only what you see above is shared, and nothing leaves your browser until you send it. Markdown is the board file format, so another board can import it.',
                 'web.readOnly': 'Read-only',
-                'web.openFolder': 'Open a folder',
+                'web.openFolder': 'Open a local folder',
+                'web.openFolderHint': 'Pick a folder on this device to edit a board of your own. This board stays read-only.',
                 'web.confirmTitle': 'Open a board from another site?',
                 'web.confirmText': 'The board will be downloaded from {host} and shown read-only. Nothing is saved, and nothing is sent to that site except the request for the files.',
                 'web.confirmOpen': 'Open board',
@@ -232,7 +237,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ WARNING: Permanently delete task "{title}"?\n\nThis action cannot be undone.\n\nIf you want to keep it in history, use "Archive" instead.',
 
                 // Alerts
-                'alert.browserNotSupported': 'Your browser does not support the File System Access API.\n\nPlease use Chrome 86+, Edge 86+ or Opera 72+.',
+                'alert.browserNotSupported': 'This browser cannot open local folders, so boards cannot be edited here.\n\nYou can still view a board from a web address, read-only (menu → Open from a web address…).\n\nTo edit your own boards, use Chrome 86+, Edge 86+ or Opera 72+.',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': 'New subtask...',
@@ -264,6 +269,10 @@
                 'header.renameProject': 'Renommer le projet',
                 'header.deleteProject': 'Retirer le projet de la liste',
                 'header.folder': 'Dossier',
+                'header.openUrl': 'Ouvrir depuis une adresse web…',
+                'prompt.boardUrl': 'Adresse d\'un tableau (son fichier kanban.md ou son dossier, ou un lien GitHub) :',
+                'welcome.openUrl': 'Ou ouvrir un tableau depuis une adresse web',
+                'header.home': 'Site de Kanban.md',
                 'header.newTask': 'Tâche',
                 'header.archives': 'Archives',
                 'header.columns': 'Colonnes',
@@ -295,7 +304,7 @@
                 'welcome.step3': 'L\'application charge automatiquement kanban.md',
                 'welcome.step4': 'Gérez vos tâches visuellement avec le Kanban',
                 'welcome.step5': 'Les modifications sont sauvegardées dans les fichiers Markdown',
-                'welcome.browserWarning': 'Navigateurs supportés : Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Modifier un dossier nécessite Chrome 86+, Edge 86+ ou Opera 72+. Tout navigateur peut afficher un tableau depuis une adresse web, en lecture seule.',
 
                 // Task detail modal
                 'taskDetail.title': 'Détails de la tâche',
@@ -410,7 +419,8 @@
                 'share.copyFailed': 'Copie impossible : sélectionnez le texte et copiez-le vous-même',
                 'share.hint': 'Seul ce que vous voyez ci-dessus est partagé, et rien ne quitte votre navigateur avant que vous l\'envoyiez. Le Markdown est le format de fichier du tableau : un autre tableau peut l\'importer.',
                 'web.readOnly': 'Lecture seule',
-                'web.openFolder': 'Ouvrir un dossier',
+                'web.openFolder': 'Ouvrir un dossier local',
+                'web.openFolderHint': 'Choisissez un dossier sur cet appareil pour modifier votre propre tableau. Ce tableau reste en lecture seule.',
                 'web.confirmTitle': 'Ouvrir un tableau d\'un autre site ?',
                 'web.confirmText': 'Le tableau sera téléchargé depuis {host} et affiché en lecture seule. Rien n\'est enregistré, et rien n\'est envoyé à ce site à part la demande des fichiers.',
                 'web.confirmOpen': 'Ouvrir le tableau',
@@ -485,7 +495,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ ATTENTION : Supprimer définitivement la tâche "{title}" ?\n\nCette action est irréversible.\n\nSi vous voulez la conserver dans l\'historique, utilisez plutôt "Archiver".',
 
                 // Alerts
-                'alert.browserNotSupported': 'Votre navigateur ne supporte pas la File System Access API.\n\nVeuillez utiliser Chrome 86+, Edge 86+ ou Opera 72+.',
+                'alert.browserNotSupported': 'Ce navigateur ne peut pas ouvrir de dossiers locaux : les tableaux ne peuvent donc pas être modifiés ici.\n\nVous pouvez tout de même afficher un tableau depuis une adresse web, en lecture seule (menu → Ouvrir depuis une adresse web…).\n\nPour modifier vos propres tableaux, utilisez Chrome 86+, Edge 86+ ou Opera 72+.',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': 'Nouvelle sous-tâche...',
@@ -517,6 +527,10 @@
                 'header.renameProject': 'Projekt umbenennen',
                 'header.deleteProject': 'Projekt aus Liste entfernen',
                 'header.folder': 'Ordner',
+                'header.openUrl': 'Von Webadresse öffnen…',
+                'prompt.boardUrl': 'Adresse eines Boards (seine kanban.md-Datei oder sein Ordner, oder ein GitHub-Link):',
+                'welcome.openUrl': 'Oder ein Board von einer Webadresse öffnen',
+                'header.home': 'Kanban.md-Website',
                 'header.newTask': 'Aufgabe',
                 'header.archives': 'Archiv',
                 'header.columns': 'Spalten',
@@ -548,7 +562,7 @@
                 'welcome.step3': 'Die App lädt automatisch kanban.md',
                 'welcome.step4': 'Verwalten Sie Ihre Aufgaben grafisch mit Kanban',
                 'welcome.step5': 'Änderungen werden als Markdown-Datei gespeichert',
-                'welcome.browserWarning': 'Unterstützte Browser: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': 'Zum Bearbeiten eines Ordners braucht es Chrome 86+, Edge 86+ oder Opera 72+. Jeder Browser kann ein Board von einer Webadresse schreibgeschützt anzeigen.',
 
                 // Task detail modal
                 'taskDetail.title': 'Aufgabendetails',
@@ -670,7 +684,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ WARNUNG: Aufgabe "{title}" endgültig löschen?\n\nDies kann nicht rückgängig gemacht werden.\n\nWenn die Aufgabe in der Historie vorgehalten werden soll, klicken Sie stattdessen auf "Archivieren".',
 
                 // Alerts
-                'alert.browserNotSupported': 'Ihr Browser unterstützt die File System Access API nicht.\n\Bitte Chrome 86+, Edge 86+ oder Opera 72+ nutzen.',
+                'alert.browserNotSupported': 'Dieser Browser kann keine lokalen Ordner öffnen, daher lassen sich Boards hier nicht bearbeiten.\n\nSie können ein Board aber von einer Webadresse schreibgeschützt anzeigen (Menü → Von Webadresse öffnen…).\n\nZum Bearbeiten eigener Boards bitte Chrome 86+, Edge 86+ oder Opera 72+ nutzen.',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': 'Neue Unteraufgabe...',
@@ -701,6 +715,10 @@
                 'header.renameProject': '重命名项目',
                 'header.deleteProject': '从列表中移除项目',
                 'header.folder': '文件夹',
+                'header.openUrl': '从网址打开…',
+                'prompt.boardUrl': '看板地址（其 kanban.md 文件或文件夹，或 GitHub 链接）：',
+                'welcome.openUrl': '或从网址打开看板',
+                'header.home': 'Kanban.md 网站',
                 'header.newTask': '任务',
                 'header.archives': '归档',
                 'header.columns': '列设置',
@@ -732,7 +750,7 @@
                 'welcome.step3': '应用将自动加载 kanban.md',
                 'welcome.step4': '通过看板可视化地管理任务',
                 'welcome.step5': '更改将保存到 Markdown 文件中',
-                'welcome.browserWarning': '支持的浏览器: Chrome 86+, Edge 86+, Opera 72+',
+                'welcome.browserWarning': '编辑文件夹需要 Chrome 86+、Edge 86+ 或 Opera 72+。任何浏览器都可以从网址以只读方式查看看板。',
 
                 // Task detail modal
                 'taskDetail.title': '任务详情',
@@ -854,7 +872,7 @@
                 'confirm.deleteTaskFromArchive': '⚠️ 警告: 永久删除任务 "{title}"?\n\n此操作无法撤销.\n\n若希望保留历史记录, 请改用“归档”功能.',
 
                 // Alerts
-                'alert.browserNotSupported': '您的浏览器不支持文件系统访问 API.\n\n请使用 Chrome 86+、 Edge 86+ 或 Opera 72+.',
+                'alert.browserNotSupported': '此浏览器无法打开本地文件夹，因此不能在这里编辑看板。\n\n您仍可以从网址以只读方式查看看板（菜单 → 从网址打开…）。\n\n要编辑自己的看板，请使用 Chrome 86+、Edge 86+ 或 Opera 72+。',
 
                 // Subtasks in detail modal
                 'subtask.newPlaceholder': '新的子任务...',
@@ -1047,6 +1065,8 @@
             document.getElementById('deleteProjectBtn').title = t('header.deleteProject');
             document.querySelector('#deleteProjectBtn .mi-label').textContent = t('header.deleteProject');
             document.querySelector('#selectFolderBtn .mi-label').textContent = t('header.folder');
+            document.querySelector('#openUrlBtn .mi-label').textContent = t('header.openUrl');
+            document.querySelector('#homeLink .mi-label').textContent = t('header.home');
             document.getElementById('newTaskBtn').textContent = t('header.newTask');
             document.querySelector('#archiveBtn .mi-label').textContent = t('header.archives');
             document.querySelector('#manageColsBtn .mi-label').textContent = t('header.columns');
@@ -1088,6 +1108,7 @@
             <button onclick="document.getElementById('selectFolderBtn').click()" class="btn btn-primary" style="height: 40px; padding: 0 var(--s-5);">
                 ${t('welcome.start')}
             </button>
+            <p class="welcome-alt"><button type="button" class="btn btn-ghost" onclick="openBoardFromUrl()">${t('welcome.openUrl')}</button></p>
             <div class="welcome-card">
                 <h3>${t('welcome.howItWorks')}</h3>
                 <ol>
@@ -1097,7 +1118,7 @@
                     <li>${t('welcome.step4')}</li>
                     <li>${t('welcome.step5')}</li>
                 </ol>
-                <p class="note">${t('welcome.browserWarning')}</p>
+                <p class="note${'showDirectoryPicker' in window ? '' : ' warn'}">${t('welcome.browserWarning')}</p>
             </div>
                 `;
             }
@@ -1284,11 +1305,6 @@
         // Update static texts after DOM loads
         document.addEventListener('DOMContentLoaded', updateStaticTexts);
 
-        // Check if File System Access API is supported
-        // (Not for a board from the web: viewing it needs no folder access.)
-        if (!('showDirectoryPicker' in window) && !new URLSearchParams(location.search).has('board')) {
-            alert(t('alert.browserNotSupported'));
-        }
 
         // IndexedDB for persisting directory handles (multiple projects)
         const DB_NAME = 'TaskManagerDB';

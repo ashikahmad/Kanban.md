@@ -83,14 +83,17 @@
             background: var(--c-column);
             border-bottom: 1px solid var(--c-border);
         }
-        .header h1 { font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; }
+        .header h1 { font-size: var(--fs-lg); font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; display: inline-flex; align-items: center; gap: var(--s-2); }
+        .app-logo { width: 24px; height: 24px; flex: none; border-radius: 6px; }
         #projectDd { width: auto; min-width: 160px; max-width: 260px; }
         #projectDd .dd-menu { right: auto; min-width: 100%; width: max-content; max-width: 360px; }
         .header-spacer { flex: 1; }
 
-        #filterBar { display: none; position: relative; flex: 1 1 auto; min-width: 0; max-width: 820px; margin: 0 auto; }
+        /* The filter bar takes the free space in the header (ahead of the spacer) and is a container, so the
+           filters collapse into one button only when they don't fit beside the search field (see below). */
+        #filterBar { display: none; position: relative; flex: 100 1 0; min-width: 0; max-width: 820px; margin: 0 auto; container: filterbar / inline-size; }
         .filter-row { display: flex; align-items: center; gap: var(--s-2); }
-        .search-field { position: relative; flex: 1 1 200px; min-width: 140px; }
+        .search-field { position: relative; flex: 1 1 160px; min-width: 120px; }
         .search-field .ic { position: absolute; left: var(--s-3); top: 50%; transform: translateY(-50%); color: var(--c-faint); pointer-events: none; }
         .search-field input { padding-left: 36px; padding-right: 32px; }
         #clearGlobalSearch { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border: 0; background: none; color: var(--c-faint); cursor: pointer; font-size: var(--fs-lg); display: none; }
@@ -147,17 +150,19 @@
         .fempty { padding: var(--s-2); font-size: var(--fs-xs); color: var(--c-faint); }
         #filterToggleBtn { display: none; }
 
-        /* Collapsed layout: one Filters button, the four lists stacked inside its panel */
-        @media (max-width: 1279px) {
+        /* Collapsed layout: one Filters button, the four lists stacked inside its panel. The width fits the
+           four buttons (longest labels: French) with their counts, plus the smallest search field. */
+        @container filterbar (max-width: 579px) {
             #filterToggleBtn { display: inline-flex; }
             .filter-group {
                 display: none; position: absolute; top: calc(100% + var(--s-2)); right: 0; z-index: 200;
-                width: 300px; max-height: calc(100vh - 80px); overflow-y: auto;
+                width: 300px; max-width: 100cqw; max-height: calc(100vh - 80px); overflow-y: auto;
                 flex-direction: column; align-items: stretch; gap: var(--s-1);
                 padding: var(--s-2);
                 background: var(--c-pop); border-radius: var(--r-md); box-shadow: var(--shadow-pop);
             }
             .filter-group.open { display: flex; }
+            .fdrop + .fdrop { border-top: 1px solid var(--c-border); padding-top: var(--s-1); }
             .fbtn { width: 100%; border: 0; background: none; padding: 0 var(--s-2); height: 28px; font-weight: 600; color: var(--c-text); }
             .fbtn .chev { margin-left: auto; display: none; }
             .fcount { margin-left: auto; }
@@ -199,6 +204,7 @@
             cursor: pointer;
             text-align: left;
         }
+        a.menu-item { text-decoration: none; }
         .menu-item .ic { color: var(--c-muted); }
         .menu-item.danger .ic { color: inherit; }
         .menu-item:hover { background: var(--c-hover); }
@@ -232,10 +238,12 @@
         .welcome { text-align: center; padding: var(--s-6) var(--s-4); }
         .welcome h2 { font-size: var(--fs-xl); margin-bottom: var(--s-2); }
         .welcome p { color: var(--c-muted); margin-bottom: var(--s-5); }
+        .welcome .welcome-alt { margin: var(--s-2) 0 0; }
         .welcome-card { margin: var(--s-5) auto 0; padding: var(--s-5); background: var(--c-card); border: 1px solid var(--c-border); border-radius: var(--r-md); max-width: 560px; text-align: left; }
         .welcome-card h3 { font-size: var(--fs-md); margin-bottom: var(--s-3); }
         .welcome-card ol { margin-left: var(--s-5); color: var(--c-muted); display: flex; flex-direction: column; gap: var(--s-1); }
         .welcome-card .note { margin-top: var(--s-4); font-size: var(--fs-sm); color: var(--c-faint); }
+        .welcome-card .note.warn { color: var(--c-muted); padding-left: var(--s-2); border-left: 3px solid var(--c-warn); }
         #kanbanView { flex: 1; min-height: 0; margin: 0; padding: 0; overflow: auto; }
 
         #newTaskBtn::before { content: "+"; font-size: 16px; line-height: 1; font-weight: 600; }

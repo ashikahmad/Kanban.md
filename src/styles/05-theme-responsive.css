@@ -3,7 +3,6 @@
         @media (max-width: 900px) {
             .header { flex-wrap: wrap; height: auto; padding: var(--s-2) var(--s-3); }
             #filterBar { order: 3; flex: 1 1 100%; max-width: none; }
-            .filter-group { right: 0; }
             .header-spacer { display: none; }
             .header h1 { margin-right: auto; }
         }
@@ -14,4 +13,4 @@
             .form-grid.cols-2, .form-grid.cols-4 { grid-template-columns: 1fr; }
             .detail-meta { grid-template-columns: 1fr 1fr; }
         }
-        @media (max-width: 480px) { .kanban-column { flex: 0 0 92vw; } .filter-group { width: calc(100vw - var(--s-6)); } }
+        @media (max-width: 480px) { .kanban-column { flex: 0 0 92vw; } }

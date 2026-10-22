@@ -62,7 +62,7 @@
                         </div>
                     ` : ''}
 
-                    <div>
+                    ${editable || task.subtasks.length ? `<div>
                         <div class="detail-label">${t('meta.subtasks', {completed: task.subtasks.filter(st => st.completed).length, total: task.subtasks.length})}</div>
                         <ul id="subtasksList" class="subtask-list">
                             ${task.subtasks.map((st, idx) => {
@@ -82,7 +82,7 @@
                             <button onclick="addSubtask('${task.id}')" class="btn btn-secondary">${t('taskForm.subtaskAdd')}</button>
                         </div>
                         ` : ''}
-                    </div>
+                    </div>` : ''}
 
                     ${task.notes ? `
                         <div>

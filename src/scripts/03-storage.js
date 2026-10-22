@@ -319,7 +319,9 @@
         });
 
         // Select folder
+        // Without the File System Access API (Firefox, Safari, iOS) folders cannot be opened; say what still works.
         document.getElementById('selectFolderBtn').addEventListener('click', async () => {
+            if (!('showDirectoryPicker' in window)) { alert(t('alert.browserNotSupported')); return; }
             try {
                 // Start in last used directory if available
                 const options = {};

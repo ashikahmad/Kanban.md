@@ -634,6 +634,10 @@
     ok([...document.querySelectorAll('#subtasksList input')].every((i) => i.disabled), 'subtask boxes disabled');
     eq(document.querySelectorAll('#subtasksList .del, #newSubtaskInput').length, 0, 'no subtask delete or add');
     closeModal();
+    showTaskDetail(tasks.find((x) => !x.subtasks.length));
+    eq(document.querySelectorAll('#subtasksList').length, 0, 'no subtasks section when there are none');
+    closeModal();
+    ok(document.querySelector('#sourceBar .source-badge svg'), 'banner badge has the lock icon');
     await openArchiveModal();
     eq(document.querySelectorAll('#archiveList [data-action]').length, 0, 'archive: no restore or delete');
     closeArchiveModal();
@@ -717,6 +721,7 @@
     setLanguage('en');
     freshStart('?board=/docs/demo/kanban.md'); await openBoardParam(boardParam());
     setLanguage('fr'); ok(document.getElementById('sourceBar').innerText.includes('Lecture seule'), 'banner in French');
+    eq(document.querySelector('#homeLink .mi-label').textContent, 'Site de Kanban.md', 'menu website link in French');
     eq(document.querySelectorAll('#taskModalActions button').length, 0, 'no edit buttons from the language refresh');
     setLanguage('en');
   });
@@ -729,6 +734,19 @@
     ok(!readOnly() && !document.body.classList.contains('readonly'), 'editable');
     ok(!shown('sourceBar'), 'banner gone'); eq(boardParam(), null, '?board= dropped');
     ok(document.querySelectorAll('.column-add-btn').length > 0 && [...document.querySelectorAll('.task-card')].every((c) => c.draggable), 'edit controls back');
+  });
+
+  await check('web board: the menu asks for an address and refuses a bad one', async () => {
+    freshStart();
+    const realPrompt = window.prompt, realAlert = window.alert; let alerted = '', asked = 0;
+    window.alert = (m) => { alerted = m; };
+    try {
+      window.prompt = () => { asked++; return null; }; openBoardFromUrl();
+      window.prompt = () => { asked++; return 'ftp://example.com/kanban.md'; }; openBoardFromUrl();
+    } finally { window.prompt = realPrompt; window.alert = realAlert; }
+    eq(asked, 2, 'asked twice'); eq(alerted, t('web.error.invalid'), 'bad address refused');
+    eq(boardParam(), null, 'stayed on the page');
+    ok(shown('openUrlBtn') && document.querySelector('#welcomeScreen .welcome-alt button'), 'menu item and start-screen button');
   });
 
   await check('board text cannot inject HTML through a code block label; links open safely', async () => {

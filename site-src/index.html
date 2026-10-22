@@ -129,7 +129,7 @@ footer p + p { margin-top: 8px; }
         <a class="btn" href="app/?board=../demo/kanban.md">See the demo board</a>
         <a class="btn" href="app/?board=../board/kanban.md">See our own board</a>
       </div>
-      <p class="note" id="browser-note">Works in Chrome, Edge, Opera and Brave on desktop. Your files stay on your machine.</p>
+      <p class="note" id="browser-note">Editing works in Chrome, Edge, Opera and Brave on desktop; any browser can view a board read-only. Your files stay on your machine.</p>
     </div>
     <div class="pillars">
       <div class="pillar">
@@ -187,7 +187,7 @@ footer p + p { margin-top: 8px; }
           <ul class="plain no">
             <li><strong>Not a hosted service.</strong> No accounts, permissions, notifications or live co-editing. Teams share a board through git or a synced folder.</li>
             <li><strong>Not a server or an API.</strong> Agents use the CLI and the MCP server; there is no HTTP API.</li>
-            <li><strong>Not for every browser.</strong> It needs a Chromium-based desktop browser. Firefox, Safari and iOS are not supported, though they can still view the demo and project boards read-only.</li>
+            <li><strong>Editing needs a Chromium browser.</strong> Opening and editing your own folder needs Chrome, Edge, Opera or Brave on desktop. Firefox, Safari and iOS can still open any board from a web address, read-only.</li>
             <li><strong>Not a reporting tool.</strong> There are no charts or time tracking yet.</li>
           </ul>
         </div>
@@ -238,7 +238,7 @@ claude mcp add kanban -- node /path/to/Kanban.md/mcp/server.js --dir /path/to/yo
   if (!('showDirectoryPicker' in window)) {
     var n = document.getElementById('browser-note');
     n.className = 'note warn';
-    n.textContent = 'This browser cannot open local folders. Kanban.md needs Chrome, Edge, Opera or Brave on a desktop computer. You can still look at the demo board and our own board.';
+    n.textContent = 'This browser cannot open local folders, so you cannot edit boards here. You can still view any board from a web address, read-only, like the demo board and our own board. To edit, use Chrome, Edge, Opera or Brave on a desktop computer.';
   }
 </script>
 </body>
