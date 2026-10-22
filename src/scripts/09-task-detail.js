@@ -10,9 +10,10 @@
             // If coming from the archiveModal, hide: archive, edit, and delete buttons
             wasArchiveModalActive = archiveModal.classList.contains('active');
             const shareBtn = `<button class="btn btn-secondary" onclick="openShareDialog()">${t('share.button')}</button>`;
-            if (wasArchiveModalActive) {
-                archiveModal.classList.remove('active');
-                actionsHtml = `<div class="push"></div>${shareBtn}`; // a read-only view of an archived task: sharing is still fine
+            const editable = !readOnly() && !wasArchiveModalActive;
+            if (wasArchiveModalActive) archiveModal.classList.remove('active');
+            if (!editable) {
+                actionsHtml = `<div class="push"></div>${shareBtn}`; // an archived task, or a board from the web: sharing is still fine
             }
             else {
                 actionsHtml = `<div class="push">
@@ -68,14 +69,14 @@
                                 const escapedText = st.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                                 return `
                                 <li class="subtask-item${st.completed ? ' done' : ''}">
-                                    <input type="checkbox" ${st.completed ? 'checked' : ''} onchange="toggleSubtask('${task.id}', ${idx})">
-                                    <span ondblclick="editSubtask('${task.id}', ${idx})" title="${t('tooltip.doubleClickEdit')}">${escapedText}</span>
-                                    <button class="del" onclick="deleteSubtask('${task.id}', ${idx})" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>
+                                    <input type="checkbox" ${st.completed ? 'checked' : ''} ${editable ? `onchange="toggleSubtask('${task.id}', ${idx})"` : 'disabled'}>
+                                    <span ${editable ? `ondblclick="editSubtask('${task.id}', ${idx})" title="${t('tooltip.doubleClickEdit')}"` : ''}>${escapedText}</span>
+                                    ${editable ? `<button class="del" onclick="deleteSubtask('${task.id}', ${idx})" title="${t('tooltip.delete')}" aria-label="${t('tooltip.delete')}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg></button>` : ''}
                                 </li>
                                 `;
                             }).join('')}
                         </ul>
-                        ${!wasArchiveModalActive ? `
+                        ${editable ? `
                         <div class="subtask-add">
                             <input type="text" id="newSubtaskInput" placeholder="${t('subtask.newPlaceholder')}" onkeypress="if(event.key==='Enter') addSubtask('${task.id}')">
                             <button onclick="addSubtask('${task.id}')" class="btn btn-secondary">${t('taskForm.subtaskAdd')}</button>
@@ -104,6 +105,7 @@
         }
 
         function editCurrentTask() {
+            if (readOnly()) return; // a board from the web is never changed
             if (currentDetailTask) {
                 closeModal();
                 openTaskModal(currentDetailTask);
@@ -112,6 +114,7 @@
 
         // Subtask management
         function toggleSubtask(taskId, subtaskIdx) {
+            if (readOnly()) return;
             const task = tasks.find(t => t.id === taskId);
             if (task && task.subtasks[subtaskIdx]) {
                 task.subtasks[subtaskIdx].completed = !task.subtasks[subtaskIdx].completed;
@@ -123,6 +126,7 @@
         }
 
         function deleteSubtask(taskId, subtaskIdx) {
+            if (readOnly()) return;
             const task = tasks.find(t => t.id === taskId);
             if (task && confirm(t('confirm.deleteSubtask'))) {
                 task.subtasks.splice(subtaskIdx, 1);
@@ -134,6 +138,7 @@
         }
 
         function addSubtask(taskId) {
+            if (readOnly()) return;
             const input = document.getElementById('newSubtaskInput');
             const text = input.value.trim();
             if (!text) return;
@@ -150,6 +155,7 @@
         }
 
         function editSubtask(taskId, subtaskIdx) {
+            if (readOnly()) return;
             const task = tasks.find(t => t.id === taskId);
             if (!task || !task.subtasks[subtaskIdx]) return;
 

@@ -589,6 +589,156 @@
     ok(boardLoaded(), 'loaded'); eq(tasks.length, 0);
   });
 
+  // ---- boards from the web (?board=<url>) ----
+  // fakeWeb() stands in for the network: keys are address endings, values the file text or { status, body, type },
+  // or an Error to throw (what fetch does when offline or blocked by CORS). Anything else is a 404 page.
+  const realFetch = window.fetch;
+  function fakeWeb(files) {
+    const log = [];
+    window.fetch = async (url, init) => {
+      log.push({ url: String(url), init });
+      const key = Object.keys(files).find((k) => String(url).endsWith(k));
+      const f = key && files[key];
+      if (f instanceof Error) throw f;
+      if (!f) return new Response('<html>Not found</html>', { status: 404, headers: { 'content-type': 'text/html' } });
+      const o = typeof f === 'string' ? { body: f } : f;
+      return new Response(o.body, { status: o.status || 200, headers: { 'content-type': o.type || 'text/markdown' } });
+    };
+    return log;
+  }
+  function freshStart(search = '') {
+    window.fetch = realFetch; webNotice = null; useSource(null);
+    history.replaceState(null, '', location.pathname + search);
+    document.getElementById('welcomeScreen').style.display = 'block';
+    document.getElementById('kanbanView').style.display = 'none';
+    renderWelcomeScreen();
+  }
+  const welcomeText = () => document.getElementById('welcomeScreen').innerText;
+  const shown = (id) => getComputedStyle(document.getElementById(id)).display !== 'none';
+
+  await check('web board: a same-origin address opens at once, read-only, with no edit controls', async () => {
+    freshStart('?board=/docs/demo/kanban.md');
+    await openBoardParam(boardParam());
+    ok(readOnly() && source.kind === 'web', 'web source');
+    ok(tasks.length > 5 && archivedTasks.length > 0, `board ${tasks.length} and archive ${archivedTasks.length} loaded`);
+    ok(document.body.classList.contains('readonly'), 'body.readonly');
+    ok(shown('sourceBar') && document.getElementById('sourceBar').innerText.includes('/docs/demo/kanban.md'), 'banner with the address');
+    ok(shown('kanbanView') && !shown('welcomeScreen'), 'board shown');
+    eq(document.querySelectorAll('.column-add-btn, .task-edit-btn').length, 0, 'no add or edit buttons');
+    ok([...document.querySelectorAll('.task-card')].every((c) => !c.draggable), 'cards cannot be dragged');
+    for (const id of ['newTaskBtn', 'manageColsBtn', 'orderToggleBtn', 'housekeepingBtn', 'backlogToggleBtn', 'renameProjectBtn', 'deleteProjectBtn', 'housekeepingBar']) ok(!shown(id), `${id} hidden`);
+    ok(shown('archiveBtn'), 'the archive can still be viewed');
+    const withSubtasks = tasks.find((x) => x.subtasks.length);
+    showTaskDetail(withSubtasks);
+    eq([...document.querySelectorAll('#taskModalActions button')].map((b) => b.textContent.trim()), ['Share'], 'detail offers just Share');
+    ok([...document.querySelectorAll('#subtasksList input')].every((i) => i.disabled), 'subtask boxes disabled');
+    eq(document.querySelectorAll('#subtasksList .del, #newSubtaskInput').length, 0, 'no subtask delete or add');
+    closeModal();
+    await openArchiveModal();
+    eq(document.querySelectorAll('#archiveList [data-action]').length, 0, 'archive: no restore or delete');
+    closeArchiveModal();
+  });
+
+  await check('web board: nothing is written, and the edit functions change nothing', async () => {
+    freshStart();
+    const log = fakeWeb({ '/kanban.md': await H.get('/docs/demo/kanban.md'), '/archive.md': await H.get('/docs/demo/archive.md') });
+    const projectsBefore = (await loadRecentProjects()).length;
+    await openBoardParam('/x/kanban.md');
+    let writes = 0; source.write = async () => { writes++; };
+    const before = JSON.stringify({ tasks, archivedTasks, config });
+    const t0 = tasks.find((x) => x.subtasks.length);
+    toggleSubtask(t0.id, 0); deleteSubtask(t0.id, 0); editCurrentTask();
+    deleteTask(tasks[0].id); unarchiveTask(archivedTasks[0].id); currentDetailTask = tasks[1]; archiveCurrentTask(); deleteCurrentTask();
+    openTaskModal(); ok(!document.getElementById('newTaskModal').classList.contains('active'), 'no edit form');
+    openColumnsModal(); ok(!document.getElementById('columnsModal').classList.contains('active'), 'no columns dialog');
+    eq(await moveTask(tasks[0].id, config.columns[1].id), false, 'move refused');
+    eq(await runOrderOp({ type: 'sortTasks', mode: 'ids' }), false, 'order op refused');
+    tasks[0].title = 'changed in memory'; eq(await autoSave(), false, 'save refused'); tasks[0].title = JSON.parse(before).tasks[0].title;
+    eq(JSON.stringify({ tasks, archivedTasks, config }), before, 'state unchanged');
+    eq(writes, 0, 'no writes'); ok(log.every((r) => !r.init || !r.init.method || r.init.method === 'GET'), 'only GET requests');
+    eq((await loadRecentProjects()).length, projectsBefore, 'not added to recent projects');
+    await pollOnce(); eq(log.filter((r) => r.url.endsWith('/kanban.md')).length, 1, 'each file is fetched once; no polling');
+  });
+
+  await check('web board: another site asks first, fetching nothing; Cancel forgets the address', async () => {
+    freshStart('?board=https://example.com/team/kanban.md');
+    const log = fakeWeb({});
+    await openBoardParam(boardParam());
+    eq(webNotice && webNotice.kind, 'confirm'); eq(log.length, 0, 'nothing fetched before asking');
+    ok(welcomeText().includes('example.com'), 'the ask names the site');
+    await cancelWebBoard();
+    eq(boardParam(), null, '?board= removed'); eq(log.length, 0, 'still nothing fetched'); eq(webNotice, null);
+  });
+
+  await check('web board: "Open board" fetches without cookies or referrer and shows it read-only', async () => {
+    freshStart('?board=https://example.com/team/');
+    const log = fakeWeb({ '/team/kanban.md': await H.get('/docs/demo/kanban.md') }); // no archive.md: optional
+    await openBoardParam(boardParam());
+    await confirmWebBoard(); await settle();
+    ok(readOnly(), 'opened'); eq(archivedTasks.length, 0, 'missing archive is fine');
+    eq(log[0].url, 'https://example.com/team/kanban.md', 'folder address means its kanban.md');
+    ok(log.every((r) => r.init.credentials === 'omit' && r.init.referrerPolicy === 'no-referrer'), 'no cookies, no referrer');
+    ok(log.some((r) => r.url === 'https://example.com/team/archive.md'), 'archive looked for next to it');
+  });
+
+  await check('web board: each failure says why, and nothing opens', async () => {
+    const cases = [
+      ['notFound', {}],
+      ['network', { '/kanban.md': new TypeError('Failed to fetch') }],
+      ['http', { '/kanban.md': { status: 500, body: 'oops' } }, '500'],
+      ['notBoard', { '/kanban.md': { body: '<!doctype html><html>Sign in</html>', type: 'text/html' } }],
+      ['notBoard', { '/kanban.md': '# My notes\n\nNot a board.\n' }],
+      ['tooLarge', { '/kanban.md': 'x'.repeat(5 * 1024 * 1024 + 1) }],
+    ];
+    for (const [code, files, extra] of cases) {
+      freshStart(); fakeWeb(files);
+      await openBoardParam('/x/kanban.md');
+      eq(webNotice && webNotice.code, code, `case ${code}`);
+      ok(!source && !readOnly(), `${code}: nothing open`);
+      ok(welcomeText().includes(t('web.error.' + code, { status: extra || '' })), `${code}: message shown`);
+    }
+    freshStart(); const log = fakeWeb({});
+    await openBoardParam('javascript:alert(1)');
+    eq(webNotice.code, 'invalid'); eq(log.length, 0, 'invalid address: nothing fetched');
+  });
+
+  await check('web board: a github.com file page is fetched from raw.githubusercontent.com', async () => {
+    freshStart();
+    fakeWeb({});
+    await openBoardParam('https://github.com/o/r/blob/main/board/kanban.md');
+    eq(webNotice.place.href, 'https://raw.githubusercontent.com/o/r/main/board/kanban.md');
+    eq(webNotice.kind, 'confirm');
+  });
+
+  await check('web board: the ask, an error and the banner follow a language switch', async () => {
+    freshStart('?board=https://example.com/kanban.md');
+    await openBoardParam(boardParam());
+    setLanguage('fr'); ok(welcomeText().includes(t('web.confirmTitle')) && /tableau/.test(welcomeText()), 'ask in French');
+    setLanguage('en');
+    freshStart('?board=/docs/demo/kanban.md'); await openBoardParam(boardParam());
+    setLanguage('fr'); ok(document.getElementById('sourceBar').innerText.includes('Lecture seule'), 'banner in French');
+    eq(document.querySelectorAll('#taskModalActions button').length, 0, 'no edit buttons from the language refresh');
+    setLanguage('en');
+  });
+
+  await check('web board: opening a folder afterwards is editable again and drops ?board=', async () => {
+    freshStart('?board=/docs/demo/kanban.md');
+    await openBoardParam(boardParam());
+    ok(readOnly());
+    await fresh();
+    ok(!readOnly() && !document.body.classList.contains('readonly'), 'editable');
+    ok(!shown('sourceBar'), 'banner gone'); eq(boardParam(), null, '?board= dropped');
+    ok(document.querySelectorAll('.column-add-btn').length > 0 && [...document.querySelectorAll('.task-card')].every((c) => c.draggable), 'edit controls back');
+  });
+
+  await check('board text cannot inject HTML through a code block label; links open safely', async () => {
+    const html = markdownToHtml('```<img src=x onerror=alert(1)>\ncode\n```\n[site](https://example.com)');
+    ok(!/<img/i.test(html), 'label escaped');
+    ok(/rel="noopener noreferrer"/.test(html), 'link rel');
+    ok(!/href="javascript/i.test(markdownToHtml('[x](javascript:alert(1))')), 'javascript: links blocked');
+  });
+  window.fetch = realFetch; freshStart();
+
   window.confirm = realConfirm;
   return JSON.stringify({ passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok), all: results.map((r) => `${r.ok ? 'ok ' : 'FAIL'} ${r.name}`) }, null, 1);
 })()

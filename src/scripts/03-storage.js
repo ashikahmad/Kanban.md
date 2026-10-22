@@ -127,8 +127,8 @@
                 const isKanbanLoaded = document.getElementById('kanbanView').style.display !== 'none';
                 const currentProject = (isKanbanLoaded && folderHandle()) ? folderHandle().name : '';
 
-                // Show/hide rename and delete buttons
-                if (isKanbanLoaded) {
+                // Show/hide rename and delete buttons (they act on the open folder)
+                if (isKanbanLoaded && folderHandle()) {
                     renameBtn.style.display = 'inline-flex';
                     deleteBtn.style.display = 'inline-flex';
                 } else {
@@ -136,9 +136,9 @@
                     deleteBtn.style.display = 'none';
                 }
 
-                // Add empty option if no project is loaded
+                // Add empty option if no project is loaded (a web board is not one of them)
                 const options = [];
-                if (!isKanbanLoaded) options.push({ value: '', label: t('projects.select') });
+                if (!currentProject) options.push({ value: '', label: t('projects.select') });
                 let selectedValue = '';
                 projects.forEach((p, idx) => {
                     const date = new Date(p.lastAccessed).toLocaleDateString('fr-FR');
@@ -305,7 +305,9 @@
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async () => {
-            await tryRestorePreviousDirectory();
+            const param = boardParam();
+            if (param !== null) await openBoardParam(param); // a board from the web (03b-web-board.js)
+            else await tryRestorePreviousDirectory();
 
             // Add event listener for project selector
             document.getElementById('projectSelector').addEventListener('change', async (e) => {

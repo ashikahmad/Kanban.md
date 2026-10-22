@@ -30,7 +30,8 @@
             const a = await source.read('archive.md');
             // The backlog file, if the board declares one (or a default-named file that exists: the ops refuse to overwrite it).
             backlogFileName = backlogFileNameOf(b.text);
-            const k = await source.read(backlogFileName);
+            // A read-only source is never written, so it only needs the backlog file when the board declares one.
+            const k = source.writable || /\*\*Backlog file\*\*:/.test(b.text) ? await source.read(backlogFileName) : null;
             lastSeenVersion.board = b.version;
             lastSeenVersion.archive = a ? a.version : null;
             lastSeenVersion.backlog = k ? k.version : null;
@@ -101,7 +102,7 @@
         }
 
         async function persistNow() {
-            if (!source || !persistBase) return false;
+            if (!source || !source.writable || !persistBase) return false;
             persistBusy = true;
             try {
                 const { ops, unsupported } = diffToOps(persistBase, currentPageState());
@@ -120,6 +121,7 @@
         // are not a diff of the page state, so when they cannot be applied nothing is rewritten.
         // Returns { ok, changed }.
         async function commit(ops, { unsupported = [], explicit = false } = {}) {
+            if (!source || !source.writable) return { ok: false, changed: false }; // a read-only board is never written
             for (let attempt = 0; attempt < 4; attempt++) {
                 const snapshot = jsonClone(currentPageState());
                 const disk = await readProjectFiles();
@@ -213,7 +215,8 @@
         }
 
         async function pollOnce() {
-            if (document.visibilityState !== 'visible' || !source || !persistBase || persistBusy || pollBusy) return;
+            // Not for a read-only source: a board from the web is not reloaded yet.
+            if (document.visibilityState !== 'visible' || !source || !source.writable || !persistBase || persistBusy || pollBusy) return;
             pollBusy = true;
             try {
                 const now = await readVersions();

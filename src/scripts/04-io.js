@@ -2,7 +2,8 @@
             persistBase = null;
             try {
                 const board = await source.read('kanban.md');
-                if (!board) return await createDefaultFiles();
+                if (!board && source.writable) return await createDefaultFiles();
+                if (!board) throw new Error('kanban.md not found');
                 currentKanbanContent = board.text;
 
                 console.log('File loaded, size:', currentKanbanContent.length);
@@ -22,7 +23,9 @@
                 // pathological slug collision where one task is parsed twice while another is missed
                 // (counts stay equal but the rewrite would drop the missed task). Provably 1:1.
                 const uniqueParsed = new Set(tasks.map(t => t.id)).size;
-                if (loadedFormatVersion < 3 && tasks.length === blockCount && uniqueParsed === blockCount) {
+                // A read-only source is shown as it is: an older file is read fine, it just stays older.
+                if (!source.writable) { /* nothing to migrate */ }
+                else if (loadedFormatVersion < 3 && tasks.length === blockCount && uniqueParsed === blockCount) {
                     // Only overwrite once the original is safely backed up — a failed backup must
                     // abort the migration, never leave the file rewritten without a recovery copy.
                     const fromVersion = loadedFormatVersion;

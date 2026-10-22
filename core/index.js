@@ -9,4 +9,5 @@ export * from './changes.js';
 export * from './housekeeping-spec.js';
 export * from './backlog-spec.js';
 export * from './share.js';
+export * from './board-url.js';
 export * from './housekeeping.js';

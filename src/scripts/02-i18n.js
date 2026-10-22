@@ -156,6 +156,19 @@
                 'share.copied': 'Copied to the clipboard',
                 'share.copyFailed': 'Could not copy: select the text and copy it yourself',
                 'share.hint': 'Only what you see above is shared, and nothing leaves your browser until you send it. Markdown is the board file format, so another board can import it.',
+                'web.readOnly': 'Read-only',
+                'web.openFolder': 'Open a folder',
+                'web.confirmTitle': 'Open a board from another site?',
+                'web.confirmText': 'The board will be downloaded from {host} and shown read-only. Nothing is saved, and nothing is sent to that site except the request for the files.',
+                'web.confirmOpen': 'Open board',
+                'web.cancel': 'Cancel',
+                'web.errorTitle': 'Could not open this board',
+                'web.error.invalid': 'The board address must be a web address (http or https).',
+                'web.error.notFound': 'There is no kanban.md at this address.',
+                'web.error.network': 'The board could not be downloaded. You may be offline, or the site does not let other pages read its files. Raw GitHub links and GitHub Pages work.',
+                'web.error.http': 'The site answered with an error ({status}).',
+                'web.error.tooLarge': 'The file is too large to open (over 5 MB).',
+                'web.error.notBoard': 'This file is not a Kanban.md board.',
                 'hk.menu': 'Housekeeping',
                 'hk.backlog_large': '{count} tasks in the backlog (limit {max})',
                 'hk.splitBtn': 'Move backlog to its own file',
@@ -396,6 +409,19 @@
                 'share.copied': 'Copié dans le presse-papiers',
                 'share.copyFailed': 'Copie impossible : sélectionnez le texte et copiez-le vous-même',
                 'share.hint': 'Seul ce que vous voyez ci-dessus est partagé, et rien ne quitte votre navigateur avant que vous l\'envoyiez. Le Markdown est le format de fichier du tableau : un autre tableau peut l\'importer.',
+                'web.readOnly': 'Lecture seule',
+                'web.openFolder': 'Ouvrir un dossier',
+                'web.confirmTitle': 'Ouvrir un tableau d\'un autre site ?',
+                'web.confirmText': 'Le tableau sera téléchargé depuis {host} et affiché en lecture seule. Rien n\'est enregistré, et rien n\'est envoyé à ce site à part la demande des fichiers.',
+                'web.confirmOpen': 'Ouvrir le tableau',
+                'web.cancel': 'Annuler',
+                'web.errorTitle': 'Impossible d\'ouvrir ce tableau',
+                'web.error.invalid': 'L\'adresse du tableau doit être une adresse web (http ou https).',
+                'web.error.notFound': 'Il n\'y a pas de kanban.md à cette adresse.',
+                'web.error.network': 'Le tableau n\'a pas pu être téléchargé. Vous êtes peut-être hors ligne, ou le site ne laisse pas d\'autres pages lire ses fichiers. Les liens GitHub « raw » et GitHub Pages fonctionnent.',
+                'web.error.http': 'Le site a répondu par une erreur ({status}).',
+                'web.error.tooLarge': 'Le fichier est trop volumineux pour être ouvert (plus de 5 Mo).',
+                'web.error.notBoard': 'Ce fichier n\'est pas un tableau Kanban.md.',
                 'hk.menu': 'Ménage',
                 'hk.backlog_large': '{count} tâches dans le backlog (limite {max})',
                 'hk.splitBtn': 'Déplacer le backlog dans son propre fichier',
@@ -1039,6 +1065,7 @@
 
             // Update welcome screen
             renderWelcomeScreen();
+            applySourceUi(); // the read-only banner
 
             // Update modals
             renderTaskDetailModal();
@@ -1055,6 +1082,7 @@
             const welcomeScreen = document.getElementById('welcomeScreen');
             if (welcomeScreen) {
                 welcomeScreen.innerHTML = `
+            ${webNoticeHtml()}
             <h2>${t('welcome.title')}</h2>
             <p>${t('welcome.description')}</p>
             <button onclick="document.getElementById('selectFolderBtn').click()" class="btn btn-primary" style="height: 40px; padding: 0 var(--s-5);">
@@ -1086,7 +1114,8 @@
             const taskModal = document.getElementById('taskModal');
             if (taskModal) {
                 const actions = taskModal.querySelector('.actions');
-                if (actions) {
+                if (actions && readOnly()) actions.innerHTML = '';
+                else if (actions) {
                     actions.innerHTML = `
                         <div class="push">
                             <button class="btn btn-danger" onclick="deleteCurrentTask()">${t('taskDetail.delete')}</button>
@@ -1256,7 +1285,8 @@
         document.addEventListener('DOMContentLoaded', updateStaticTexts);
 
         // Check if File System Access API is supported
-        if (!('showDirectoryPicker' in window)) {
+        // (Not for a board from the web: viewing it needs no folder access.)
+        if (!('showDirectoryPicker' in window) && !new URLSearchParams(location.search).has('board')) {
             alert(t('alert.browserNotSupported'));
         }
 

@@ -19,6 +19,7 @@
         }
 
         async function runOrderOp(op, message) {
+            if (readOnly()) return false; // a board from the web is never changed
             await autoSave();
             const result = await commit([op], { explicit: true });
             if (result.ok && message) showNotification(t(message), 'success');
@@ -26,6 +27,7 @@
         }
 
         async function toggleManualOrder() {
+            if (readOnly()) return;
             if (orderingActive()) {
                 if (!confirm(t('confirm.orderOff'))) return;
                 setOrderChoice('off');
@@ -37,6 +39,7 @@
         }
 
         async function resetOrderById() {
+            if (readOnly()) return;
             if (!confirm(t('confirm.resetOrder'))) return;
             await runOrderOp({ type: 'sortTasks', mode: 'ids' }, 'notif.orderReset');
         }
@@ -45,7 +48,7 @@
             const toggle = document.getElementById('orderToggleBtn');
             const reset = document.getElementById('orderResetBtn');
             if (!toggle || !reset) return;
-            const open = boardLoaded();
+            const open = boardLoaded() && !readOnly();
             toggle.style.display = open ? 'inline-flex' : 'none';
             reset.style.display = open && orderingActive() ? 'inline-flex' : 'none';
             toggle.querySelector('.mi-label').textContent = t(orderingActive() ? 'menu.manualOrderOn' : 'menu.manualOrderOff');

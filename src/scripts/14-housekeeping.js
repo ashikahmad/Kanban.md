@@ -32,7 +32,7 @@
             const bar = document.getElementById('housekeepingBar');
             const settings = document.getElementById('housekeepingBtn');
             if (!bar) return;
-            const open = boardLoaded();
+            const open = boardLoaded() && !readOnly(); // nothing to tidy on a board that cannot change
             if (settings) {
                 settings.style.display = open ? 'inline-flex' : 'none';
                 settings.querySelector('.mi-label').textContent = t('hk.menu');
@@ -68,6 +68,7 @@
         }
 
         async function hkArchiveDone() {
+            if (readOnly()) return; // a board from the web is never changed
             const ids = archiveCandidates({ board: currentKanbanContent, archive: null, backlog: currentBacklogText });
             if (!ids.length) return;
             if (!confirm(t('hk.confirmArchive', { count: ids.length }))) return;
@@ -95,6 +96,7 @@
 
         // Edit the policy as text: "done=done after=30d | backlog=backlog after=90d | max=200", "off", or "reset".
         async function editHousekeepingSettings() {
+            if (readOnly()) return;
             const current = formatHousekeepingSpec(config.housekeeping);
             const input = prompt(t('hk.settingsPrompt'), current);
             if (input === null) return;

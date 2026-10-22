@@ -1,0 +1,16 @@
+/* Boards from the web: the read-only bar under the header, and the ask / error card on the start screen. */
+.source-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); margin: var(--s-3) var(--s-4); padding: var(--s-2) var(--s-3); background: var(--c-fill); border: 1px solid var(--c-border); border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--c-muted); }
+.source-bar .source-badge { font-weight: 600; color: var(--c-text); }
+.source-bar .source-link { flex: 1 1 200px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-muted); }
+.source-bar .source-link:hover { color: var(--c-text); }
+
+/* A read-only board has nothing to add or arrange (the controls are also left out where they are drawn). */
+body.readonly #newTaskBtn, body.readonly #manageColsBtn, body.readonly #housekeepingBar { display: none !important; }
+
+.welcome-card.web-notice { margin: 0 auto var(--s-5); }
+.web-notice p { margin-bottom: var(--s-3); }
+.web-notice .web-notice-url { font-size: var(--fs-sm); word-break: break-all; }
+.web-notice .web-notice-url a { color: var(--c-muted); }
+.web-notice .web-notice-actions { display: flex; justify-content: flex-end; gap: var(--s-2); }
+.web-notice--error { border-color: var(--c-danger); }
+.web-notice--error h3 { color: var(--c-danger); }
