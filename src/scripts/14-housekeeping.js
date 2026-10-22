@@ -6,7 +6,7 @@
         const HK_SNOOZE_MS = 7 * 24 * 3600 * 1000;
         let hkState = { suggestions: [], staleIds: new Set() };
 
-        function hkKey(part) { return 'kanbanmd.hk.' + part + '.' + (directoryHandle ? directoryHandle.name : ''); }
+        function hkKey(part) { return 'kanbanmd.hk.' + part + '.' + (source ? source.key : ''); }
         function hkFingerprint(suggestions) { return suggestions.map((s) => s.kind + ':' + s.count).join('|'); }
         function hkHidden(suggestions) {
             try {
@@ -20,7 +20,7 @@
         // while cards are built) and the bar is drawn after.
         function refreshHousekeepingState() {
             hkState = { suggestions: [], staleIds: new Set() };
-            if (!kanbanFileHandle || !persistBase) return;
+            if (!boardLoaded()) return;
             try {
                 const ws = { board: currentKanbanContent, archive: null, backlog: currentBacklogText };
                 hkState.suggestions = getHousekeeping(ws).suggestions;
@@ -32,7 +32,7 @@
             const bar = document.getElementById('housekeepingBar');
             const settings = document.getElementById('housekeepingBtn');
             if (!bar) return;
-            const open = !!(kanbanFileHandle && persistBase);
+            const open = boardLoaded();
             if (settings) {
                 settings.style.display = open ? 'inline-flex' : 'none';
                 settings.querySelector('.mi-label').textContent = t('hk.menu');

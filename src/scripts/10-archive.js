@@ -1,12 +1,13 @@
         async function loadArchive() {
             console.log('🗃️ === LOADING ARCHIVE ===');
-            archiveFileHandle = null;
             try {
-                archiveFileHandle = await directoryHandle.getFileHandle('archive.md');
-                console.log('✓ Archive file handle obtained');
-                const file = await archiveFileHandle.getFile();
-                console.log('✓ Archive file loaded, size:', file.size, 'bytes');
-                const content = await file.text();
+                const file = await source.read('archive.md');
+                if (!file) {
+                    console.log('No archive.md');
+                    archivedTasks = [];
+                    return;
+                }
+                const content = file.text;
                 console.log('✓ Archive content read, length:', content.length, 'characters');
                 console.log('Archive content preview:', content.substring(0, 500));
 

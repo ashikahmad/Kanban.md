@@ -99,7 +99,7 @@
             const toggle = document.getElementById('backlogToggleBtn');
             const open = document.getElementById('backlogOpenBtn');
             if (!toggle || !open) return;
-            const loaded = !!(kanbanFileHandle && persistBase);
+            const loaded = boardLoaded();
             const on = loaded && !!backlogColumnId();
             toggle.style.display = loaded ? 'inline-flex' : 'none';
             open.style.display = on ? 'inline-flex' : 'none';

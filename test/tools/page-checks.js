@@ -544,6 +544,51 @@
     closeModal(); closeArchiveModal();
   });
 
+  await check('folder source: a missing file reads as null, a write creates it, its version changes', async () => {
+    const dir = H.makeDir({ 'kanban.md': 'x' });
+    const src = folderSource(dir.handle);
+    eq(await src.read('nope.md'), null, 'missing read'); eq(await src.version('nope.md'), null, 'missing version');
+    const v1 = await src.version('kanban.md');
+    await src.write('kanban.md', 'y'); await src.write('new.md', 'z');
+    eq((await src.read('kanban.md')).text, 'y'); eq((await src.read('new.md')).text, 'z');
+    ok((await src.version('kanban.md')) !== v1, 'version changed');
+    ok(src.writable && src.kind === 'folder' && folderSource(dir.handle).key === 'fake', 'folder source fields');
+  });
+
+  // Any object with the source fields works: the page never reaches past `source` to a folder.
+  function memorySource(files) {
+    let n = 0; const ver = {};
+    for (const k of Object.keys(files)) ver[k] = ++n;
+    return {
+      files, kind: 'memory', key: 'mem', label: 'mem', writable: true,
+      async read(name) { return name in files ? { text: files[name], version: ver[name] } : null; },
+      async version(name) { return name in files ? ver[name] : null; },
+      async write(name, text) { files[name] = text; ver[name] = ++n; },
+      external(name, text) { files[name] = text; ver[name] = ++n; },
+    };
+  }
+
+  await check('data source: a source with no folder behind it loads, saves and picks up outside edits', async () => {
+    const src = memorySource({ 'kanban.md': await H.fixture('demo.kanban'), 'archive.md': await H.fixture('demo.archive') });
+    useSource(src); await loadKanbanFile(); H.show();
+    ok(/Format: v3/.test(src.files['kanban.md']), 'migrated through the source');
+    ok('kanban.v2-backup.md' in src.files, 'backup written through the source');
+    eq(folderHandle(), null, 'no folder');
+    tasks.find((t) => t.id === 'TASK-002').title = 'Saved through a memory source';
+    await autoSave();
+    ok(src.files['kanban.md'].includes('Saved through a memory source'), 'saved');
+    src.external('kanban.md', src.files['kanban.md'].replace('Saved through a memory source', 'Changed outside'));
+    await pollOnce();
+    eq(tasks.find((t) => t.id === 'TASK-002').title, 'Changed outside', 'picked up');
+  });
+
+  await check('data source: a source with no kanban.md is started with an empty board and archive', async () => {
+    const src = memorySource({});
+    useSource(src); await loadKanbanFile();
+    ok('kanban.md' in src.files && 'archive.md' in src.files, 'both files created');
+    ok(boardLoaded(), 'loaded'); eq(tasks.length, 0);
+  });
+
   window.confirm = realConfirm;
   return JSON.stringify({ passed: results.filter((r) => r.ok).length, failed: results.filter((r) => !r.ok), all: results.map((r) => `${r.ok ? 'ok ' : 'FAIL'} ${r.name}`) }, null, 1);
 })()

@@ -1,6 +1,5 @@
-        // File System Access API
-        let directoryHandle = null;
-        let kanbanFileHandle = null;
+        // Where the board's files come from (see 03a-sources.js). null = no board open.
+        let source = null;
         let currentKanbanContent = '';
         let tasks = [];
         let config = {};
@@ -10,7 +9,6 @@
         let currentDetailTask = null;
         let formSubtasks = [];
         let archivedTasks = [];
-        let archiveFileHandle = null;
         let wasArchiveModalActive = false;
         let loadedFormatVersion = 3; // format of the loaded kanban.md: 1 legacy sections, 2 joined metadata lines, 3 one field per line (current)
         let loadedArchiveVersion = 3; // same, for the loaded archive.md

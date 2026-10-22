@@ -1,7 +1,7 @@
 // Browser-side harness for checking the page against a fake in-memory project folder.
 // Load it inside the page served from the repo root (e.g. python3 -m http.server):
 //   (0, eval)(await (await fetch('/test/tools/page-harness.js')).text())
-// then use window.H. The fake folder implements just the File System Access methods the page uses
+// then use window.H. The fake folder implements just the File System Access methods the folder source uses
 // (getFileHandle / getFile / createWritable) with modification times, so polling and write order
 // can be observed, and `H.external()` plays another writer (an agent, the CLI).
 window.H = (() => {
@@ -35,7 +35,7 @@ window.H = (() => {
     // Open a project the way the page does after the user picks a folder.
     async open(files) {
       const dir = makeDir(files);
-      directoryHandle = dir.handle; kanbanFileHandle = null; archiveFileHandle = null;
+      useSource(folderSource(dir.handle));
       await loadKanbanFile();
       show();
       return { files, ...dir };
