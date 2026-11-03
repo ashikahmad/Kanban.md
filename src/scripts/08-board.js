@@ -24,14 +24,20 @@
                 console.log(`Column ${column.id}: ${columnTasks.length} tasks`);
 
                 const columnEl = document.createElement('div');
-                columnEl.className = 'kanban-column';
+                columnEl.className = isBacklogStub ? 'kanban-column is-rail is-backlog' : 'kanban-column';
                 columnEl.dataset.columnId = column.id;
+
+                // The backlog rail keeps the column's own icon upright in the title row; only the words turn in the rail.
+                const split = isBacklogStub ? splitColumnIcon(column.name) : null;
+                const titleHtml = split && split.icon
+                    ? `<span class="rail-title-icon">${escapeHtml(split.icon)}</span><span class="rail-title-words"> ${escapeHtml(split.words)} <span class="column-count">${shownCount}</span></span>`
+                    : `${escapeHtml(column.name)}
+                            <span class="column-count">${shownCount}</span>`;
 
                 columnEl.innerHTML = `
                     <div class="column-header">
                         <div class="column-title">
-                            ${escapeHtml(column.name)}
-                            <span class="column-count">${shownCount}</span>
+                            ${titleHtml}
                         </div>
                         <div class="column-tools">
                             ${editable ? `<button class="column-add-btn" aria-label="${escapeHtml(t('taskForm.newTask'))}"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></button>` : ''}
@@ -53,19 +59,17 @@
                 }
 
                 if (isBacklogStub) {
-                    const stub = document.createElement('div');
-                    stub.className = 'backlog-stub';
-                    const count = document.createElement('div');
-                    count.className = 'backlog-stub-count';
-                    count.textContent = String(shownCount);
-                    const note = document.createElement('div');
-                    note.className = 'backlog-stub-note';
-                    note.textContent = t('backlog.stub', { file: resolveBacklogFile(config).file });
-                    const open = document.createElement('button');
-                    open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = t('backlog.open');
-                    open.addEventListener('click', openBacklogModal);
-                    stub.append(count, note, open);
-                    taskList.appendChild(stub);
+                    taskList.appendChild(buildRailStub({
+                        name: split.words || column.name, count: shownCount,
+                        note: t('backlog.stub', { file: resolveBacklogFile(config).file }),
+                        openLabel: t('backlog.open'), onOpen: openBacklogModal
+                    }));
+                    // Dragging a card over the rail opens it, as hover would (a drag suppresses :hover in some browsers).
+                    // dragenter/dragleave fire for every child too, so count them instead of trusting relatedTarget.
+                    let depth = 0;
+                    columnEl.addEventListener('dragenter', () => { depth++; columnEl.classList.add('is-open'); });
+                    columnEl.addEventListener('dragleave', () => { depth = Math.max(0, depth - 1); if (!depth) columnEl.classList.remove('is-open'); });
+                    columnEl.addEventListener('drop', () => { depth = 0; columnEl.classList.remove('is-open'); });
                 } else {
                     columnTasks.forEach(task => {
                         const taskEl = createTaskElement(task);
@@ -75,7 +79,72 @@
 
                 board.appendChild(columnEl);
             });
+            appendArchiveRail(board);
             updateHousekeepingBar();
+        }
+
+        // A column name's leading emoji (flags and skin tones included; (c), (R) and TM are text) and the words after it.
+        function splitColumnIcon(name) {
+            const m = !/^[\u00A9\u00AE\u2122]/.test(name)
+                && /^((?:\p{Regional_Indicator}{2}|[\p{Emoji_Presentation}\p{Extended_Pictographic}])[\uFE0F\u200D\u{1F3FB}-\u{1F3FF}\p{Emoji_Presentation}\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(name);
+            return m ? { icon: m[1], words: m[2] } : { icon: '', words: name };
+        }
+
+        // The quiet content of a rail column. At rest only the rail button (count and vertical name) shows; on hover or focus
+        // the column widens and the stub (count, where it is kept, an open button) takes over. The rail button stays in the
+        // tab order when the stub is showing (visually hidden), so keyboard focus is never dropped by the widening.
+        function buildRailStub({ name, count, note, openLabel, onOpen }) {
+            const stub = document.createElement('div');
+            stub.className = 'rail-stub';
+            const rail = document.createElement('button');
+            rail.type = 'button'; rail.className = 'rail-button';
+            rail.setAttribute('aria-label', `${name}: ${openLabel}`);
+            const railCount = document.createElement('span');
+            railCount.className = 'rail-count'; railCount.textContent = String(count);
+            const railName = document.createElement('span');
+            railName.className = 'rail-name'; railName.textContent = name;
+            rail.append(railCount, railName);
+            rail.addEventListener('click', onOpen);
+            const body = document.createElement('div');
+            body.className = 'rail-stub-body';
+            const big = document.createElement('div');
+            big.className = 'rail-stub-count'; big.textContent = String(count);
+            const noteEl = document.createElement('div');
+            noteEl.className = 'rail-stub-note'; noteEl.textContent = note;
+            const open = document.createElement('button');
+            open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = openLabel;
+            open.addEventListener('click', onOpen);
+            body.append(big, noteEl, open);
+            stub.append(rail, body);
+            return stub;
+        }
+
+        // The archive as a last, thin column when there is something in it. It only opens the archive panel: cards are not
+        // dropped on it (use the card's Archive action).
+        function appendArchiveRail(board) {
+            if (!archivedTasks.length) return;
+            const name = t('header.archives');
+            const columnEl = document.createElement('div');
+            columnEl.className = 'kanban-column is-rail is-archive';
+            columnEl.innerHTML = `
+                <div class="column-header">
+                    <div class="column-title">
+                        <span class="rail-title-icon">\u{1F5C3}\uFE0F</span><span class="rail-title-words"> ${escapeHtml(name)} <span class="column-count">${archivedTasks.length}</span></span>
+                    </div>
+                </div>
+                <div class="task-list"></div>`;
+            columnEl.querySelector('.task-list').appendChild(buildRailStub({
+                name, count: archivedTasks.length, note: t('archive.stub'), openLabel: t('archive.open'), onOpen: openArchiveModal
+            }));
+            // Last column: widening pushes it past the right edge, so scroll just enough to show it once it has grown.
+            const reveal = () => setTimeout(() => {
+                const view = document.getElementById('kanbanView');
+                const over = columnEl.getBoundingClientRect().right - view.getBoundingClientRect().right;
+                if (over > 0) view.scrollBy({ left: over + 8, behavior: 'smooth' });
+            }, 200);
+            columnEl.addEventListener('mouseenter', reveal);
+            columnEl.addEventListener('focusin', reveal);
+            board.appendChild(columnEl);
         }
 
         // Deadline visibility: classify a task by its **Due** date so the card can surface it.

@@ -1,5 +1,23 @@
-/* The backlog column when its tasks live in the backlog file: a quiet stub that opens the panel. */
-.backlog-stub { display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-3); text-align: center; color: var(--c-muted); border: 1px dashed var(--c-border-strong); border-radius: var(--r-md); }
-.backlog-stub-count { font-size: var(--fs-xl); font-weight: 600; color: var(--c-text); }
-.backlog-stub-note { font-size: var(--fs-sm); }
+/* Rail columns: the backlog column when its tasks live in the backlog file, and the archive. A thin rail at rest; hover, focus
+   or a drag over it widens it to a quiet stub that opens the panel. */
+.kanban-column.is-rail { flex: 0 0 var(--rail-w); min-width: 0; overflow: hidden; transition: flex-basis 0.18s ease; }
+.kanban-column.is-rail:is(:hover, :focus-within, .is-open) { flex-basis: var(--rail-open-w); }
+.is-rail .column-header { justify-content: center; }
+.is-rail .column-tools, .is-rail .rail-title-words { display: none; }
+.is-rail:is(:hover, :focus-within, .is-open) .column-header { justify-content: space-between; }
+.is-rail:is(:hover, :focus-within, .is-open) .column-tools { display: flex; }
+.is-rail:is(:hover, :focus-within, .is-open) .rail-title-words { display: inline; }
+.is-rail .task-list { padding: 0 var(--s-1) var(--s-2); }
+.rail-stub { position: relative; min-width: calc(var(--rail-open-w) - 2 * var(--s-2)); }
+.rail-button { width: calc(var(--rail-w) - 2 * var(--s-1)); display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-2) 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--c-muted); cursor: pointer; font: inherit; }
+.rail-button:hover { background: var(--c-hover); color: var(--c-text); }
+.rail-count { font-size: var(--fs-sm); font-weight: 600; color: var(--c-text); }
+.rail-name { writing-mode: vertical-rl; transform: rotate(180deg); font-size: var(--fs-sm); white-space: nowrap; }
+.rail-stub-body { display: none; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-3); text-align: center; color: var(--c-muted); border: 1px dashed var(--c-border-strong); border-radius: var(--r-md); }
+.is-rail:is(:hover, :focus-within, .is-open) .rail-stub-body { display: flex; }
+/* Open: the rail button is visually hidden but keeps focus, so the widening never drops the keyboard user. */
+.is-rail:is(:hover, :focus-within, .is-open) .rail-button { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+.rail-button:focus-visible ~ .rail-stub-body { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+.rail-stub-count { font-size: var(--fs-xl); font-weight: 600; color: var(--c-text); }
+.rail-stub-note { font-size: var(--fs-sm); }
 .archive-item.hk-stale { border-style: dashed; border-color: var(--c-warn); }
