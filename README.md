@@ -16,9 +16,10 @@ Kanban.md turns two Markdown files, `kanban.md` and `archive.md`, into an intera
 - **A real board.** Drag-and-drop columns you define, subtasks with progress bars, priorities, tags, categories, assignees, due dates, search, filters, an archive, several projects, light and dark themes, and four interface languages.
 - **Humans and AI at the same time.** A CLI and an MCP server let agents read and change the board safely while you use the browser. Changes show up on both sides within a couple of seconds, and concurrent edits are merged, not overwritten.
 - **Cheap for AI.** An agent reads a few hundred tokens instead of the whole board. A "what is in this column?" question on a 100-task board costs about 1,000 tokens instead of about 20,000.
-- **Private by construction.** Nothing leaves your machine. No telemetry, no CDN, works offline.
+- **Private by construction.** Nothing leaves your machine. No telemetry, no CDN, works offline. The only network request the app can make is fetching a board for read-only viewing (see below), and only when you give it a `?board=` URL or serve it next to a `kanban.md`.
 - **Scales up gently.** Housekeeping nudges, an optional separate backlog file, and optional manual card order keep big boards fast.
 - **Shareable.** Copy a task as plain text or as a Markdown block another board can import.
+- **Viewable from a URL.** Open `kanbanmd.html?board=<url-to-kanban.md>`, or serve the app next to a `kanban.md`, and it shows that board read-only.
 
 ## Where it shines
 
@@ -43,6 +44,8 @@ Kanban.md turns two Markdown files, `kanban.md` and `archive.md`, into an intera
 Want to look around first? Pick the [`docs/demo`](docs/demo) folder for a sample board with dummy tasks.
 
 More options, including keeping the app in one shared place and using it across projects, are in [Getting started](docs/getting-started.md).
+
+**Just viewing a board?** Open `kanbanmd.html?board=<url-to-a-kanban.md>` (the app must be served over http or https, and the host must allow cross-origin requests; GitHub Pages and `raw.githubusercontent.com` do). The board opens read-only. If the app is served from a web server and no folder project is restored, a `kanban.md` next to it opens the same way. Opened straight from disk, the browser does not allow this, so you get the folder picker.
 
 ## Use it with AI agents
 

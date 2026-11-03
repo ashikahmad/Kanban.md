@@ -23,7 +23,7 @@
                 console.log(`Column ${column.id}: ${columnTasks.length} tasks`);
 
                 const columnEl = document.createElement('div');
-                columnEl.className = isBacklogStub ? 'kanban-column is-backlog' : 'kanban-column';
+                columnEl.className = isBacklogStub ? 'kanban-column is-rail is-backlog' : 'kanban-column';
                 columnEl.dataset.columnId = column.id;
 
                 columnEl.innerHTML = `
@@ -100,7 +100,62 @@
 
                 board.appendChild(columnEl);
             });
+            appendArchiveRail(board);
             updateHousekeepingBar();
+        }
+
+        // The archive as a last, thin column when there is something in it: icon, count and vertical name at rest;
+        // hover, focus or a drag over it widens it to a stub that opens the archive panel (same behaviour as the backlog rail).
+        function appendArchiveRail(board) {
+            if (!archivedTasks.length) return;
+            const columnEl = document.createElement('div');
+            columnEl.className = 'kanban-column is-rail is-archive';
+            const name = t('header.archives');
+            const header = document.createElement('div');
+            header.className = 'column-header';
+            const title = document.createElement('div');
+            title.className = 'column-title';
+            const icon = document.createElement('span');
+            icon.className = 'backlog-title-icon'; icon.textContent = '\u{1F5C3}\uFE0F';
+            const words = document.createElement('span');
+            words.className = 'backlog-title-words'; words.textContent = ` ${name} `;
+            const wordsCount = document.createElement('span');
+            wordsCount.className = 'column-count'; wordsCount.textContent = String(archivedTasks.length);
+            words.append(wordsCount);
+            title.append(icon, words);
+            header.append(title);
+
+            const list = document.createElement('div');
+            list.className = 'task-list';
+            const stub = document.createElement('div');
+            stub.className = 'backlog-stub';
+            const rail = document.createElement('button');
+            rail.type = 'button'; rail.className = 'backlog-rail';
+            rail.setAttribute('aria-label', `${name}: ${t('archive.open')}`);
+            const railCount = document.createElement('span');
+            railCount.className = 'backlog-rail-count'; railCount.textContent = String(archivedTasks.length);
+            const railName = document.createElement('span');
+            railName.className = 'backlog-rail-name'; railName.textContent = name;
+            rail.append(railCount, railName);
+            rail.addEventListener('click', openArchiveModal);
+            const body = document.createElement('div');
+            body.className = 'backlog-stub-body';
+            const count = document.createElement('div');
+            count.className = 'backlog-stub-count'; count.textContent = String(archivedTasks.length);
+            const note = document.createElement('div');
+            note.className = 'backlog-stub-note'; note.textContent = t('archive.stub');
+            const open = document.createElement('button');
+            open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = t('archive.open');
+            open.addEventListener('click', openArchiveModal);
+            body.append(count, note, open);
+            stub.append(rail, body);
+            list.appendChild(stub);
+            columnEl.append(header, list);
+            // It is the last column, so widening pushes it past the right edge: bring it into view once it has grown.
+            const reveal = () => setTimeout(() => columnEl.scrollIntoView({ inline: 'end', block: 'nearest', behavior: 'smooth' }), 200);
+            columnEl.addEventListener('mouseenter', reveal);
+            columnEl.addEventListener('focusin', reveal);
+            board.appendChild(columnEl);
         }
 
         // Deadline visibility: classify a task by its **Due** date so the card can surface it.

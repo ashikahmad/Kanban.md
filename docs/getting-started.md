@@ -79,12 +79,23 @@ alias tasks='xdg-open ~/tools/kanbanmd.html'    # Linux
 
 Next: [Using the board](using-the-board.md), or [working with AI agents](ai-agents.md).
 
+## Opening a board from a URL
+
+Use this to look at a board without downloading it, for example a project's public board.
+
+1. Serve `kanbanmd.html` over http or https (a web server, or GitHub Pages). Opened from disk, browsers block it.
+2. Add `?board=<url-to-kanban.md>`, for example `kanbanmd.html?board=https://example.com/board/kanban.md`. The app also fetches `archive.md` and the backlog file from the same folder, if they exist.
+3. The board opens **read-only**: no editing, dragging or saving, and a banner says so. Pick a folder from the menu to leave read-only mode and work on your own board.
+
+The host must allow cross-origin requests (GitHub Pages and `raw.githubusercontent.com` do). Without `?board=`, a restored folder project wins; if there is none, a `kanban.md` next to the served page opens the same way.
+
 ## Bringing tasks from somewhere else
 
 There is no importer. The format is plain Markdown, so a short script (or an AI agent) can convert an export from Trello, Jira, Linear, GitHub Issues or Notion into the format described in [File format](file-format.md). Run `kanbanmd migrate --dry-run` or open the folder in the app to check the result.
 
 ## Privacy and permissions
 
-- Nothing is sent over the network. There is no telemetry, no analytics, no account and no CDN: the whole app is in the one HTML file and works offline.
+- There is no telemetry, no analytics, no account and no CDN: the whole app is in the one HTML file and works offline. Your folder's contents are never uploaded.
+- The only network request the app makes is fetching a read-only board, and only in two cases: you open it with `?board=<url>`, or it is served over http(s) and finds a `kanban.md` next to it (plus that board's `archive.md` and backlog file if they exist). Opened from disk, or with a restored folder project, it makes none.
 - The page asks for exactly two things: read and write access to the folder you pick, and IndexedDB to remember your recent projects in your browser.
 - The source is readable in the HTML file, and in `src/`.

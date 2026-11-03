@@ -116,7 +116,7 @@
 
         async function openArchiveModal() {
             console.log('\n📂 === OPENING ARCHIVE MODAL ===');
-            await reloadFromDisk({ quiet: true }); // the archive may have changed outside
+            if (!readOnlyBoard) await reloadFromDisk({ quiet: true }); // the archive may have changed outside
             renderArchiveList();
             document.getElementById('archiveModal').classList.add('active');
             console.log('✓ Archive modal opened');

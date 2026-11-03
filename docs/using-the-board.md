@@ -79,7 +79,7 @@ Because edits are written as minimal patches, changing one card touches only tha
 
 **Housekeeping nudges.** A quiet bar under the header suggests keeping the board small: tasks finished 30+ days ago (button: *Archive done*), backlog tasks older than 90 days, a board over 200 tasks, or a backlog over 100 tasks (button: *Move backlog to its own file*). *Snooze 7 days* hides it, *Dismiss* hides it until the numbers change. It never acts on its own. Change the numbers, or turn it off, in the burger menu → **Housekeeping**.
 
-**Backlog file.** For a very large backlog, tasks in the backlog column can live in their own `backlog.md`, which keeps `kanban.md` small. The column becomes a stub with a count, and **Open backlog** shows a panel where you can search, send a task to any column, or archive it. Switch it on from the nudge or burger menu → **Backlog file**.
+**Backlog file.** For a very large backlog, tasks in the backlog column can live in their own `backlog.md`, which keeps `kanban.md` small. The column becomes a thin rail with its icon, a count and a vertical name; hover it, focus it or drag a card over it and it widens to a stub with **Open backlog** (clicking the rail opens it too). The panel lets you search, send a task to any column, or archive it. Switch it on from the nudge or burger menu → **Backlog file**.
 
 **Sharing a task.** The task details have a **Share** button. It shows a preview of exactly what would be shared (plain text for chat or mail, or the Markdown block that another board can import), with checkboxes to leave out notes and assignees, a **Copy** button, and **Share…** where your browser has a share sheet. The app sends nothing by itself.
 

@@ -18,9 +18,10 @@ Kanban.md transforme deux fichiers Markdown, `kanban.md` et `archive.md`, en un 
 - **Un vrai tableau.** Colonnes par glisser-déposer que vous définissez, sous-tâches avec barres de progression, priorités, étiquettes, catégories, assignations, échéances, recherche, filtres, archives, plusieurs projets, thèmes clair et sombre, et quatre langues d'interface.
 - **Humains et IA en même temps.** Une CLI et un serveur MCP permettent aux agents de lire et de modifier le tableau en toute sécurité pendant que vous l'utilisez dans le navigateur. Les changements apparaissent des deux côtés en quelques secondes, et les modifications simultanées sont fusionnées, jamais écrasées.
 - **Économe pour l'IA.** Un agent lit quelques centaines de jetons au lieu du tableau entier. La question « que contient cette colonne ? » sur un tableau de 100 tâches coûte environ 1 000 jetons au lieu d'environ 20 000.
-- **Privé par construction.** Rien ne quitte votre machine. Pas de télémétrie, pas de CDN, fonctionne hors ligne.
+- **Privé par construction.** Rien ne quitte votre machine. Pas de télémétrie, pas de CDN, fonctionne hors ligne. La seule requête réseau possible est le chargement d'un tableau que vous indiquez (voir plus bas), et seulement si vous le lui indiquez ou si vous le servez à côté d'un `kanban.md`.
 - **Évolue en douceur.** Rappels de rangement, fichier de backlog séparé facultatif et ordre manuel des cartes facultatif gardent les gros tableaux rapides.
 - **Partageable.** Copiez une tâche en texte brut ou en bloc Markdown qu'un autre tableau peut importer.
+- **Consultable depuis une URL.** Ouvrez `kanbanmd.html?board=<url-de-kanban.md>`, ou servez l'application à côté d'un `kanban.md`, et elle affiche ce tableau en lecture seule.
 
 ## Là où il brille
 
@@ -45,6 +46,8 @@ Kanban.md transforme deux fichiers Markdown, `kanban.md` et `archive.md`, en un 
 Envie de jeter un œil d'abord ? Choisissez le dossier [`docs/demo`](docs/demo) : un tableau d'exemple avec des tâches fictives.
 
 D'autres options, dont garder l'application à un endroit partagé et l'utiliser sur plusieurs projets, sont décrites dans [Getting started](docs/getting-started.md) (en anglais).
+
+**Vous voulez seulement consulter un tableau ?** Ouvrez `kanbanmd.html?board=<url-d-un-kanban.md>` (l'application doit être servie en http ou https, et l'hôte doit autoriser les requêtes inter-origines ; GitHub Pages et `raw.githubusercontent.com` le font). Le tableau s'ouvre en lecture seule. Si l'application est servie par un serveur web et qu'aucun dossier n'est restauré, un `kanban.md` placé à côté s'ouvre de la même façon. Ouverte directement depuis le disque, elle ne peut pas le faire : vous obtenez le sélecteur de dossier.
 
 ## Utilisation avec des agents IA
 

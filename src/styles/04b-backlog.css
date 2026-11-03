@@ -1,21 +1,21 @@
-/* The backlog column when its tasks live in the backlog file: a thin rail that widens on hover or focus to a stub that opens the panel. */
-.kanban-column.is-backlog { flex: 0 0 var(--backlog-rail); min-width: 0; overflow: hidden; transition: flex-basis 0.18s ease; }
-.kanban-column.is-backlog:is(:hover, :focus-within, .is-open) { flex-basis: var(--backlog-open); }
-.is-backlog .column-header { justify-content: center; }
-.is-backlog .column-tools, .is-backlog .backlog-title-words { display: none; }
-.is-backlog:is(:hover, :focus-within, .is-open) .column-header { justify-content: space-between; }
-.is-backlog:is(:hover, :focus-within, .is-open) .column-tools { display: flex; }
-.is-backlog:is(:hover, :focus-within, .is-open) .backlog-title-words { display: inline; }
-.is-backlog .task-list { padding: 0 var(--s-1) var(--s-2); }
+/* The backlog column when its tasks live in the backlog file, and the archive column: a thin rail that widens on hover or focus to a stub that opens the panel. */
+.kanban-column.is-rail { flex: 0 0 var(--backlog-rail); min-width: 0; overflow: hidden; transition: flex-basis 0.18s ease; }
+.kanban-column.is-rail:is(:hover, :focus-within, .is-open) { flex-basis: var(--backlog-open); }
+.is-rail .column-header { justify-content: center; }
+.is-rail .column-tools, .is-rail .backlog-title-words { display: none; }
+.is-rail:is(:hover, :focus-within, .is-open) .column-header { justify-content: space-between; }
+.is-rail:is(:hover, :focus-within, .is-open) .column-tools { display: flex; }
+.is-rail:is(:hover, :focus-within, .is-open) .backlog-title-words { display: inline; }
+.is-rail .task-list { padding: 0 var(--s-1) var(--s-2); }
 .backlog-stub { min-width: calc(var(--backlog-open) - 2 * var(--s-2)); }
 .backlog-rail { width: calc(var(--backlog-rail) - 2 * var(--s-1)); display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-2) 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--c-muted); cursor: pointer; font: inherit; }
 .backlog-rail:hover { background: var(--c-hover); color: var(--c-text); }
 .backlog-rail-count { font-size: var(--fs-sm); font-weight: 600; color: var(--c-text); }
 .backlog-rail-name { writing-mode: vertical-rl; transform: rotate(180deg); font-size: var(--fs-sm); white-space: nowrap; }
 .backlog-stub-body { display: none; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-3); text-align: center; color: var(--c-muted); border: 1px dashed var(--c-border-strong); border-radius: var(--r-md); }
-.is-backlog:is(:hover, :focus-within, .is-open) .backlog-rail { display: none; }
-.is-backlog:is(:hover, :focus-within, .is-open) .backlog-stub-body { display: flex; }
+.is-rail:is(:hover, :focus-within, .is-open) .backlog-rail { display: none; }
+.is-rail:is(:hover, :focus-within, .is-open) .backlog-stub-body { display: flex; }
 .backlog-stub-count { font-size: var(--fs-xl); font-weight: 600; color: var(--c-text); }
 .backlog-stub-note { font-size: var(--fs-sm); }
 .archive-item.hk-stale { border-style: dashed; border-color: var(--c-warn); }
-@media (max-width: 768px) { .kanban-column.is-backlog { scroll-snap-align: start; } }
+@media (max-width: 768px) { .kanban-column.is-rail { scroll-snap-align: start; } }

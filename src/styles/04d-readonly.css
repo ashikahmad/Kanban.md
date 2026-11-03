@@ -1,4 +1,5 @@
 /* A board opened from a URL: shown, never edited. The scripts refuse to save; this hides the controls that would suggest otherwise. */
 .ro-bar { padding: var(--s-2) var(--s-4); font-size: var(--fs-sm); color: var(--c-muted); background: var(--c-column); border-bottom: 1px solid var(--c-border); }
 body.read-only :is(#newTaskBtn, #archiveBtn, #manageColsBtn, #orderToggleBtn, #orderResetBtn, #housekeepingBtn, #housekeepingBar, #backlogToggleBtn, #renameProjectBtn, #deleteProjectBtn, .column-add-btn, .task-edit-btn) { display: none !important; }
+body.read-only .archive-item [data-action] { display: none; }
 body.read-only .task-card :is(.prio, .subtask-checkbox, input[type=checkbox]) { pointer-events: none; }
