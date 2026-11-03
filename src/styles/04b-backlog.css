@@ -1,23 +1,38 @@
 /* Rail columns: the backlog column when its tasks live in the backlog file, and the archive. A thin rail at rest; hover, focus
    or a drag over it widens it to a quiet stub that opens the panel. */
 .kanban-column.is-rail { flex: 0 0 var(--rail-w); min-width: 0; overflow: hidden; transition: flex-basis 0.18s ease; }
-.kanban-column.is-rail:is(:hover, :focus-within, .is-open) { flex-basis: var(--rail-open-w); }
+.kanban-column.is-rail.is-open { flex-basis: var(--rail-open-w); }
+.is-rail { cursor: pointer; }
 .is-rail .column-header { justify-content: center; }
 .is-rail .column-tools, .is-rail .rail-title-words { display: none; }
-.is-rail:is(:hover, :focus-within, .is-open) .column-header { justify-content: space-between; }
-.is-rail:is(:hover, :focus-within, .is-open) .column-tools { display: flex; }
-.is-rail:is(:hover, :focus-within, .is-open) .rail-title-words { display: inline; }
+.is-rail.is-open .column-header { justify-content: space-between; }
+.is-rail.is-open .column-tools { display: flex; }
+.is-rail.is-open .rail-title-words { display: inline; }
 .is-rail .task-list { padding: 0 var(--s-1) var(--s-2); }
 .rail-stub { position: relative; min-width: calc(var(--rail-open-w) - 2 * var(--s-2)); }
 .rail-button { width: calc(var(--rail-w) - 2 * var(--s-1)); display: flex; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-2) 0; background: none; border: 0; border-radius: var(--r-sm); color: var(--c-muted); cursor: pointer; font: inherit; }
-.rail-button:hover { background: var(--c-hover); color: var(--c-text); }
+.is-rail:active .rail-button { color: var(--c-text); }
+@media (hover: hover) { .kanban-column.is-rail:hover .rail-button { color: var(--c-text); } }
+/* The whole rail answers the pointer, not just its label: a tint over the column, so it reads as one tappable thing. */
+.kanban-column.is-rail:active { background-image: linear-gradient(var(--c-hover), var(--c-hover)); }
+@media (hover: hover) { .kanban-column.is-rail:hover { background-image: linear-gradient(var(--c-hover), var(--c-hover)); } }
 .rail-count { font-size: var(--fs-sm); font-weight: 600; color: var(--c-text); }
 .rail-name { writing-mode: vertical-rl; transform: rotate(180deg); font-size: var(--fs-sm); white-space: nowrap; }
-.rail-stub-body { display: none; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-3); text-align: center; color: var(--c-muted); border: 1px dashed var(--c-border-strong); border-radius: var(--r-md); }
-.is-rail:is(:hover, :focus-within, .is-open) .rail-stub-body { display: flex; }
+.rail-stub-body { display: none; flex-direction: column; align-items: center; gap: var(--s-2); padding: var(--s-5) var(--s-3); text-align: center; color: var(--c-muted); }
+.is-rail.is-open .rail-stub-body { display: flex; }
 /* Open: the rail button is visually hidden but keeps focus, so the widening never drops the keyboard user. */
-.is-rail:is(:hover, :focus-within, .is-open) .rail-button { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+.is-rail.is-open .rail-button { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 .rail-button:focus-visible ~ .rail-stub-body { outline: 2px solid var(--c-accent); outline-offset: 2px; }
 .rail-stub-count { font-size: var(--fs-xl); font-weight: 600; color: var(--c-text); }
 .rail-stub-note { font-size: var(--fs-sm); }
+.rail-stub-hint { font-size: var(--fs-xs); color: var(--c-faint); }
+/* Hover and focus only widen a rail on a wide screen. On a phone a rail stays thin and a tap opens the panel (a drag still opens it). */
+@media (min-width: 769px) {
+    .kanban-column.is-rail:is(:hover, :focus-within) { flex-basis: var(--rail-open-w); }
+    .is-rail:is(:hover, :focus-within) .column-header { justify-content: space-between; }
+    .is-rail:is(:hover, :focus-within) .column-tools { display: flex; }
+    .is-rail:is(:hover, :focus-within) .rail-title-words { display: inline; }
+    .is-rail:is(:hover, :focus-within) .rail-stub-body { display: flex; }
+    .is-rail:is(:hover, :focus-within) .rail-button { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+}
 .archive-item.hk-stale { border-style: dashed; border-color: var(--c-warn); }

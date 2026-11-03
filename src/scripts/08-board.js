@@ -64,6 +64,7 @@
                         note: t('backlog.stub', { file: resolveBacklogFile(config).file }),
                         openLabel: t('backlog.open'), onOpen: openBacklogModal
                     }));
+                    openRailOnTap(columnEl, openBacklogModal);
                     // Dragging a card over the rail opens it, as hover would (a drag suppresses :hover in some browsers).
                     // dragenter/dragleave fire for every child too, so count them instead of trusting relatedTarget.
                     let depth = 0;
@@ -93,6 +94,12 @@
         // The quiet content of a rail column. At rest only the rail button (count and vertical name) shows; on hover or focus
         // the column widens and the stub (count, where it is kept, an open button) takes over. The rail button stays in the
         // tab order when the stub is showing (visually hidden), so keyboard focus is never dropped by the widening.
+        // The whole rail is a tap target, not just its label: on a phone nothing hints that only the top is live. Buttons keep
+        // their own handlers (the rail button, the column's +), so they are left alone here.
+        function openRailOnTap(columnEl, onOpen) {
+            columnEl.addEventListener('click', (e) => { if (!e.target.closest('button')) onOpen(); });
+        }
+
         function buildRailStub({ name, count, note, openLabel, onOpen }) {
             const stub = document.createElement('div');
             stub.className = 'rail-stub';
@@ -111,10 +118,9 @@
             big.className = 'rail-stub-count'; big.textContent = String(count);
             const noteEl = document.createElement('div');
             noteEl.className = 'rail-stub-note'; noteEl.textContent = note;
-            const open = document.createElement('button');
-            open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = openLabel;
-            open.addEventListener('click', onOpen);
-            body.append(big, noteEl, open);
+            const hint = document.createElement('div');
+            hint.className = 'rail-stub-hint'; hint.textContent = t('rail.hint'); // the whole rail opens it: no button needed
+            body.append(big, noteEl, hint);
             stub.append(rail, body);
             return stub;
         }
@@ -136,6 +142,7 @@
             columnEl.querySelector('.task-list').appendChild(buildRailStub({
                 name, count: archivedTasks.length, note: t('archive.stub'), openLabel: t('archive.open'), onOpen: openArchiveModal
             }));
+            openRailOnTap(columnEl, openArchiveModal);
             // Last column: widening pushes it past the right edge, so scroll just enough to show it once it has grown.
             const reveal = () => setTimeout(() => {
                 const view = document.getElementById('kanbanView');
