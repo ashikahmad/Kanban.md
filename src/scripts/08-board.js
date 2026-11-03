@@ -23,7 +23,7 @@
                 console.log(`Column ${column.id}: ${columnTasks.length} tasks`);
 
                 const columnEl = document.createElement('div');
-                columnEl.className = 'kanban-column';
+                columnEl.className = isBacklogStub ? 'kanban-column is-backlog' : 'kanban-column';
                 columnEl.dataset.columnId = column.id;
 
                 columnEl.innerHTML = `
@@ -52,6 +52,29 @@
                 if (isBacklogStub) {
                     const stub = document.createElement('div');
                     stub.className = 'backlog-stub';
+                    // At rest the column is a thin rail (count + vertical name); hover or focus widens it to the full stub.
+                    const rail = document.createElement('button');
+                    rail.type = 'button'; rail.className = 'backlog-rail';
+                    rail.setAttribute('aria-label', `${column.name}: ${t('backlog.open')}`);
+                    const railCount = document.createElement('span');
+                    railCount.className = 'backlog-rail-count'; railCount.textContent = String(shownCount);
+                    // The column's own icon stays in the title row, upright and where every other column has it; only the words turn.
+                    const iconMatch = /^(\p{Extended_Pictographic}[\uFE0F\u200D\p{Extended_Pictographic}]*)\s*(.*)$/u.exec(column.name);
+                    const railName = document.createElement('span');
+                    railName.className = 'backlog-rail-name'; railName.textContent = iconMatch ? iconMatch[2] : column.name;
+                    if (iconMatch) {
+                        const title = columnEl.querySelector('.column-title');
+                        const icon = document.createElement('span');
+                        icon.className = 'backlog-title-icon'; icon.textContent = iconMatch[1];
+                        const words = document.createElement('span');
+                        words.className = 'backlog-title-words'; words.append(...title.childNodes);
+                        words.firstChild.textContent = ` ${iconMatch[2]}\n`; // the first node is the name text
+                        title.append(icon, words);
+                    }
+                    rail.append(railCount, railName);
+                    rail.addEventListener('click', openBacklogModal);
+                    const body = document.createElement('div');
+                    body.className = 'backlog-stub-body';
                     const count = document.createElement('div');
                     count.className = 'backlog-stub-count';
                     count.textContent = String(shownCount);
@@ -61,7 +84,12 @@
                     const open = document.createElement('button');
                     open.type = 'button'; open.className = 'btn btn-secondary btn-sm'; open.textContent = t('backlog.open');
                     open.addEventListener('click', openBacklogModal);
-                    stub.append(count, note, open);
+                    // Dragging a card over the rail opens it, as hover would (a drag suppresses :hover in some browsers).
+                    columnEl.addEventListener('dragenter', () => columnEl.classList.add('is-open'));
+                    columnEl.addEventListener('dragleave', (e) => { if (!columnEl.contains(e.relatedTarget)) columnEl.classList.remove('is-open'); });
+                    columnEl.addEventListener('drop', () => columnEl.classList.remove('is-open'));
+                    body.append(count, note, open);
+                    stub.append(rail, body);
                     taskList.appendChild(stub);
                 } else {
                     columnTasks.forEach(task => {
@@ -164,6 +192,7 @@
         }
 
         function drag(event) {
+            if (readOnlyBoard) { event.preventDefault(); return; }
             event.dataTransfer.setData('taskId', event.target.dataset.taskId);
             event.target.classList.add('dragging');
         }

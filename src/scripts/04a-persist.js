@@ -116,6 +116,7 @@
 
         // ---- saving ----
         function autoSave() {
+            if (readOnlyBoard) return Promise.resolve(false);
             persistChain = persistChain.then(persistNow, persistNow);
             return persistChain;
         }
@@ -140,6 +141,7 @@
         // are not a diff of the page state, so when they cannot be applied nothing is rewritten.
         // Returns { ok, changed }.
         async function commit(ops, { unsupported = [], explicit = false } = {}) {
+            if (readOnlyBoard) return { ok: false, changed: false };
             for (let attempt = 0; attempt < 4; attempt++) {
                 const snapshot = jsonClone(currentPageState());
                 const disk = await readProjectFiles();

@@ -10,7 +10,7 @@
             // If coming from the archiveModal, hide: archive, edit, and delete buttons
             wasArchiveModalActive = archiveModal.classList.contains('active');
             const shareBtn = `<button class="btn btn-secondary" onclick="openShareDialog()">${t('share.button')}</button>`;
-            if (wasArchiveModalActive) {
+            if (wasArchiveModalActive || readOnlyBoard) {
                 archiveModal.classList.remove('active');
                 actionsHtml = `<div class="push"></div>${shareBtn}`; // a read-only view of an archived task: sharing is still fine
             }

@@ -1,6 +1,7 @@
         // File System Access API
         let directoryHandle = null;
         let kanbanFileHandle = null;
+        let readOnlyBoard = false; // a board fetched from a URL: nothing is editable or saved
         let currentKanbanContent = '';
         let tasks = [];
         let config = {};

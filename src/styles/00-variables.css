@@ -13,6 +13,8 @@
             --control-h: 32px;
             --col-min: 280px;
             --col-max: 460px;
+            --backlog-rail: 48px;
+            --backlog-open: 220px;
 
             /* Surface ladder: the further back, the darker; the nearer the user, the lighter, in both themes:
                page < column / bar / dialog < card / control < popover. Cool slate neutrals, soft borders.

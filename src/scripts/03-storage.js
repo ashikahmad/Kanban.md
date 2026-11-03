@@ -304,7 +304,7 @@
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async () => {
-            await tryRestorePreviousDirectory();
+            if (!(await tryRestorePreviousDirectory())) await tryOpenRemoteBoard();
 
             // Add event listener for project selector
             document.getElementById('projectSelector').addEventListener('change', async (e) => {

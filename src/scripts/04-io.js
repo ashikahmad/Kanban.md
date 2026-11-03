@@ -1,4 +1,5 @@
         async function loadKanbanFile() {
+            exitReadOnlyBoard(); // a folder project replaces a board opened from a URL
             archiveFileHandle = null; // never keep another project's handle
             persistBase = null;
             try {

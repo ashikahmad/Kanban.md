@@ -67,6 +67,7 @@
 
         // Task edit/create modal
         function openTaskModal(task = null, defaultColumnId = null) {
+            if (readOnlyBoard) return;
             isEditMode = !!task;
             const modal = document.getElementById('newTaskModal');
             const form = document.getElementById('newTaskForm');
