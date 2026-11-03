@@ -65,6 +65,7 @@ const fieldProps = {
     category: { type: 'string' },
     assignees: { type: 'array', items: { type: 'string' } },
     tags: { type: 'array', items: { type: 'string' } },
+    blockedBy: { type: 'array', items: { type: 'string' }, description: 'task ids this one waits on' },
     created: date, started: date, due: date, completed: date,
     description: { type: 'string' },
     subtasks: { type: 'array', items: { type: 'object', properties: { text: { type: 'string' }, completed: { type: 'boolean' } }, required: ['text'] } },

@@ -23,11 +23,11 @@ export class Doc {
 export class Fallback extends Error {}
 
 const HEADER_RE = /^###\s+TASK-(\d+)\s*\|\s*(.+?)\s*$/;
-const META_LINE_RE = /^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/;
+const META_LINE_RE = /^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by)\*\*/;
 const STOP_RE = /^\*\*(Subtasks|Notes|Links|Review|Dependencies)\*\*/;
 // One metadata field per line, in this fixed order. [task key, label in the file]
 const FIELDS = [['status', 'Status'], ['order', 'Order'], ['priority', 'Priority'], ['category', 'Category'], ['assignees', 'Assigned'],
-    ['created', 'Created'], ['started', 'Started'], ['due', 'Due'], ['completed', 'Finished'], ['tags', 'Tags']];
+    ['created', 'Created'], ['started', 'Started'], ['due', 'Due'], ['completed', 'Finished'], ['tags', 'Tags'], ['blockedBy', 'Blocked by']];
 const FIELD_LABELS = FIELDS.map(([, l]) => l).join('|');
 const FIELD_LINE = new RegExp(`^(\\s*\\*\\*(${FIELD_LABELS})\\*\\*\\s*:[ \\t]*)(.*)$`);
 const taskId = (digits) => 'TASK-' + digits.padStart(3, '0');
@@ -148,6 +148,7 @@ export function setTitle(doc, loc, title) {
 export function fieldText(key, value) {
     if (key === 'assignees') return value.length ? value.join(', ') : null;
     if (key === 'tags') return value.length ? value.join(' ') : null;
+    if (key === 'blockedBy') return value && value.length ? value.join(', ') : null;
     if (key === 'order') return value === null || value === undefined ? null : String(value);
     return value ? String(value) : null;
 }

@@ -99,7 +99,7 @@
                 result.push('</ul>');
             }
 
-            html = result.join('\n');
+            html = autolinkTaskIds(result.join('\n')); // while code is still a placeholder
 
             // Restore stashed code (function replacers keep `$` in code literal)
             codeBlocks.forEach((block, index) => {

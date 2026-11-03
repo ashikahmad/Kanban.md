@@ -227,8 +227,14 @@ export function parseTaskBlocks(sectionContent, statusId, honorStatusField = fal
     return tasksFound;
 }
 
+// "TASK-12, task-007" -> ['TASK-012', 'TASK-007'] (unique, in order; anything that is not an id is ignored)
+export function parseTaskIds(text) {
+    const ids = (String(text).match(/\bTASK-\d+\b/gi) || []).map(i => 'TASK-' + i.slice(5).padStart(3, '0'));
+    return [...new Set(ids)];
+}
+
 export const FIELD_BREAK = '  ';
-const FIELD_LABELS = 'Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags';
+const FIELD_LABELS = 'Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by';
 const FIELD_LINE_RE = new RegExp(`^\\s*\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:`);
 const FIELD_SPLIT_RE = new RegExp(`\\s*\\|\\s*(?=\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:)`);
 const FIELD_SEG_RE = new RegExp(`^\\s*\\*\\*(${FIELD_LABELS})\\*\\*\\s*:\\s*(.*?)\\s*$`);
@@ -273,6 +279,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
         category: '',
         assignees: [],
         tags: [],
+        blockedBy: [], // ids of the tasks this one waits on (**Blocked by**); "blocks" is derived, never stored
         created: '',
         started: '',
         due: '',
@@ -292,6 +299,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
         if (m) task[key] = m[0];
     }
     if (fields.Tags !== undefined) task.tags = fields.Tags.match(/#[\w-]+/g) || [];
+    if (fields['Blocked by'] !== undefined) task.blockedBy = parseTaskIds(fields['Blocked by']);
 
     // Parse description (text after dates/tags but before "**Sous-tâches**" or "**Notes**")
     let descriptionLines = [];
@@ -299,7 +307,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
 
     for (let line of lines) {
         // Skip metadata lines
-        if (FIELD_LINE_RE.test(line) || line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/)) {
+        if (FIELD_LINE_RE.test(line) || line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by)\*\*/)) {
             continue;
         }
         // Stop at subsections
@@ -346,7 +354,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
     // Capture each section from its header to the next recognised section or end; the generator
     // re-emits task.extra between subtasks and notes. Description/notes parsing are untouched.
     const extraStart = /^\s*\*\*(Links|Review|Dependencies)\*\*\s*:/i;
-    const extraStop = /^\s*\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Subtasks)\*\*/i;
+    const extraStop = /^\s*\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by|Subtasks)\*\*/i;
     const extraLines = [];
     let capturingExtra = false;
     for (let line of lines) {
@@ -419,6 +427,7 @@ export function generateTaskBlock(task) {
     if (task.due) md += field('Due', task.due);
     if (task.completed) md += field('Finished', task.completed);
     if (task.tags.length > 0) md += field('Tags', task.tags.join(' '));
+    if (task.blockedBy && task.blockedBy.length > 0) md += field('Blocked by', task.blockedBy.join(', '));
 
     if (task.description) {
         md += `\n${task.description}\n`;

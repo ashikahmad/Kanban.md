@@ -207,8 +207,8 @@
             // An open read-only detail view: refresh it.
             const detail = document.getElementById('taskModal');
             if (detail.classList.contains('active') && currentDetailTask) {
-                const fresh = tasks.find((x) => x.id === currentDetailTask.id) || archivedTasks.find((x) => x.id === currentDetailTask.id);
-                if (fresh) showTaskDetail(fresh); else closeModal();
+                const fresh = detailCtx.archived ? archivedTasks.find((x) => x.id === currentDetailTask.id) : tasks.find((x) => x.id === currentDetailTask.id);
+                if (fresh) showTaskDetail(fresh, detailCtx); else closeModal();
             }
             if (!quiet) showNotification(t('notif.reloaded'), 'success');
             return true;

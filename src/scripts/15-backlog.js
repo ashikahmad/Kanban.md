@@ -34,6 +34,7 @@
             const rows = q ? all.filter((x) => [x.id, x.title, x.description, x.category, ...x.tags].join(' ').toLowerCase().includes(q)) : all;
             if (!rows.length) { list.innerHTML = `<div class="empty-state">${escapeHtml(t('backlog.empty'))}</div>`; return; }
             const editable = !readOnly();
+            const byId = linkIndex();
             const targets = editable ? config.columns.filter((c) => c.id !== col) : [];
             list.innerHTML = rows.map((task) => `
                 <div class="archive-item${hkState.staleIds.has(task.id) ? ' hk-stale' : ''}" style="cursor: pointer;" data-id="${escapeHtml(task.id)}">
@@ -49,6 +50,7 @@
                     </div>
                     ${task.description ? `<div class="desc">${markdownToHtml(task.description)}</div>` : ''}
                     <div class="task-meta">
+                        ${blockedBadgeHtml(task, byId)}
                         ${task.priority ? `<span class="badge">${priorityHtml(task.priority)}</span>` : ''}
                         ${task.category ? `<span class="badge">${escapeHtml(task.category)}</span>` : ''}
                         ${task.tags.map((g) => `<span class="tag">${escapeHtml(g)}</span>`).join('')}

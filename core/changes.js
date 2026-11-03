@@ -11,7 +11,7 @@
 import { applyOp, orderKinds } from './ops.js';
 import { deepEqual } from './text.js';
 
-const TASK_KEYS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
+const TASK_KEYS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'blockedBy', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
 const LISTS = ['categories', 'users', 'priorities', 'tags'];
 const byId = (tasks) => new Map(tasks.map((t) => [t.id, t]));
 

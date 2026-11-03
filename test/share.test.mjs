@@ -7,7 +7,7 @@ import { parseBoard } from '../core/board.js';
 const COLS = [{ id: 'todo', name: '📝 To Do' }, { id: 'doing', name: '🚀 In Progress' }];
 const task = (o = {}) => ({
   id: 'TASK-014', title: 'Rate limiting for the API', status: 'doing', order: 3000, priority: 'High', category: 'Backend',
-  assignees: ['@bob', '@alice'], tags: ['#api', '#security'], created: '2026-10-03', started: '', due: '2026-11-01', completed: '',
+  assignees: ['@bob', '@alice'], tags: ['#api', '#security'], blockedBy: [], created: '2026-10-03', started: '', due: '2026-11-01', completed: '',
   description: 'Protect the endpoints.\nStart with per-key limits.', subtasks: [{ completed: true, text: 'Choose limits' }, { completed: false, text: 'Add middleware' }],
   notes: 'Waiting on infra.\nSee the dashboard.', extra: '', ...o,
 });
@@ -54,6 +54,10 @@ test('markdown is the board format, without the board-specific order key, and re
   const back = parseBoard(board).tasks[0];
   const expected = task({ order: null });
   assert.deepEqual(back, expected);
+});
+
+test('markdown leaves out Blocked by: the ids belong to the board they came from', () => {
+  assert.ok(!taskToMarkdown(task({ blockedBy: ['TASK-002'] })).includes('Blocked by'));
 });
 
 test('line endings are normalized so a CRLF board shares cleanly', () => {

@@ -192,7 +192,7 @@
             const action = e.target.closest('[data-action]')?.dataset.action;
             if (action === 'delete') deleteTask(id, true);
             else if (action === 'restore') unarchiveTask(id);
-            else showTaskDetail(archivedTasks.find(t => t.id === id));
+            else showTaskDetail(archivedTasks.find(t => t.id === id), { archived: true, fromArchivePanel: true });
         }
 
         function unarchiveTask(taskId) {
