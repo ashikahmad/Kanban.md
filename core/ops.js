@@ -230,10 +230,11 @@ function needArchiveMigration(ctx) {
 
 // Every id in a **Blocked by** list must name a task (board, backlog or archive), and a task cannot wait on
 // itself. A cycle is allowed (the page only warns about it), and a blocker deleted later just stops counting.
-function checkBlockers(ctx, ids, selfId) {
+function checkBlockers(ctx, ids, selfId, current = []) {
     const known = new Set([...ctx.state.tasks, ...ctx.state.backlog, ...ctx.state.archive].map((t) => t.id));
     for (const id of ids) {
         if (id === selfId) fail('invalid_field', `${id} cannot be blocked by itself`);
+        if (current.includes(id)) continue; // already there (maybe deleted since): keeping it is not a new claim
         if (!known.has(id)) fail('unknown_task', `blockedBy names ${id}, which does not exist`, { hint: 'Ids look like TASK-014.' });
     }
 }
@@ -343,7 +344,7 @@ const OPS = {
         const found = findTask(ctx, op.id);
         checkEtag(ctx, found, op);
         const patch = normalizeFields(op.set || fail('missing_field', 'updateTask needs a "set" object'), ctx.state.config, { partial: true });
-        if (patch.blockedBy) checkBlockers(ctx, patch.blockedBy, found.task.id);
+        if (patch.blockedBy) checkBlockers(ctx, patch.blockedBy, found.task.id, found.task.blockedBy || []);
         const before = clone(found.task);
         if (patch.notes !== undefined) patch.notes = patch.notes.replace(/\n/g, found.doc.eol);
         const after = Object.assign(found.task, patch);

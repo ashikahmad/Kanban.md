@@ -60,7 +60,7 @@ Task description...
 - Each task has its own **`**Status**`** line holding a column id. That is what places it in a column, so moving a card is a one-line edit.
 - Every metadata field has its own line and is optional. A task can have a priority and no category. Empty fields are left out.
 - An optional `**Order**: 3000` line holds the manual card order (see [Using the board](using-the-board.md#optional-features)).
-- An optional `**Blocked by**: TASK-007, TASK-012` line (after `Tags`) lists the tasks this one waits on. Only this direction is stored; "blocks" is worked out from it. The ids can name a task in `kanban.md`, the backlog file or the archive. It is advice only: nothing stops a blocked task from moving. Versions of the app, the CLI and the MCP server from before this field existed read the line as part of the description, keep it as long as the description is not edited away, and show it as plain text.
+- An optional `**Blocked by**: TASK-007, TASK-012` line (written after `Tags`, read anywhere in the metadata) lists the tasks this one waits on. Only this direction is stored; "blocks" is worked out from it. The ids can name a task in `kanban.md`, the backlog file or the archive. A line whose value is not just task ids (say `**Blocked by**: waiting on legal`) is left alone as ordinary description text. It is advice only: nothing stops a blocked task from moving. Versions of the app, the CLI and the MCP server from before this field existed read the line as part of the description, keep it as long as the description is not edited away, and show it as plain text.
 - Optional configuration lines: `**Housekeeping**: …` and `**Backlog file**: backlog.md (backlog)`.
 
 ## `archive.md`

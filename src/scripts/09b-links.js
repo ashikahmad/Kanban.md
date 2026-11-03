@@ -104,7 +104,7 @@
             const moved = await moveTask(id, target.id, null, { askOrder: false });
             if (moved) {
                 showNotification(t('notif.taskMoved'), 'success');
-                if (currentDetailTask) showTaskDetail(currentDetailTask);
+                if (currentDetailTask) showTaskDetail(currentDetailTask, detailCtx);
             }
         }
 
@@ -130,7 +130,7 @@
                 <label for="taskBlockedBy">${escapeHtml(t('links.blockedBy'))}</label>
                 <div class="chips">${formBlockedBy.map((id) => {
                     const e = byId.get(id);
-                    return `<span class="chip"><span class="task-id">${escapeHtml(id)}</span>${e ? ` ${escapeHtml(e.task.title)}` : ` ${escapeHtml(t('links.unknown'))}`}<button type="button" data-unblock="${escapeHtml(id)}" aria-label="${escapeHtml(t('tooltip.delete'))}">&times;</button></span>`;
+                    return `<span class="chip"><span class="task-id">${escapeHtml(id)}</span>${e ? ` ${escapeHtml(e.task.title)}` : ` ${escapeHtml(t('links.unknown'))}`}<button type="button" data-unblock="${escapeHtml(id)}" aria-label="${escapeHtml(t('tooltip.delete') + ' ' + id)}">&times;</button></span>`;
                 }).join('')}</div>
                 <input type="text" id="taskBlockedBy" list="blockedByList" placeholder="${escapeHtml(t('links.add'))}" autocomplete="off">
                 <datalist id="blockedByList">${options.map((e) => `<option value="${escapeHtml(e.task.id)}">${escapeHtml(e.task.title)}</option>`).join('')}</datalist>

@@ -1,3 +1,4 @@
+import { BLOCKED_LABEL } from './links.js';
 import { parseHousekeepingSpec, formatHousekeepingSpec } from './housekeeping-spec.js';
 import { parseBacklogFileSpec, formatBacklogFileSpec } from './backlog-spec.js';
 
@@ -229,12 +230,12 @@ export function parseTaskBlocks(sectionContent, statusId, honorStatusField = fal
 
 // "TASK-12, task-007" -> ['TASK-012', 'TASK-007'] (unique, in order; anything that is not an id is ignored)
 export function parseTaskIds(text) {
-    const ids = (String(text).match(/\bTASK-\d+\b/gi) || []).map(i => 'TASK-' + i.slice(5).padStart(3, '0'));
+    const ids = (String(text).match(/\bTASK-\d+\b/gi) || []).map(i => 'TASK-' + String(parseInt(i.slice(5), 10)).padStart(3, '0'));
     return [...new Set(ids)];
 }
 
 export const FIELD_BREAK = '  ';
-const FIELD_LABELS = 'Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by';
+const FIELD_LABELS = `Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|${BLOCKED_LABEL}`;
 const FIELD_LINE_RE = new RegExp(`^\\s*\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:`);
 const FIELD_SPLIT_RE = new RegExp(`\\s*\\|\\s*(?=\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:)`);
 const FIELD_SEG_RE = new RegExp(`^\\s*\\*\\*(${FIELD_LABELS})\\*\\*\\s*:\\s*(.*?)\\s*$`);
@@ -307,7 +308,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
 
     for (let line of lines) {
         // Skip metadata lines
-        if (FIELD_LINE_RE.test(line) || line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by)\*\*/)) {
+        if (FIELD_LINE_RE.test(line) || line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/)) {
             continue;
         }
         // Stop at subsections
@@ -354,7 +355,7 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
     // Capture each section from its header to the next recognised section or end; the generator
     // re-emits task.extra between subtasks and notes. Description/notes parsing are untouched.
     const extraStart = /^\s*\*\*(Links|Review|Dependencies)\*\*\s*:/i;
-    const extraStop = /^\s*\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by|Subtasks)\*\*/i;
+    const extraStop = /^\s*\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Subtasks)\*\*/i;
     const extraLines = [];
     let capturingExtra = false;
     for (let line of lines) {

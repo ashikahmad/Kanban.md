@@ -1,3 +1,7 @@
+// The label as a metadata line only when the value is nothing but task ids. A hand-written line such as
+// "**Blocked by**: waiting on legal" is ordinary description text and stays exactly as written.
+export const BLOCKED_LABEL = 'Blocked by(?=\\*\\*\\s*:[ \\t]*(?:[Tt][Aa][Ss][Kk]-\\d+[\\s,]*)+$)';
+
 // Task links: **Blocked by** is the only stored relation. "Blocks" is derived from it, so the two can never
 // disagree. Advice only: nothing here stops a move or a save.
 

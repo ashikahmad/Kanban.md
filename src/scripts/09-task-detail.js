@@ -121,7 +121,7 @@
             if (task && task.subtasks[subtaskIdx]) {
                 task.subtasks[subtaskIdx].completed = !task.subtasks[subtaskIdx].completed;
                 currentDetailTask = task; // Update reference
-                showTaskDetail(task); // Refresh display
+                showTaskDetail(task, detailCtx); // Refresh display
                 renderKanban(); // Update card progress
                 autoSave();
             }
@@ -133,7 +133,7 @@
             if (task && confirm(t('confirm.deleteSubtask'))) {
                 task.subtasks.splice(subtaskIdx, 1);
                 currentDetailTask = task;
-                showTaskDetail(task);
+                showTaskDetail(task, detailCtx);
                 renderKanban();
                 autoSave();
             }
@@ -150,7 +150,7 @@
                 task.subtasks.push({ completed: false, text });
                 currentDetailTask = task;
                 input.value = '';
-                showTaskDetail(task);
+                showTaskDetail(task, detailCtx);
                 renderKanban();
                 autoSave();
             }
@@ -165,7 +165,7 @@
             if (newText !== null && newText.trim()) {
                 task.subtasks[subtaskIdx].text = newText.trim();
                 currentDetailTask = task;
-                showTaskDetail(task);
+                showTaskDetail(task, detailCtx);
                 renderKanban();
                 autoSave();
             }

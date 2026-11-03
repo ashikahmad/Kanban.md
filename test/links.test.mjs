@@ -111,3 +111,29 @@ test('reads derive openBlockers and blocks across board, backlog and archive', (
   const row = getBoard(ws, { fields: ['title', 'openBlockers'] }).tasks.find((t) => t.id === 'TASK-001');
   assert.deepEqual(row, { id: 'TASK-001', title: 'Ship', openBlockers: ['TASK-002', 'TASK-003'] });
 });
+
+test('a Blocked by line that is not just ids is ordinary description text and survives edits', () => {
+  const prose = `${HEAD}${block(1, 'Legal', 'todo', '**Priority**: High  \n**Blocked by**: waiting on legal sign-off  \n')}${block(2, 'Mixed', 'todo', '**Blocked by**: TASK-001 until legal signs  \n')}`;
+  const p = parseBoard(prose);
+  assert.deepEqual(p.tasks.map((t) => t.blockedBy), [[], []]);
+  assert.match(p.tasks[0].description, /waiting on legal sign-off/);
+  assert.match(p.tasks[1].description, /TASK-001 until legal signs/);
+  assert.match(generateBoard(p), /\*\*Blocked by\*\*: waiting on legal sign-off/);
+  const edited = apply({ board: prose }, { type: 'updateTask', id: 'TASK-001', set: { priority: 'Low', blockedBy: ['TASK-002'] } }).board;
+  assert.match(edited, /\*\*Blocked by\*\*: waiting on legal sign-off/, 'the prose stays');
+  assert.deepEqual(parseBoard(edited).tasks[0].blockedBy, ['TASK-002'], 'and a real field is added next to it');
+});
+
+test('ids written with extra zeros or odd case still match the board', () => {
+  assert.deepEqual(parseTaskIds('TASK-0002, task-03 TASK-1000'), ['TASK-002', 'TASK-003', 'TASK-1000']);
+  const out = apply(ws, { type: 'updateTask', id: 'TASK-001', set: { blockedBy: ['TASK-0002'] } }).board;
+  assert.deepEqual(parseBoard(out).tasks[0].blockedBy, ['TASK-002']);
+});
+
+test('keeping an id that no longer exists is not a new claim; adding one is refused', () => {
+  const dangling = apply(ws, { type: 'updateTask', id: 'TASK-001', set: { priority: 'Low' } }).board; // TASK-009 is already named and does not exist
+  const w2 = { board: dangling, backlog, archive };
+  const kept = apply(w2, { type: 'updateTask', id: 'TASK-001', set: { blockedBy: ['TASK-002', 'TASK-009'] } }).board;
+  assert.deepEqual(parseBoard(kept).tasks[0].blockedBy, ['TASK-002', 'TASK-009']);
+  assert.equal(code(() => apply(w2, { type: 'updateTask', id: 'TASK-001', set: { blockedBy: ['TASK-002', 'TASK-009', 'TASK-777'] } })), 'unknown_task');
+});
