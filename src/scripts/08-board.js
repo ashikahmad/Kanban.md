@@ -29,7 +29,7 @@
 
                 // The backlog rail keeps the column's own icon upright in the title row; only the words turn in the rail.
                 const split = isBacklogStub ? splitColumnIcon(column.name) : null;
-                const titleHtml = split && split.icon
+                const titleHtml = split
                     ? `<span class="rail-title-icon">${escapeHtml(split.icon)}</span><span class="rail-title-words"> ${escapeHtml(split.words)} <span class="column-count">${shownCount}</span></span>`
                     : `${escapeHtml(column.name)}
                             <span class="column-count">${shownCount}</span>`;
@@ -96,6 +96,7 @@
         // tab order when the stub is showing (visually hidden), so keyboard focus is never dropped by the widening.
         // The whole rail is a tap target, not just its label: on a phone nothing hints that only the top is live. Buttons keep
         // their own handlers (the rail button, the column's +), so they are left alone here.
+        let railOpenedByKeyboard = false; // a click with detail 0 is Enter/Space: remember it so focus can come back to the rail
         function openRailOnTap(columnEl, onOpen) {
             columnEl.addEventListener('click', (e) => { if (!e.target.closest('button')) onOpen(); });
         }
@@ -111,7 +112,7 @@
             const railName = document.createElement('span');
             railName.className = 'rail-name'; railName.textContent = name;
             rail.append(railCount, railName);
-            rail.addEventListener('click', onOpen);
+            rail.addEventListener('click', (e) => { railOpenedByKeyboard = e.detail === 0; onOpen(); });
             const body = document.createElement('div');
             body.className = 'rail-stub-body';
             const big = document.createElement('div');
@@ -346,7 +347,7 @@
                 }
                 e.preventDefault(); // block page scroll while dragging
                 const under = document.elementFromPoint(tch.clientX, tch.clientY);
-                const col = under && under.closest('.kanban-column');
+                const col = under && under.closest('.kanban-column:not(.is-archive)'); // the archive rail takes no drops
                 document.querySelectorAll('.kanban-column').forEach(c => c.classList.toggle('drop-target', c === col));
             }, { passive: false });
 

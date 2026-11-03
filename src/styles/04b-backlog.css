@@ -26,13 +26,22 @@
 .rail-stub-count { font-size: var(--fs-xl); font-weight: 600; color: var(--c-text); }
 .rail-stub-note { font-size: var(--fs-sm); }
 .rail-stub-hint { font-size: var(--fs-xs); color: var(--c-faint); }
-/* Hover and focus only widen a rail on a wide screen. On a phone a rail stays thin and a tap opens the panel (a drag still opens it). */
+/* Focus widens a rail on a wide screen; hover too where there is a real pointer (on a tablet a tap would leave it stuck open).
+   On a phone a rail stays thin and a tap opens the panel (a drag still opens it). */
 @media (min-width: 769px) {
-    .kanban-column.is-rail:is(:hover, :focus-within) { flex-basis: var(--rail-open-w); }
-    .is-rail:is(:hover, :focus-within) .column-header { justify-content: space-between; }
-    .is-rail:is(:hover, :focus-within) .column-tools { display: flex; }
-    .is-rail:is(:hover, :focus-within) .rail-title-words { display: inline; }
-    .is-rail:is(:hover, :focus-within) .rail-stub-body { display: flex; }
-    .is-rail:is(:hover, :focus-within) .rail-button { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+    .kanban-column.is-rail:focus-within { flex-basis: var(--rail-open-w); }
+    .is-rail:focus-within .column-header { justify-content: space-between; }
+    .is-rail:focus-within .column-tools { display: flex; }
+    .is-rail:focus-within .rail-title-words { display: inline; }
+    .is-rail:focus-within .rail-stub-body { display: flex; }
+    .is-rail:focus-within .rail-button { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+}
+@media (min-width: 769px) and (hover: hover) {
+    .kanban-column.is-rail:hover { flex-basis: var(--rail-open-w); }
+    .is-rail:hover .column-header { justify-content: space-between; }
+    .is-rail:hover .column-tools { display: flex; }
+    .is-rail:hover .rail-title-words { display: inline; }
+    .is-rail:hover .rail-stub-body { display: flex; }
+    .is-rail:hover .rail-button { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
 }
 .archive-item.hk-stale { border-style: dashed; border-color: var(--c-warn); }
