@@ -129,12 +129,7 @@
 
         function closeArchiveModal() {
             document.getElementById('archiveModal').classList.remove('active');
-            // Opening re-renders the board (reload from disk), which replaces the rail button the keyboard user pressed.
-            if (railOpenedByKeyboard) {
-                railOpenedByKeyboard = false;
-                const rail = document.querySelector('.kanban-column.is-archive .rail-button');
-                if (rail) rail.focus();
-            }
+            restoreRailFocus('archive');
         }
 
         function renderArchiveList(searchTerm = '') {

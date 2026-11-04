@@ -60,7 +60,7 @@
 
                 if (isBacklogStub) {
                     taskList.appendChild(buildRailStub({
-                        name: split.words || column.name, count: shownCount,
+                        kind: 'backlog', name: split.words || column.name, count: shownCount,
                         note: t('backlog.stub', { file: resolveBacklogFile(config).file }),
                         openLabel: t('backlog.open'), onOpen: openBacklogModal
                     }));
@@ -96,12 +96,22 @@
         // tab order when the stub is showing (visually hidden), so keyboard focus is never dropped by the widening.
         // The whole rail is a tap target, not just its label: on a phone nothing hints that only the top is live. Buttons keep
         // their own handlers (the rail button, the column's +), so they are left alone here.
-        let railOpenedByKeyboard = false; // a click with detail 0 is Enter/Space: remember it so focus can come back to the rail
+        // Which rail ('backlog' or 'archive') was opened with Enter/Space (a click with detail 0), so closing its panel can put focus
+        // back on it: opening can re-render the board, which replaces the button the keyboard user pressed. Each panel's close
+        // clears it, so a rail opened by keyboard never pulls focus when the other panel closes later.
+        let railOpenedByKeyboard = null;
+        function restoreRailFocus(kind) {
+            const was = railOpenedByKeyboard;
+            railOpenedByKeyboard = null;
+            if (was !== kind) return;
+            const rail = document.querySelector(`.kanban-column.is-${kind} .rail-button`);
+            if (rail) rail.focus();
+        }
         function openRailOnTap(columnEl, onOpen) {
             columnEl.addEventListener('click', (e) => { if (!e.target.closest('button')) onOpen(); });
         }
 
-        function buildRailStub({ name, count, note, openLabel, onOpen }) {
+        function buildRailStub({ kind, name, count, note, openLabel, onOpen }) {
             const stub = document.createElement('div');
             stub.className = 'rail-stub';
             const rail = document.createElement('button');
@@ -112,7 +122,7 @@
             const railName = document.createElement('span');
             railName.className = 'rail-name'; railName.textContent = name;
             rail.append(railCount, railName);
-            rail.addEventListener('click', (e) => { railOpenedByKeyboard = e.detail === 0; onOpen(); });
+            rail.addEventListener('click', (e) => { railOpenedByKeyboard = e.detail === 0 ? kind : null; onOpen(); });
             const body = document.createElement('div');
             body.className = 'rail-stub-body';
             const big = document.createElement('div');
@@ -141,7 +151,7 @@
                 </div>
                 <div class="task-list"></div>`;
             columnEl.querySelector('.task-list').appendChild(buildRailStub({
-                name, count: archivedTasks.length, note: t('archive.stub'), openLabel: t('archive.open'), onOpen: openArchiveModal
+                kind: 'archive', name, count: archivedTasks.length, note: t('archive.stub'), openLabel: t('archive.open'), onOpen: openArchiveModal
             }));
             openRailOnTap(columnEl, openArchiveModal);
             // Last column: widening pushes it past the right edge, so scroll just enough to show it once it has grown.
