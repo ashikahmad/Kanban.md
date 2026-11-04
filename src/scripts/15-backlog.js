@@ -22,6 +22,7 @@
 
         function closeBacklogModal() {
             document.getElementById('backlogModal').classList.remove('active');
+            restoreRailFocus('backlog');
         }
 
         function renderBacklogList(term = '') {

@@ -129,6 +129,7 @@
 
         function closeArchiveModal() {
             document.getElementById('archiveModal').classList.remove('active');
+            restoreRailFocus('archive');
         }
 
         function renderArchiveList(searchTerm = '') {
