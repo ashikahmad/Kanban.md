@@ -32,6 +32,7 @@
 
             modalBody.innerHTML = `
                 <div class="detail">
+                    ${detailBackHtml()}
                     <div>
                         <div class="detail-id">${escapeHtml(task.id)}</div>
                         <h3>${escapeHtml(task.title)}</h3>
@@ -100,6 +101,7 @@
 
         function closeModal() {
             document.getElementById('taskModal').classList.remove('active');
+            detailStack = [];
             if (detailCtx.fromArchivePanel) {
                 document.getElementById('archiveModal').classList.add('active');
                 detailCtx.fromArchivePanel = false;

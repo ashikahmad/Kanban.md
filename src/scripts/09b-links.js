@@ -68,7 +68,27 @@
 
         function openLinkedTask(id) {
             const hit = linkIndex().get(id);
-            if (hit) showTaskDetail(hit.task, { archived: hit.where === 'archive', fromArchivePanel: detailCtx.fromArchivePanel });
+            if (!hit) return;
+            if (currentDetailTask && currentDetailTask.id !== id) detailStack = [...detailStack, { id: currentDetailTask.id, archived: detailCtx.archived }].slice(-20);
+            showTaskDetail(hit.task, { archived: hit.where === 'archive', fromArchivePanel: detailCtx.fromArchivePanel });
+        }
+
+        // "Back to TASK-001" above the detail, once a link has been followed.
+        function detailBackHtml() {
+            if (!detailStack.length) return '';
+            const id = detailStack[detailStack.length - 1].id;
+            return `<div><button type="button" class="link-action detail-back" data-detail-back>\u2190 ${escapeHtml(t('links.back', { id }))}</button></div>`;
+        }
+
+        // Back to the task the last link was followed from. One that has been deleted meanwhile is skipped.
+        function detailBack() {
+            while (detailStack.length) {
+                const { id, archived } = detailStack[detailStack.length - 1];
+                detailStack = detailStack.slice(0, -1);
+                const task = (archived ? archivedTasks : tasks).find((x) => x.id === id);
+                if (task) return showTaskDetail(task, { archived, fromArchivePanel: detailCtx.fromArchivePanel });
+            }
+            closeModal();
         }
 
         // One linked id with its state icon. Finished, archived and unknown ones are faded; the hover text has the
@@ -110,6 +130,7 @@
 
         // One delegated handler for every link on the page.
         document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-detail-back]')) { e.preventDefault(); e.stopPropagation(); detailBack(); return; }
             const link = e.target.closest('[data-task-link]');
             if (link) { e.preventDefault(); e.stopPropagation(); openLinkedTask(link.dataset.taskLink); return; }
             const promote = e.target.closest('[data-promote-blocker]');
