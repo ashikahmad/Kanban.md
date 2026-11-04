@@ -57,7 +57,7 @@ Every change is saved the moment you make it. There is no Save button.
 
 Archiving moves a task from `kanban.md` into `archive.md`. It is always a manual choice: nothing is archived on its own.
 
-- Open it from the burger menu → **Archives**, and search it with its own search box.
+- Open it from the burger menu → **Archives**, or click or tap the thin **Archives** rail at the right end of the board (shown when the archive has tasks). On a wide screen, hovering or focusing the rail widens it to show the count and where the tasks are kept; on a phone it stays thin. Cards cannot be dropped on it: use a card's **Archive** action. Search the archive with its own search box.
 - **Restore** puts a task back in its original column with its metadata intact.
 - You can organise the archive in sections (by month or by sprint, for example).
 
@@ -91,7 +91,7 @@ Add `?board=` and the address of a `kanban.md` to the app's address to open that
 
 **Housekeeping nudges.** A quiet bar under the header suggests keeping the board small: tasks finished 30+ days ago (button: *Archive done*), backlog tasks older than 90 days, a board over 200 tasks, or a backlog over 100 tasks (button: *Move backlog to its own file*). *Snooze 7 days* hides it, *Dismiss* hides it until the numbers change. It never acts on its own. Change the numbers, or turn it off, in the burger menu → **Housekeeping**.
 
-**Backlog file.** For a very large backlog, tasks in the backlog column can live in their own `backlog.md`, which keeps `kanban.md` small. The column becomes a stub with a count, and **Open backlog** shows a panel where you can search, send a task to any column, or archive it. Switch it on from the nudge or burger menu → **Backlog file**.
+**Backlog file.** For a very large backlog, tasks in the backlog column can live in their own `backlog.md`, which keeps `kanban.md` small. The column becomes a thin rail with its icon, a count and a vertical name. Click or tap the rail to open the backlog panel, where you can search, send a task to any column, or archive a task. On a wide screen, hovering or focusing the rail widens it to show the count and the file the tasks are kept in; on a phone it stays thin. Dragging a card over the rail widens it too, and dropping the card there moves it to the backlog. Switch it on from the nudge or burger menu → **Backlog file**.
 
 **Sharing a task.** The task details have a **Share** button. It shows a preview of exactly what would be shared (plain text for chat or mail, or the Markdown block that another board can import), with checkboxes to leave out notes and assignees, a **Copy** button, and **Share…** where your browser has a share sheet. The app sends nothing by itself.
 
