@@ -167,12 +167,25 @@
                 }).join('')}</div>
                 <input type="text" id="taskBlockedBy" list="blockedByList" placeholder="${escapeHtml(t('links.add'))}" autocomplete="off">
                 <datalist id="blockedByList">${options.map((e) => `<option value="${escapeHtml(e.task.id)}">${escapeHtml(e.task.title)}</option>`).join('')}</datalist>
-                <small>${escapeHtml(t('links.help'))}</small>`;
+                <small>${escapeHtml(t('links.help'))}</small>
+                <small id="taskBlockedByError" class="link-error" role="alert" hidden></small>`;
             const input = document.getElementById('taskBlockedBy');
+            const error = document.getElementById('taskBlockedByError');
+            const fail = (key, q) => { error.textContent = t(key, { q }); error.hidden = false; input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', 'taskBlockedByError'); };
+            // What was typed or picked: an id ("TASK-012", "12") or part of a title, when it names exactly one task.
             const add = () => {
-                const id = (parseTaskIds(input.value)[0]) || '';
-                if (id && !formBlockedBy.includes(id) && options.some((e) => e.task.id === id)) { formBlockedBy.push(id); renderBlockedByField(); document.getElementById('taskBlockedBy').focus(); }
+                const q = input.value.trim();
+                if (!q) return;
+                const id = /^\d+$/.test(q) ? 'TASK-' + q : q;
+                let hit = options.filter((e) => e.task.id === (parseTaskIds(id)[0] || ''));
+                if (!hit.length) hit = options.filter((e) => e.task.title.toLowerCase().includes(q.toLowerCase()));
+                if (!hit.length) return fail('links.noMatch', q);
+                if (hit.length > 1) return fail('links.severalMatches', q);
+                formBlockedBy.push(hit[0].task.id);
+                renderBlockedByField();
+                document.getElementById('taskBlockedBy').focus();
             };
+            input.addEventListener('input', () => { error.hidden = true; input.removeAttribute('aria-invalid'); input.removeAttribute('aria-describedby'); });
             input.addEventListener('change', add);
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); add(); } });
             wrap.querySelectorAll('[data-unblock]').forEach((b) => b.addEventListener('click', () => {

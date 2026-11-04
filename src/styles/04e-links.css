@@ -12,6 +12,7 @@
         .link-banner { margin-top: var(--s-2); padding: var(--s-2) var(--s-3); border-radius: var(--r-sm); border: 1px solid color-mix(in srgb, var(--c-warn) 40%, transparent); background: color-mix(in srgb, var(--c-warn) 10%, transparent); color: var(--c-text); font-size: var(--fs-sm); }
         .link-action { border: 0; background: none; padding: 0; margin-left: var(--s-1); color: var(--c-accent); font: inherit; cursor: pointer; }
         .link-action:hover { text-decoration: underline; }
+        .link-error { display: block; color: var(--c-danger); margin-top: var(--s-1); }
         .detail-back { display: flex; align-items: center; gap: var(--s-2); width: 100%; padding: var(--s-2) var(--s-3); border: 1px solid color-mix(in srgb, var(--c-accent) 30%, transparent); border-radius: var(--r-sm); background: color-mix(in srgb, var(--c-accent) 10%, transparent); color: var(--c-accent); font: inherit; text-align: left; cursor: pointer; }
         .detail-back:hover { background: color-mix(in srgb, var(--c-accent) 16%, transparent); }
         .detail-back-arrow { font-size: var(--fs-lg); line-height: 1; }
