@@ -76,8 +76,15 @@
         // "Back to TASK-001" above the detail, once a link has been followed.
         function detailBackHtml() {
             if (!detailStack.length) return '';
-            const id = detailStack[detailStack.length - 1].id;
-            return `<div><button type="button" class="link-action detail-back" data-detail-back>\u2190 ${escapeHtml(t('links.back', { id }))}</button></div>`;
+            const { id, archived } = detailStack[detailStack.length - 1];
+            const task = (archived ? archivedTasks : tasks).find((x) => x.id === id);
+            const st = task ? linkStateOf({ task, where: archived ? 'archive' : 'board' }) : null;
+            const state = st ? `${st.icon} ${st.label}`.trim() : '';
+            const name = task ? `${t('links.back', { id })}, ${task.title}, ${state}` : t('links.back', { id });
+            return `<button type="button" class="detail-back" data-detail-back title="${escapeHtml(name)}" aria-label="${escapeHtml(name)}">
+                <span class="detail-back-arrow" aria-hidden="true">\u2190</span>
+                <span class="detail-back-text"><span class="detail-back-title">${escapeHtml(task ? task.title : id)}</span><span class="detail-back-meta">${escapeHtml(state ? `${id} \u00B7 ${state}` : id)}</span></span>
+            </button>`;
         }
 
         // Back to the task the last link was followed from. One that has been deleted meanwhile is skipped.
@@ -86,7 +93,12 @@
                 const { id, archived } = detailStack[detailStack.length - 1];
                 detailStack = detailStack.slice(0, -1);
                 const task = (archived ? archivedTasks : tasks).find((x) => x.id === id);
-                if (task) return showTaskDetail(task, { archived, fromArchivePanel: detailCtx.fromArchivePanel });
+                if (task) {
+                    showTaskDetail(task, { archived, fromArchivePanel: detailCtx.fromArchivePanel });
+                    const heading = document.querySelector('#modalBody h3');
+                    if (heading) { heading.tabIndex = -1; heading.focus(); } // the redraw dropped focus with the button
+                    return;
+                }
             }
             closeModal();
         }
