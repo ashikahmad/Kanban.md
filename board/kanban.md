@@ -1,6 +1,6 @@
 # Kanban.md Project Board
 
-<!-- Config: Last Task ID: 32 -->
+<!-- Config: Last Task ID: 33 -->
 <!-- Format: v3 -->
 
 ## ⚙️ Configuration
@@ -390,4 +390,21 @@ Share a task as plain text or as a Markdown block another board can import.
 - [x] Preview with a real GFM parser, escaped and sanitised
 - [x] Raw / rendered toggle and options to leave out notes and assignees
 - [x] Copy and the system share sheet
+
+### TASK-033 | One way to create a task: drop the per-column +
+**Status**: planned  
+**Priority**: Low  
+**Category**: App  
+**Created**: 2026-11-04  
+**Tags**: #app #good-first-issue  
+
+The header's Task button already creates tasks and has a column picker, so the + in every column header duplicates it. Remove the per-column + and make the Task button always open on the first column.
+
+Today the Task button does not reliably open on the first column: the form's reset leaves the last column selected. After a column's + or editing a task, the next Task opens on that column (seen: In Review's +, then Task, saved the new task to review). The fix is to set the status explicitly in openTaskModal (src/scripts/07-columns-form.js) when no column is given.
+
+**Subtasks**:
+- [ ] Task button: always open on the first column (set taskStatus when no column is given)
+- [ ] Remove the column + (column-add-btn) from 08-board.js and its styles in 02-board.css, and the rail rules in 04b-backlog.css
+- [ ] Update test/tools/page-checks.js (the edit-controls-back check uses .column-add-btn)
+- [ ] Docs: check nothing mentions a column +
 
