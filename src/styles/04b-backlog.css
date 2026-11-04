@@ -1,6 +1,6 @@
 /* Rail columns: the backlog column when its tasks live in the backlog file, and the archive. A thin rail at rest; hover, focus
    or a drag over it widens it to a quiet stub that opens the panel. */
-.kanban-column.is-rail { flex: 0 0 var(--rail-w); min-width: 0; overflow: hidden; transition: flex-basis 0.18s ease; }
+.kanban-column.is-rail { flex: 0 0 var(--rail-w); min-width: 0; overflow: clip; /* clip, not hidden: hidden would make it a scroller and unstick the title row */ transition: flex-basis 0.18s ease; }
 .kanban-column.is-rail.is-open { flex-basis: var(--rail-open-w); }
 .is-rail { cursor: pointer; }
 .is-rail .column-header { justify-content: center; }
