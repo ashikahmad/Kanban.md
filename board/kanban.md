@@ -1,6 +1,6 @@
 # Kanban.md Project Board
 
-<!-- Config: Last Task ID: 32 -->
+<!-- Config: Last Task ID: 34 -->
 <!-- Format: v3 -->
 
 ## ⚙️ Configuration
@@ -390,4 +390,22 @@ Share a task as plain text or as a Markdown block another board can import.
 - [x] Preview with a real GFM parser, escaped and sanitised
 - [x] Raw / rendered toggle and options to leave out notes and assignees
 - [x] Copy and the system share sheet
+
+### TASK-033 | Task links: Blocked by
+**Status**: in-progress  
+**Priority**: Medium  
+**Category**: Format  
+**Created**: 2026-11-03  
+**Tags**: #app #cli #mcp #format  
+
+A task can list the tasks it waits on (**Blocked by**: TASK-007, TASK-012). Only that direction is stored; what a task blocks is derived. The card shows a lock with the number of blockers still open; the details list both directions and link to them; a TASK-012 in a description becomes a link. A blocker in the backlog file counts as open and can be moved to the board from the details. Advice only: nothing is enforced, and there are no link types, graph or auto-status changes on purpose (that is where a tracker is the better tool). Older versions read the line as description text.
+
+### TASK-034 | Revisit the Dependencies section
+**Status**: ideas  
+**Priority**: Low  
+**Category**: Format  
+**Created**: 2026-11-03  
+**Tags**: #format  
+
+The parser reserves **Links**, **Review** and **Dependencies** as sections that are kept verbatim and cannot be edited (core/board.js, core/patch.js; the page reports them as unsupported). Nothing reads them and the format has no spec for them; they exist so hand-written or imported sections survive the v3 migration. With **Blocked by** now the real way to link tasks, decide: keep the preserved sections as they are, make them editable (and define a format), or drop the support. Questions to answer: do any real boards use them, what would editing look like, and does dropping them risk losing text on old files.
 

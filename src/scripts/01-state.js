@@ -9,6 +9,9 @@
         let currentDetailTask = null;
         let formSubtasks = [];
         let archivedTasks = [];
-        let wasArchiveModalActive = false;
+        // How the open detail view was reached: an archived task is read-only, and when it was opened from the
+        // archive panel (hidden behind it) closing it brings that panel back.
+        let detailCtx = { archived: false, fromArchivePanel: false };
+        let detailStack = []; // tasks left behind by following links in the detail view, newest last: [{ id, archived }]
         let loadedFormatVersion = 3; // format of the loaded kanban.md: 1 legacy sections, 2 joined metadata lines, 3 one field per line (current)
         let loadedArchiveVersion = 3; // same, for the loaded archive.md

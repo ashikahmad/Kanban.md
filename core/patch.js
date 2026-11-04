@@ -9,6 +9,7 @@ import { splitLines, stripEol, lineEol, detectEol, toEol } from './text.js';
 import { generateBoard, generateTaskBlock, FIELD_BREAK } from './board.js';
 import { formatHousekeepingSpec } from './housekeeping-spec.js';
 import { formatBacklogFileSpec } from './backlog-spec.js';
+import { BLOCKED_LABEL } from './links.js';
 
 export class Doc {
     constructor(text) {
@@ -23,12 +24,12 @@ export class Doc {
 export class Fallback extends Error {}
 
 const HEADER_RE = /^###\s+TASK-(\d+)\s*\|\s*(.+?)\s*$/;
-const META_LINE_RE = /^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/;
+const META_LINE_RE = new RegExp(`^\\*\\*(?:Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|${BLOCKED_LABEL})\\*\\*`);
 const STOP_RE = /^\*\*(Subtasks|Notes|Links|Review|Dependencies)\*\*/;
 // One metadata field per line, in this fixed order. [task key, label in the file]
 const FIELDS = [['status', 'Status'], ['order', 'Order'], ['priority', 'Priority'], ['category', 'Category'], ['assignees', 'Assigned'],
-    ['created', 'Created'], ['started', 'Started'], ['due', 'Due'], ['completed', 'Finished'], ['tags', 'Tags']];
-const FIELD_LABELS = FIELDS.map(([, l]) => l).join('|');
+    ['created', 'Created'], ['started', 'Started'], ['due', 'Due'], ['completed', 'Finished'], ['tags', 'Tags'], ['blockedBy', 'Blocked by']];
+const FIELD_LABELS = FIELDS.map(([, l]) => (l === 'Blocked by' ? BLOCKED_LABEL : l)).join('|');
 const FIELD_LINE = new RegExp(`^(\\s*\\*\\*(${FIELD_LABELS})\\*\\*\\s*:[ \\t]*)(.*)$`);
 const taskId = (digits) => 'TASK-' + digits.padStart(3, '0');
 const isBlank = (line) => stripEol(line).trim() === '';
@@ -148,6 +149,7 @@ export function setTitle(doc, loc, title) {
 export function fieldText(key, value) {
     if (key === 'assignees') return value.length ? value.join(', ') : null;
     if (key === 'tags') return value.length ? value.join(' ') : null;
+    if (key === 'blockedBy') return value && value.length ? value.join(', ') : null;
     if (key === 'order') return value === null || value === undefined ? null : String(value);
     return value ? String(value) : null;
 }

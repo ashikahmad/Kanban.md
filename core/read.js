@@ -12,11 +12,12 @@ import { BoardError, etagOf } from './text.js';
 import { Doc, blocksOf } from './patch.js';
 import { localToday, dayNumber } from './dates.js';
 import { getHousekeeping } from './housekeeping.js';
+import { indexTasks, blockersOf, blockedByThis } from './links.js';
 import { resolveHousekeeping } from './housekeeping-spec.js';
 
 export { localToday };
 
-export const TASK_VIEW_FIELDS = ['id', 'title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due',
+export const TASK_VIEW_FIELDS = ['id', 'title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'blockedBy', 'openBlockers', 'blocks', 'created', 'started', 'due',
     'completed', 'description', 'subtasks', 'notes', 'extra', 'progress', 'etag'];
 const SUMMARY_FIELDS = ['id', 'title', 'status', 'priority', 'assignees', 'due', 'tags'];
 const MAX_LIMIT = 500, DEFAULT_LIMIT = 50, STATS_LIST_CAP = 20;
@@ -47,6 +48,13 @@ function load(ws) {
     // The backlog file's tasks, when one is configured. `live` is every task still in play (board + backlog).
     const bf = resolveBacklogFile(bp.config);
     const kp = bf && typeof ws.backlog === 'string' ? parseBacklog(ws.backlog, bp.config.columns, bf.column) : { tasks: [] };
+    // Derived link fields, readable like any other: `openBlockers` (blockedBy ids that are not finished yet) and
+    // `blocks` (the tasks that name this one). Nothing of this is stored.
+    const byId = indexTasks({ board: bp.tasks, backlog: kp.tasks, archive: ap.tasks });
+    for (const { task } of byId.values()) {
+        task.openBlockers = blockersOf(task, byId, bp.config.columns).open.map((e) => e.task.id);
+        task.blocks = blockedByThis(task.id, byId).map((e) => e.task.id);
+    }
     return { bp, ap, kp, bf, live: [...bp.tasks, ...kp.tasks], ws };
 }
 

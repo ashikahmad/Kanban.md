@@ -7,7 +7,7 @@
 // anything is returned the patched text is re-parsed and must equal the expected state exactly;
 // otherwise nothing is written and a verify_failed error is raised. The text and the state are
 // computed separately on purpose: that is what makes the verify step meaningful.
-import { parseBoard, parseArchive, parseBacklog, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks } from './board.js';
+import { parseBoard, parseArchive, parseBacklog, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks, parseTaskIds } from './board.js';
 import { BoardError, firstDifference, etagOf, stripEol, toEol } from './text.js';
 import { CURRENT_VERSION } from './migrate.js';
 import { normalizeHousekeeping, formatHousekeepingSpec } from './housekeeping-spec.js';
@@ -16,7 +16,7 @@ import * as P from './patch.js';
 
 export const DEFAULT_ARCHIVE_STRINGS = { title: '# Task Archive', desc: '> Archived tasks', section: '## ✅ Archives' };
 export const DEFAULT_BACKLOG_STRINGS = { title: '# Backlog', desc: '> Parked tasks, kept out of the board file. A task is here exactly while its status is the backlog column.', section: '## 📥 Backlog' };
-export const TASK_FIELDS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
+export const TASK_FIELDS = ['title', 'status', 'order', 'priority', 'category', 'assignees', 'tags', 'blockedBy', 'created', 'started', 'due', 'completed', 'description', 'subtasks', 'notes'];
 export const OP_TYPES = ['createTask', 'updateTask', 'moveTask', 'sortTasks', 'archiveTasks', 'setHousekeeping', 'setBacklogFile', 'toggleSubtask', 'addSubtask', 'appendNote', 'archiveTask', 'restoreTask', 'deleteTask', 'setConfigList', 'setColumns'];
 const CONFIG_LISTS = ['categories', 'users', 'priorities', 'tags'];
 
@@ -87,6 +87,12 @@ export function normalizeFields(input, config, { partial }) {
         for (const t of tags) if (!/^#[\w-]+$/.test(t)) fail('invalid_tag', `Invalid tag "${t}"`, { hint: 'Tags are letters, digits, "_" and "-".' });
         out.tags = [...new Set(tags)];
     }
+    if (has('blockedBy')) {
+        const raw = Array.isArray(input.blockedBy) ? input.blockedBy : isStr(input.blockedBy) ? input.blockedBy.split(/[\s,]+/) : fail('invalid_field', 'blockedBy must be an array or a comma separated string');
+        const ids = raw.map((x) => oneLine(x, 'blockedBy')).filter(Boolean);
+        for (const id of ids) if (!/^(?:TASK-)?\d+$/i.test(id)) fail('invalid_field', `Invalid task id "${id}" in blockedBy`, { hint: 'Ids look like TASK-014.' });
+        out.blockedBy = parseTaskIds(ids.map((i) => (/^\d+$/.test(i) ? 'TASK-' + i : i)).join(' '));
+    }
     for (const key of ['created', 'started', 'due', 'completed']) {
         if (!has(key)) continue;
         const v = oneLine(input[key], key);
@@ -98,7 +104,7 @@ export function normalizeFields(input, config, { partial }) {
         const lines = input.description.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         for (const l of lines) {
             if (/^#{1,6}\s/.test(l)) fail('invalid_description', 'description must not contain markdown headings', { hint: `Offending line: "${l}"` });
-            if (/^\*\*(Status|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Subtasks|Notes|Links|Review|Dependencies)\*\*/.test(l) || /\*\*Notes\*\*:\s*$/.test(l)) {
+            if (/^\*\*(Status|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Blocked by|Subtasks|Notes|Links|Review|Dependencies)\*\*/.test(l) || /\*\*Notes\*\*:\s*$/.test(l)) {
                 fail('invalid_description', 'description must not start a line with a field or section label', { hint: `Offending line: "${l}"` });
             }
         }
@@ -222,6 +228,17 @@ function needArchiveMigration(ctx) {
     fail('needs_migration', `archive.md uses format v${ctx.archiveVersion}; edits need v${CURRENT_VERSION}`, { hint: 'Run `kanbanmd migrate`, or open the board in the app.' });
 }
 
+// Every id in a **Blocked by** list must name a task (board, backlog or archive), and a task cannot wait on
+// itself. A cycle is allowed (the page only warns about it), and a blocker deleted later just stops counting.
+function checkBlockers(ctx, ids, selfId, current = []) {
+    const known = new Set([...ctx.state.tasks, ...ctx.state.backlog, ...ctx.state.archive].map((t) => t.id));
+    for (const id of ids) {
+        if (id === selfId) fail('invalid_field', `${id} cannot be blocked by itself`);
+        if (current.includes(id)) continue; // already there (maybe deleted since): keeping it is not a new claim
+        if (!known.has(id)) fail('unknown_task', `blockedBy names ${id}, which does not exist`, { hint: 'Ids look like TASK-014.' });
+    }
+}
+
 function findTask(ctx, id) {
     const norm = /^TASK-\d+$/i.test(id || '') ? 'TASK-' + id.slice(5).padStart(3, '0') : id;
     const inBoard = ctx.state.tasks.find((t) => t.id === norm);
@@ -257,7 +274,7 @@ function patchFields(ctx, found, before, after) {
     const loc = () => locate(ctx, found);
     try {
         if (before.title !== after.title) P.setTitle(doc, loc(), after.title);
-        for (const key of ['status', 'order', 'priority', 'category', 'assignees', 'created', 'started', 'due', 'completed', 'tags']) {
+        for (const key of ['status', 'order', 'priority', 'category', 'assignees', 'created', 'started', 'due', 'completed', 'tags', 'blockedBy']) {
             if (!same(before[key], after[key])) P.setField(doc, loc(), key, after[key]);
         }
         if (before.description !== after.description) P.setDescription(doc, loc(), after.description);
@@ -301,9 +318,10 @@ function maxId(ctx) {
 const OPS = {
     createTask(ctx, op, env) {
         const f = normalizeFields(op.task || fail('missing_field', 'createTask needs a "task" object'), ctx.state.config, { partial: false });
+        if (f.blockedBy) checkBlockers(ctx, f.blockedBy, null);
         const task = {
             id: '', title: f.title, status: f.status || ctx.state.config.columns[0].id,
-            priority: f.priority || '', category: f.category || '', assignees: f.assignees || [], tags: f.tags || [],
+            priority: f.priority || '', category: f.category || '', assignees: f.assignees || [], tags: f.tags || [], blockedBy: f.blockedBy || [],
             created: f.created || env.today(), started: f.started || '', due: f.due || '', completed: f.completed || '',
             description: f.description || '', subtasks: f.subtasks || [], notes: f.notes || '', extra: '',
             order: f.order === undefined ? null : f.order,
@@ -326,6 +344,7 @@ const OPS = {
         const found = findTask(ctx, op.id);
         checkEtag(ctx, found, op);
         const patch = normalizeFields(op.set || fail('missing_field', 'updateTask needs a "set" object'), ctx.state.config, { partial: true });
+        if (patch.blockedBy) checkBlockers(ctx, patch.blockedBy, found.task.id, found.task.blockedBy || []);
         const before = clone(found.task);
         if (patch.notes !== undefined) patch.notes = patch.notes.replace(/\n/g, found.doc.eol);
         const after = Object.assign(found.task, patch);

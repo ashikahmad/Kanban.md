@@ -25,6 +25,7 @@ Every task has an auto-generated ID (`TASK-042`) and a title. Everything else is
 - **Category**: one value from your own list.
 - **Assigned**: one or more users (`@alice`, `@bob`).
 - **Tags**: any number (`#bug`, `#feature`).
+- **Blocked by**: the tasks this one waits on. A card shows a lock and the number of those still open (hidden once they are all in the last column or archived). A task in the backlog file counts as open; the details offer a **Move to board** button for it. The details list the blockers and what the task blocks as linked ids, each with its column's icon (finished, archived and unknown ones are faded; hover for the title and column). A `TASK-012` written in a description or note links to that task, archived ones included, which open read-only. Nothing is enforced: a blocked card can still be moved.
 - **Dates**: created, started, due and finished.
 - **Description**: free text with Markdown.
 - **Subtasks**: add, edit, delete and tick off in place. A progress bar and a counter ("3/5 subtasks") show where you are.

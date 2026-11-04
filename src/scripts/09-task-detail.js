@@ -1,4 +1,5 @@
-        function showTaskDetail(task) {
+        function showTaskDetail(task, opts = {}) {
+            detailCtx = { archived: !!opts.archived, fromArchivePanel: !!opts.fromArchivePanel };
             currentDetailTask = task;
             const actions = document.getElementById('taskModalActions');
             const modal = document.getElementById('taskModal');
@@ -8,10 +9,9 @@
             let actionsHtml = '';
 
             // If coming from the archiveModal, hide: archive, edit, and delete buttons
-            wasArchiveModalActive = archiveModal.classList.contains('active');
             const shareBtn = `<button class="btn btn-secondary" onclick="openShareDialog()">${t('share.button')}</button>`;
-            const editable = !readOnly() && !wasArchiveModalActive;
-            if (wasArchiveModalActive) archiveModal.classList.remove('active');
+            const editable = !readOnly() && !detailCtx.archived;
+            if (detailCtx.fromArchivePanel) archiveModal.classList.remove('active');
             if (!editable) {
                 actionsHtml = `<div class="push"></div>${shareBtn}`; // an archived task, or a board from the web: sharing is still fine
             }
@@ -32,6 +32,7 @@
 
             modalBody.innerHTML = `
                 <div class="detail">
+                    ${detailBackHtml()}
                     <div>
                         <div class="detail-id">${escapeHtml(task.id)}</div>
                         <h3>${escapeHtml(task.title)}</h3>
@@ -54,6 +55,8 @@
                             <div class="detail-tags">${task.tags.map(tag => `<span>${escapeHtml(tag)}</span>`).join('')}</div>
                         </div>
                     ` : ''}
+
+                    ${linksSectionHtml(task, editable)}
 
                     ${task.description ? `
                         <div>
@@ -98,9 +101,10 @@
 
         function closeModal() {
             document.getElementById('taskModal').classList.remove('active');
-            if (wasArchiveModalActive) {
+            detailStack = [];
+            if (detailCtx.fromArchivePanel) {
                 document.getElementById('archiveModal').classList.add('active');
-                wasArchiveModalActive = false; // Reset for next time
+                detailCtx.fromArchivePanel = false;
             }
         }
 
@@ -119,7 +123,7 @@
             if (task && task.subtasks[subtaskIdx]) {
                 task.subtasks[subtaskIdx].completed = !task.subtasks[subtaskIdx].completed;
                 currentDetailTask = task; // Update reference
-                showTaskDetail(task); // Refresh display
+                showTaskDetail(task, detailCtx); // Refresh display
                 renderKanban(); // Update card progress
                 autoSave();
             }
@@ -131,7 +135,7 @@
             if (task && confirm(t('confirm.deleteSubtask'))) {
                 task.subtasks.splice(subtaskIdx, 1);
                 currentDetailTask = task;
-                showTaskDetail(task);
+                showTaskDetail(task, detailCtx);
                 renderKanban();
                 autoSave();
             }
@@ -148,7 +152,7 @@
                 task.subtasks.push({ completed: false, text });
                 currentDetailTask = task;
                 input.value = '';
-                showTaskDetail(task);
+                showTaskDetail(task, detailCtx);
                 renderKanban();
                 autoSave();
             }
@@ -163,7 +167,7 @@
             if (newText !== null && newText.trim()) {
                 task.subtasks[subtaskIdx].text = newText.trim();
                 currentDetailTask = task;
-                showTaskDetail(task);
+                showTaskDetail(task, detailCtx);
                 renderKanban();
                 autoSave();
             }
@@ -208,6 +212,7 @@
                     task.completed = completed;
                     task.description = description;
                     task.subtasks = formSubtasks;
+                    task.blockedBy = [...formBlockedBy];
                     task.notes = notes;
                     showNotification(t('notif.taskEdited', {id: taskId}), 'success');
                 }
@@ -225,6 +230,7 @@
                     category,
                     assignees,
                     tags,
+                    blockedBy: [...formBlockedBy],
                     created: created || new Date().toISOString().split('T')[0],
                     started: started || '',
                     due,

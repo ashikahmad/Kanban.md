@@ -13,13 +13,16 @@ const pairs = JSON.parse(readFileSync(new URL('./pairs.json', import.meta.url), 
 const read = (dir, name) => readFileSync(new URL(`./${dir}/${name}`, import.meta.url), 'utf8');
 const readJson = (dir, name) => JSON.parse(read(dir, name));
 // The golden files come from the legacy code, which predates the optional `order` key; an unset
-// key (null) is the only difference, so drop it before comparing.
+// key (null) is the only difference, so drop it before comparing. Same for the later `blockedBy` list (empty).
 const viaJson = (v) => {
   const j = JSON.parse(JSON.stringify(v));
   delete j.formatVersion; // added after the golden files were captured
   if (j.config && j.config.housekeeping === null) delete j.config.housekeeping; // ditto (optional policy line)
   if (j.config && j.config.backlogFile === null) delete j.config.backlogFile;
-  for (const t of j.tasks || []) if (t.order === null) delete t.order;
+  for (const t of j.tasks || []) {
+    if (t.order === null) delete t.order;
+    if (Array.isArray(t.blockedBy) && !t.blockedBy.length) delete t.blockedBy;
+  }
   return j;
 };
 

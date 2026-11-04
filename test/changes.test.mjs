@@ -184,7 +184,7 @@ function mutate(R, state) {
       if (chance(0.3)) t.subtasks = Array.from({ length: Math.floor(R() * 4) }, () => ({ completed: chance(0.4), text: pick(WORDS) }));
       if (chance(0.3)) t.notes = chance(0.3) ? '' : `${pick(WORDS)} note`;
     } else if (r < 0.5) {
-      s.tasks.push({ id: 'TASK-' + String(maxId + 1 + i).padStart(3, '0'), title: `new ${pick(WORDS)}`, status: pick(cols()), order: null, priority: '', category: '', assignees: [], tags: [], created: '2026-10-21', started: '', due: '', completed: '', description: chance(0.5) ? pick(WORDS) : '', subtasks: [], notes: '', extra: '' });
+      s.tasks.push({ id: 'TASK-' + String(maxId + 1 + i).padStart(3, '0'), title: `new ${pick(WORDS)}`, status: pick(cols()), order: null, priority: '', category: '', assignees: [], tags: [], blockedBy: [], created: '2026-10-21', started: '', due: '', completed: '', description: chance(0.5) ? pick(WORDS) : '', subtasks: [], notes: '', extra: '' });
     } else if (r < 0.6 && t) s.tasks.splice(s.tasks.indexOf(t), 1);
     else if (r < 0.7 && t) { s.tasks.splice(s.tasks.indexOf(t), 1); s.archive.push(t); }
     else if (r < 0.78 && s.archive.length) s.tasks.push(s.archive.splice(Math.floor(R() * s.archive.length), 1)[0]);

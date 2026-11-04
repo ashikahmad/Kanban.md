@@ -27,7 +27,8 @@ export function taskToPlainText(task, columns = [], { notes = true, assignees = 
     return out.join('\n') + '\n';
 }
 
-// The task as a board block (format v3), with the board-specific parts dropped: no manual order key.
+// The task as a board block (format v3), with the board-specific parts dropped: no manual order key and no
+// **Blocked by** (ids mean nothing outside the board they came from).
 export function taskToMarkdown(task, { notes = true, assignees = true } = {}) {
     return lf(generateTaskBlock({
         ...task,
@@ -35,5 +36,6 @@ export function taskToMarkdown(task, { notes = true, assignees = true } = {}) {
         notes: notes ? task.notes : '',
         extra: notes ? task.extra : '',
         order: null,
+        blockedBy: [],
     })).trimEnd() + '\n';
 }

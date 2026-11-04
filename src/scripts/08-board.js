@@ -72,8 +72,9 @@
                     columnEl.addEventListener('dragleave', () => { depth = Math.max(0, depth - 1); if (!depth) columnEl.classList.remove('is-open'); });
                     columnEl.addEventListener('drop', () => { depth = 0; columnEl.classList.remove('is-open'); });
                 } else {
+                    const byId = linkIndex();
                     columnTasks.forEach(task => {
-                        const taskEl = createTaskElement(task);
+                        const taskEl = createTaskElement(task, byId);
                         taskList.appendChild(taskEl);
                     });
                 }
@@ -187,7 +188,7 @@
         }
 
         // Create task element
-        function createTaskElement(task) {
+        function createTaskElement(task, byId = linkIndex()) {
             const taskEl = document.createElement('div');
             taskEl.className = 'task-card';
             if (hkState.staleIds.has(task.id)) { taskEl.classList.add('hk-stale'); taskEl.title = t('hk.staleCard'); }
@@ -211,6 +212,7 @@
                     </div>
                 </div>` : '';
 
+            const blockedBadge = blockedBadgeHtml(task, byId);
             const dueLabel = task.due
                 ? `<span class="badge badge-due${due ? ` badge-due--${due}` : ''}" title="${escapeHtml(t(due === 'overdue' ? 'tooltip.overdue' : (due === 'soon' ? 'tooltip.dueSoon' : 'meta.due')))}">${escapeHtml(task.due)}</span>`
                 : '';
@@ -224,6 +226,7 @@
                 <div class="task-title">${escapeHtml(task.title)}</div>
                 ${task.description ? `<div class="task-description">${markdownToHtml(task.description)}</div>` : ''}
                 <div class="task-meta">
+                    ${blockedBadge}
                     ${dueLabel}
                     ${task.category ? `<span class="badge" data-filter="category" data-filter-value="${escapeHtml(task.category)}" title="${t('tooltip.filterByCategory')}">${escapeHtml(task.category)}</span>` : ''}
                     ${task.assignees.map(a => {

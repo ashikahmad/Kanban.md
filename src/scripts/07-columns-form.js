@@ -105,6 +105,7 @@
                 document.getElementById('taskDescription').value = task.description || '';
                 document.getElementById('taskNotes').value = task.notes || '';
                 formSubtasks = JSON.parse(JSON.stringify(task.subtasks || []));
+                formBlockedBy = [...(task.blockedBy || [])];
             } else {
                 form.reset();
                 document.getElementById('taskEditId').value = '';
@@ -112,9 +113,11 @@
                     ddSetValue('taskStatus', defaultColumnId, true);
                 }
                 formSubtasks = [];
+                formBlockedBy = [];
             }
 
             renderFormSubtasks();
+            renderBlockedByField();
             modal.classList.add('active');
         }
 
@@ -122,6 +125,7 @@
             document.getElementById('newTaskModal').classList.remove('active');
             document.getElementById('newTaskForm').reset();
             formSubtasks = [];
+            formBlockedBy = [];
             isEditMode = false;
         }
 
