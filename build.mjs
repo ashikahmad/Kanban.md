@@ -27,7 +27,7 @@ const css = concatDir('src/styles', '.css');
 // already owns names such as dueStatus, so binding everything would collide.
 const PAGE_CORE_EXPORTS = [
   'parseBoard', 'parseArchive', 'generateBoard', 'generateArchive', 'generateTaskBlock', 'normalizeConfig',
-  'createDefaultBoardContent', 'createDefaultArchiveContent', 'orderedTasks',
+  'createDefaultBoardContent', 'createDefaultArchiveContent', 'orderedTasks', 'hasSourceComment',
   'diffToOps', 'applyOps', 'deepEqual',
   'getHousekeeping', 'archiveCandidates', 'staleBacklogIds', 'parseHousekeepingSpec', 'formatHousekeepingSpec',
   'resolveBacklogFile', 'parseBacklog', 'backlogFileNameOf', 'DEFAULT_BACKLOG_STRINGS',

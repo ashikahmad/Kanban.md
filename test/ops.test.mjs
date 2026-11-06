@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { applyOp } from '../core/ops.js';
 import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
-import { parseBoard, parseArchive, orderedTasks } from '../core/board.js';
+import { parseBoard, parseArchive, orderedTasks, hasSourceComment } from '../core/board.js';
 import { BoardError, diffStats, diffLines, splitLines } from '../core/text.js';
 import { Doc, blocksOf } from '../core/patch.js';
 
@@ -146,6 +146,8 @@ test('archiving with no archive.md creates one marked v3', () => {
   const out = apply({ board: fx('demo.kanban'), archive: null }, { type: 'archiveTask', id: 'TASK-003' });
   assert.match(out.archive, /<!-- Format: v3 -->/);
   assert.equal(parseArchive(out.archive, parseBoard(out.board).config.columns).tasks[0].id, 'TASK-003');
+  assert.equal(hasSourceComment(out.archive), true, 'a new archive.md says where it comes from');
+  assert.equal(hasSourceComment(out.board), hasSourceComment(fx('demo.kanban')), 'the board is not touched');
 });
 
 test('an unmarked, empty legacy archive gets the v3 marker', () => {

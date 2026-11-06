@@ -166,7 +166,7 @@ function backlogDoc(ctx) {
             const stray = parseBacklog(ctx.strayBacklog, ctx.state.config.columns, 'backlog');
             if (stray.tasks.length) fail('backlog_file_exists', `${ctx.backlogName} already exists and holds ${stray.tasks.length} task(s)`, { hint: 'Move or rename that file first; it is not touched.' });
         }
-        ctx.backlog = new P.Doc(toEol(generateArchive([], DEFAULT_BACKLOG_STRINGS), ctx.board.eol));
+        ctx.backlog = new P.Doc(toEol(generateArchive([], DEFAULT_BACKLOG_STRINGS, { sourceComment: true }), ctx.board.eol));
     }
     return ctx.backlog;
 }
@@ -212,7 +212,7 @@ export function orderKinds(kinds, moves) {
 
 function archiveDoc(ctx) {
     if (!ctx.archive) {
-        ctx.archive = new P.Doc(toEol(generateArchive([], DEFAULT_ARCHIVE_STRINGS), ctx.board.eol)); // same line endings as the board
+        ctx.archive = new P.Doc(toEol(generateArchive([], DEFAULT_ARCHIVE_STRINGS, { sourceComment: true }), ctx.board.eol)); // same line endings as the board
         ctx.archiveVersion = CURRENT_VERSION;
         return ctx.archive;
     }

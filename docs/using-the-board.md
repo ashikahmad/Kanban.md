@@ -66,7 +66,7 @@ Archiving moves a task from `kanban.md` into `archive.md`. It is always a manual
 ![Project switcher](images/multi-project.jpg)
 *The project switcher, with custom names.*
 
-The app remembers your last 10 project folders. Switch between them from the dropdown in the top bar. The last project reopens automatically, and you never need to pick the folder again (the browser may ask you to confirm access). Rename a project from the burger menu → **Rename project**.
+The app remembers your last 10 project folders. Switch between them from the dropdown in the top bar. The last project reopens automatically, and you never need to pick the folder again (the browser may ask you to confirm access). Rename a project from the burger menu → **Rename project**. The bottom of the burger menu links to the Kanban.md website and to its source on GitHub.
 
 ## Live editing with other tools
 

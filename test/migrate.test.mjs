@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, mkdtempSync, readdirSync, existsSync } fro
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { parseBoard, parseArchive, generateBoard } from '../core/board.js';
+import { parseBoard, parseArchive, generateBoard, SOURCE_COMMENT, hasSourceComment } from '../core/board.js';
 import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
 import { migrateProject, mutate } from '../io/node-fs.js';
 import { BoardError } from '../core/text.js';
@@ -80,9 +80,11 @@ for (const [archive, board] of Object.entries(pairs.archives)) {
     const out = migrateArchiveText(src, cols);
     assert.equal(parseArchive(out.text, cols).formatVersion, 3);
     assert.deepEqual(parseArchive(out.text, cols).tasks, norm(parseArchive(src, cols).tasks, out.text.includes('\r\n') ? '\r\n' : '\n'));
-    const headingBefore = src.split(/^###\s+TASK-/m)[0].split('\n').filter((l) => l.trim() && !/Format:/.test(l));
-    const headingAfter = out.text.split(/^###\s+TASK-/m)[0].split('\n').filter((l) => l.trim() && !/Format:/.test(l));
+    const own = (l) => l.trim() && !/Format:/.test(l) && !/Kanban\.md board/.test(l);
+    const headingBefore = src.split(/^###\s+TASK-/m)[0].split('\n').filter(own);
+    const headingAfter = out.text.split(/^###\s+TASK-/m)[0].split('\n').filter(own);
     assert.deepEqual(headingAfter, headingBefore);
+    assert.equal(out.text.split(SOURCE_COMMENT).length, 2, 'the source comment is added once');
     assert.equal(migrateArchiveText(out.text, cols).changed, false);
   });
 }
@@ -189,4 +191,22 @@ test('cli: migrate (dry run, real run, and repeat)', () => {
   assert.equal(r.changed, true);
   assert.equal(run('migrate').changed, false);
   assert.equal(run('move', 'TASK-004', 'done').ok, true);
+});
+
+test('migration adds the source comment once and never twice', () => {
+  const board = migrateBoardText(raw('examples-v1.kanban')).text;
+  assert.equal(board.split(SOURCE_COMMENT).length, 2);
+  assert.equal(hasSourceComment(board), true);
+  // An older archive that already has it keeps one.
+  const cols = parseBoard(raw('examples-v1.kanban')).config.columns;
+  const src = raw('examples-v1.archive').replace(/\n/, `\n${SOURCE_COMMENT}\n`);
+  assert.equal(migrateArchiveText(src, cols).text.split(SOURCE_COMMENT).length, 2);
+});
+
+test('a v3 board without the source comment is left as it is', () => {
+  const v3 = migrateBoardText(raw('examples-v1.kanban')).text.split(/\r?\n/).filter((l) => l !== SOURCE_COMMENT).join('\n');
+  assert.equal(v3.includes(SOURCE_COMMENT), false);
+  const again = migrateBoardText(v3);
+  assert.equal(again.changed, false);
+  assert.equal(again.text.includes(SOURCE_COMMENT), false);
 });

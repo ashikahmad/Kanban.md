@@ -158,21 +158,21 @@
 
         // Old behavior, kept as the fallback: rewrite the files from the page's state (also what the one-time
         // migration uses). Only called when the files have not changed since the base.
-        async function writeWholeBoard() {
-            const text = generateMarkdown();
+        async function writeWholeBoard(opts) {
+            const text = generateMarkdown(opts);
             await writeProjectFile('kanban.md', text);
             currentKanbanContent = text;
             return text;
         }
         async function writeWholeArchive() {
-            const text = generateArchive(archivedTasks, archiveStrings());
+            const text = generateArchive(archivedTasks, archiveStrings(), { sourceComment: currentArchiveText === null || hasSourceComment(currentArchiveText) }); // a new file gets it
             await writeProjectFile('archive.md', text);
             return text;
         }
         async function writeWholeBacklog() {
             const bc = resolveBacklogFile(config);
             if (!bc) return currentBacklogText;
-            const text = generateArchive(tasks.filter((x) => x.status === bc.column), DEFAULT_BACKLOG_STRINGS);
+            const text = generateArchive(tasks.filter((x) => x.status === bc.column), DEFAULT_BACKLOG_STRINGS, { sourceComment: currentBacklogText === null || hasSourceComment(currentBacklogText) });
             await writeProjectFile(bc.file, text);
             return text;
         }

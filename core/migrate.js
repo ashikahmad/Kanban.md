@@ -3,7 +3,7 @@
 // Accepts v1 (status by section) and v2 (joined metadata lines). The file is rewritten
 // canonically, and the result is only returned if re-parsing it gives exactly the same tasks and
 // configuration as the original: a migration that would lose or change anything is refused.
-import { parseBoard, parseArchive, generateBoard, generateTaskBlock, normalizeConfig } from './board.js';
+import { parseBoard, parseArchive, generateBoard, generateTaskBlock, normalizeConfig, SOURCE_COMMENT, hasSourceComment } from './board.js';
 import { BoardError, deepEqual, firstDifference, detectEol, toEol, splitLines, stripEol } from './text.js';
 
 export const CURRENT_VERSION = 3;
@@ -31,7 +31,7 @@ export function migrateBoardText(md) {
     assertTotalParse(md, before.tasks, 'kanban.md');
 
     const eol = detectEol(md);
-    const text = toEol(generateBoard({ config: before.config, tasks: before.tasks }), eol);
+    const text = toEol(generateBoard({ config: before.config, tasks: before.tasks }, { sourceComment: true }), eol);
 
     const after = parseBoard(text);
     const diff = firstDifference(
@@ -55,7 +55,8 @@ export function migrateArchiveText(md, columns) {
     if (firstTask < 0) firstTask = lines.length;
     const head = lines.slice(0, firstTask).filter((l) => !/<!--\s*Format:/i.test(l));
     if (!head.length) head.push('# Archive' + eol);
-    head.splice(1, 0, `<!-- Format: v${CURRENT_VERSION} -->` + eol);
+    const hadSource = hasSourceComment(md);
+    head.splice(1, 0, `<!-- Format: v${CURRENT_VERSION} -->` + eol, ...(hadSource ? [] : [SOURCE_COMMENT + eol]));
     while (head.length && stripEol(head[head.length - 1]).trim() === '') head.pop();
     const text = toEol(head.join('') + '\n\n' + before.tasks.map(generateTaskBlock).join(''), eol);
 

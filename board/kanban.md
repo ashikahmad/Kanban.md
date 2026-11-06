@@ -2,6 +2,7 @@
 
 <!-- Config: Last Task ID: 34 -->
 <!-- Format: v3 -->
+<!-- Kanban.md board. Format, rules and tools (app, CLI, MCP): https://github.com/ashikahmad/Kanban.md -->
 
 ## ⚙️ Configuration
 
