@@ -454,15 +454,29 @@ export function generateTaskBlock(task) {
     return md + `\n`; // one blank line between tasks, no ---
 }
 
+// One comment under the Format marker that says what the file is and where its rules and tools live, for an agent
+// or person who finds a board in a repository with nothing else to go on. It is optional: nothing reads it. Boards get
+// it when created or migrated; whole-file rewrites keep it only if the file already had it, so deleting it sticks.
+// (It cannot share the Format line: older readers accept only "<!-- Format: vN -->" there.)
+export const SOURCE_COMMENT = '<!-- Kanban.md board. Format, rules and tools (app, CLI, MCP): https://github.com/ashikahmad/Kanban.md -->';
+
+// Whether a board, archive or backlog file carries that comment above its first task.
+export function hasSourceComment(text) {
+    if (!text) return false;
+    const first = text.search(/^###\s+TASK-/m);
+    return /<!--\s*Kanban\.md board\b/i.test(first < 0 ? text : text.slice(0, first));
+}
+
 // Whole-board serializer: { config, tasks } -> kanban.md text.
 // The Format marker makes V2 detection unambiguous (vs a legacy column named "Tasks").
 // V2 is a single "## Tasks" section; each task carries its own **Status** (= its column) and its
 // order in the file is its rank within its column, so moving a task between columns is a
 // one-line **Status** edit.
-export function generateBoard({ config, tasks }) {
+// `sourceComment` writes SOURCE_COMMENT under the Format marker.
+export function generateBoard({ config, tasks }, { sourceComment = false } = {}) {
     const cfg = normalizeConfig(config);
     const boardTitle = (cfg.boardTitle && cfg.boardTitle.trim()) || 'Kanban Board';
-    let md = `# ${boardTitle}\n\n<!-- Config: Last Task ID: ${cfg.lastTaskId} -->\n<!-- Format: v3 -->\n\n`;
+    let md = `# ${boardTitle}\n\n<!-- Config: Last Task ID: ${cfg.lastTaskId} -->\n<!-- Format: v3 -->\n${sourceComment ? SOURCE_COMMENT + '\n' : ''}\n`;
 
     md += `## ⚙️ Configuration\n\n`;
     md += `**Columns**: ${cfg.columns.map(c => `${c.name} (${c.id})`).join(' | ')}\n\n`;
@@ -480,8 +494,8 @@ export function generateBoard({ config, tasks }) {
 }
 
 // archive.md text. `strings` carries the localized heading lines: { title, desc, section }.
-export function generateArchive(tasks, strings) {
-    let md = `${strings.title}\n<!-- Format: v3 -->\n\n${strings.desc}\n\n${strings.section}\n\n`;
+export function generateArchive(tasks, strings, { sourceComment = false } = {}) {
+    let md = `${strings.title}\n<!-- Format: v3 -->\n${sourceComment ? SOURCE_COMMENT + '\n' : ''}\n${strings.desc}\n\n${strings.section}\n\n`;
     tasks.forEach(task => { md += generateTaskBlock(task); });
     return md;
 }
@@ -492,6 +506,7 @@ export function createDefaultBoardContent() {
 
 <!-- Config: Last Task ID: 0 -->
 <!-- Format: v3 -->
+${SOURCE_COMMENT}
 
 ## ⚙️ Configuration
 
@@ -513,6 +528,7 @@ export function createDefaultBoardContent() {
 
 export function createDefaultArchiveContent(strings) {
     return `${strings.title}
+${SOURCE_COMMENT}
 
 ${strings.desc}
 

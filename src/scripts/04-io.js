@@ -29,7 +29,7 @@
                     // Only overwrite once the original is safely backed up — a failed backup must
                     // abort the migration, never leave the file rewritten without a recovery copy.
                     const fromVersion = loadedFormatVersion;
-                    if (await backupOriginal('kanban.md', currentKanbanContent, fromVersion) && await writeWholeBoard()) {
+                    if (await backupOriginal('kanban.md', currentKanbanContent, fromVersion) && await writeWholeBoard({ addSourceComment: true })) {
                         console.log(`Migrated kanban.md from v${fromVersion} to v3 (one metadata field per line)`);
                     } else {
                         console.warn('Skipped migration: backup or save failed. File left unchanged.');

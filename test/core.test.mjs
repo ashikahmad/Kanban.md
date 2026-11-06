@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import {
   parseBoard, parseArchive, generateBoard, generateArchive,
-  createDefaultBoardContent, createDefaultArchiveContent, normalizeConfig,
+  createDefaultBoardContent, createDefaultArchiveContent, normalizeConfig, SOURCE_COMMENT, hasSourceComment,
 } from '../core/board.js';
 
 const pairs = JSON.parse(readFileSync(new URL('./pairs.json', import.meta.url), 'utf8'));
@@ -65,8 +65,21 @@ test('default board content parses to a valid, empty v2 board', () => {
   assert.deepEqual(config.columns.map(c => c.id), ['todo', 'in-progress', 'in-review', 'done']);
 });
 
-test('default archive content is the three heading lines', () => {
-  assert.equal(createDefaultArchiveContent(archiveStrings), `${archiveStrings.title}\n\n${archiveStrings.desc}\n\n${archiveStrings.section}\n\n`);
+test('default archive content is the three heading lines and the source comment', () => {
+  assert.equal(createDefaultArchiveContent(archiveStrings), `${archiveStrings.title}\n${SOURCE_COMMENT}\n\n${archiveStrings.desc}\n\n${archiveStrings.section}\n\n`);
+});
+
+test('source comment: written only when asked, detected only above the first task', () => {
+  const board = { config: parseBoard(createDefaultBoardContent()).config, tasks: [] };
+  assert.equal(generateBoard(board).includes(SOURCE_COMMENT), false);
+  const withIt = generateBoard(board, { sourceComment: true });
+  assert.match(withIt, /<!-- Format: v3 -->\n<!-- Kanban\.md board\. /);
+  assert.equal(hasSourceComment(withIt), true);
+  assert.equal(parseBoard(withIt).formatVersion, 3); // its own line: the Format marker still reads
+  assert.equal(generateArchive([], archiveStrings, { sourceComment: true }).split(SOURCE_COMMENT).length, 2);
+  assert.equal(hasSourceComment(`# B\n\n## Tasks\n\n### TASK-001 | t\n**Status**: todo\n\n${SOURCE_COMMENT}\n`), false);
+  assert.equal(hasSourceComment(createDefaultBoardContent()), true);
+  assert.equal(hasSourceComment(null), false);
 });
 
 test('normalizeConfig does not mutate its input', () => {

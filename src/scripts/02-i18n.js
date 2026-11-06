@@ -15,6 +15,7 @@
                 'prompt.boardUrl': 'Address of a board (its kanban.md file or folder, or a GitHub link):',
                 'welcome.openUrl': 'Or open a board from a web address',
                 'header.home': 'Kanban.md website',
+                'header.source': 'Source on GitHub',
                 'header.newTask': 'Task',
                 'header.archives': 'Archives',
                 'header.columns': 'Columns',
@@ -290,6 +291,7 @@
                 'prompt.boardUrl': 'Adresse d\'un tableau (son fichier kanban.md ou son dossier, ou un lien GitHub) :',
                 'welcome.openUrl': 'Ou ouvrir un tableau depuis une adresse web',
                 'header.home': 'Site de Kanban.md',
+                'header.source': 'Code source sur GitHub',
                 'header.newTask': 'Tâche',
                 'header.archives': 'Archives',
                 'header.columns': 'Colonnes',
@@ -565,6 +567,7 @@
                 'prompt.boardUrl': 'Adresse eines Boards (seine kanban.md-Datei oder sein Ordner, oder ein GitHub-Link):',
                 'welcome.openUrl': 'Oder ein Board von einer Webadresse öffnen',
                 'header.home': 'Kanban.md-Website',
+                'header.source': 'Quellcode auf GitHub',
                 'header.newTask': 'Aufgabe',
                 'header.archives': 'Archiv',
                 'header.columns': 'Spalten',
@@ -753,6 +756,7 @@
                 'prompt.boardUrl': '看板地址（其 kanban.md 文件或文件夹，或 GitHub 链接）：',
                 'welcome.openUrl': '或从网址打开看板',
                 'header.home': 'Kanban.md 网站',
+                'header.source': 'GitHub 上的源代码',
                 'header.newTask': '任务',
                 'header.archives': '归档',
                 'header.columns': '列设置',
@@ -1101,6 +1105,7 @@
             document.querySelector('#selectFolderBtn .mi-label').textContent = t('header.folder');
             document.querySelector('#openUrlBtn .mi-label').textContent = t('header.openUrl');
             document.querySelector('#homeLink .mi-label').textContent = t('header.home');
+            document.querySelector('#sourceLink .mi-label').textContent = t('header.source');
             document.getElementById('newTaskBtn').textContent = t('header.newTask');
             document.querySelector('#archiveBtn .mi-label').textContent = t('header.archives');
             document.querySelector('#manageColsBtn .mi-label').textContent = t('header.columns');

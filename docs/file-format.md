@@ -11,6 +11,14 @@ your-project/
 
 The current format is **v3**, marked with `<!-- Format: v3 -->`. For the full field-by-field reference, see [`examples/README.md`](../examples/README.md) (currently written in French) and the sample files next to it.
 
+Under the format marker, a board usually carries one more comment that says what the file is and where its rules and tools live:
+
+```markdown
+<!-- Kanban.md board. Format, rules and tools (app, CLI, MCP): https://github.com/ashikahmad/Kanban.md -->
+```
+
+It is there for an agent or a person who comes across a board in a repository with nothing else to go on. Nothing reads it, so it is safe to delete. The app, the CLI and the MCP server write it when they create a file (`kanban.md`, `archive.md` or a backlog file) or migrate one to v3. Afterwards they keep it if it is there and never put it back once it is gone. Keep it on its own line: older versions read the format only from a line that is exactly `<!-- Format: vN -->`.
+
 ## `kanban.md`
 
 ```markdown
@@ -18,6 +26,7 @@ The current format is **v3**, marked with `<!-- Format: v3 -->`. For the full fi
 
 <!-- Config: Last Task ID: 42 -->
 <!-- Format: v3 -->
+<!-- Kanban.md board. Format, rules and tools (app, CLI, MCP): https://github.com/ashikahmad/Kanban.md -->
 
 ## ⚙️ Configuration
 
@@ -69,6 +78,7 @@ Task description...
 # Task Archive
 
 <!-- Format: v3 -->
+<!-- Kanban.md board. Format, rules and tools (app, CLI, MCP): https://github.com/ashikahmad/Kanban.md -->
 
 > Archived tasks
 
