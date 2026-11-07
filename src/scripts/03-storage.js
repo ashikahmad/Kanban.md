@@ -173,12 +173,7 @@
                         // Load the project
                         await loadKanbanFile();
 
-                        document.getElementById('welcomeScreen').style.display = 'none';
-                        document.getElementById('kanbanView').style.display = 'block';
-                        document.getElementById('filterBar').style.display = 'block';
-                        document.getElementById('newTaskBtn').style.display = 'inline-flex';
-                        document.getElementById('archiveBtn').style.display = 'inline-flex';
-                        document.getElementById('manageColsBtn').style.display = 'inline-flex';
+                        showBoardView(true);
 
                         // Update project selector now that kanban is visible
                         await updateProjectSelector();
@@ -280,12 +275,7 @@
                         useSource(folderSource(savedHandle));
                         await loadKanbanFile();
 
-                        document.getElementById('welcomeScreen').style.display = 'none';
-                        document.getElementById('kanbanView').style.display = 'block';
-                        document.getElementById('filterBar').style.display = 'block';
-                        document.getElementById('newTaskBtn').style.display = 'inline-flex';
-                        document.getElementById('archiveBtn').style.display = 'inline-flex';
-                        document.getElementById('manageColsBtn').style.display = 'inline-flex';
+                        showBoardView(true);
 
                         showNotification(t('notif.projectRestored'), 'success');
                         await updateProjectSelector(); // Show project selector
@@ -306,7 +296,10 @@
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', async () => {
             const param = boardParam();
+            renderStatusBar(); // on a served page the bar shows from the start
+            // An explicit ?board= wins: "Open from a web address" on a served page reloads it with that address.
             if (param !== null) await openBoardParam(param); // a board from the web (03b-web-board.js)
+            else if (window.KANBANMD_SERVICE) await openServiceBoard(window.KANBANMD_SERVICE); // served by kanbanmd serve (03d-service.js)
             else await tryRestorePreviousDirectory();
 
             // Add event listener for project selector
@@ -321,7 +314,7 @@
         // Select folder
         // Without the File System Access API (Firefox, Safari, iOS) folders cannot be opened; say what still works.
         document.getElementById('selectFolderBtn').addEventListener('click', async () => {
-            if (!('showDirectoryPicker' in window)) { alert(t('alert.browserNotSupported')); return; }
+            if (!('showDirectoryPicker' in window)) { pickFolderFiles(); return; } // read-only (03c-picked-folder.js)
             try {
                 // Start in last used directory if available
                 const options = {};
@@ -334,12 +327,7 @@
                 await saveDirectoryHandle(picked); // Save for next time
                 await loadKanbanFile();
 
-                document.getElementById('welcomeScreen').style.display = 'none';
-                document.getElementById('kanbanView').style.display = 'block';
-                document.getElementById('filterBar').style.display = 'block';
-                document.getElementById('newTaskBtn').style.display = 'inline-flex';
-                document.getElementById('archiveBtn').style.display = 'inline-flex';
-                document.getElementById('manageColsBtn').style.display = 'inline-flex';
+                showBoardView(true);
 
                 // Update project selector now that kanban is visible
                 await updateProjectSelector();

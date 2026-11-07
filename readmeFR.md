@@ -53,11 +53,11 @@ D'autres options, dont garder l'application à un endroit partagé et l'utiliser
 ## Utilisation avec des agents IA
 
 ```bash
-npm run mcp:install      # une fois, dans ce dépôt
-claude mcp add kanban -- node /chemin/vers/Kanban.md/mcp/server.js --dir /chemin/vers/votre/projet
+npx -y @ashikahmad/kanbanmd init                  # dans votre projet : config MCP, skill et consignes pour les agents
+claude mcp add kanban -- npx -y @ashikahmad/kanbanmd mcp   # ou seulement le serveur MCP
 ```
 
-Les mêmes opérations sont disponibles depuis le shell avec la CLI `kanbanmd` (`node cli/kanbanmd.js --dir . board --status in-progress`). Copiez [`AI_WORKFLOW.md`](AI_WORKFLOW.md) dans votre projet pour que votre assistant connaisse les règles, et consultez [Working with AI agents](docs/ai-agents.md) (en anglais) pour les outils, les modèles par assistant et la skill Claude Code.
+Les mêmes opérations sont disponibles depuis le shell avec la CLI `kanbanmd` (`npx -y @ashikahmad/kanbanmd board --status in-progress`). Copiez [`AI_WORKFLOW.md`](AI_WORKFLOW.md) dans votre projet pour que votre assistant connaisse les règles, et consultez [Working with AI agents](docs/ai-agents.md) (en anglais) pour les outils, les modèles par assistant et la skill Claude Code.
 
 ## Documentation
 

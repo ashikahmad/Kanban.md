@@ -4,27 +4,44 @@ Kanban.md is built so a person and an AI agent can use the same board at the sam
 
 An agent can always edit the Markdown directly. That costs tokens (the whole file on every read), invites formatting mistakes, and can overwrite what you are doing. The optional **`kanbanmd` CLI** and **MCP server** avoid all three: they read only what is asked, validate every change, and write minimal patches that merge with your concurrent edits.
 
-## Set up the MCP server
+## Set up the agents
+
+One command, run in your project folder, sets everything up:
 
 ```bash
-npm run mcp:install      # once: installs the MCP SDK inside mcp/
+npx -y @ashikahmad/kanbanmd init                      # asks which agents (Enter = Claude Code)
+npx -y @ashikahmad/kanbanmd init --agent claude,cursor
+npx -y @ashikahmad/kanbanmd init --dry-run --agent all   # preview, writes nothing
 ```
 
-(The page and the CLI have no dependencies; only the MCP server needs this step.)
+From a clone of this repository, use `node /path/to/Kanban.md/cli/kanbanmd.js init` instead (run `npm install` in the clone once; the MCP SDK is its only dependency).
 
-Then add the server to your MCP client, pointing `--dir` at the folder that holds `kanban.md`:
+`--agent` takes a comma-separated list of `claude`, `cursor`, `vscode`, `gemini`, `codex`, `generic` or `all`. Per agent, `init` writes:
+
+| Agent | MCP server entry | Instruction block | Also |
+|---|---|---|---|
+| `claude` | `.mcp.json` | `CLAUDE.md` | the skill in `.claude/skills/` |
+| `cursor` | `.cursor/mcp.json` | `AGENTS.md` | |
+| `vscode` (Copilot) | `.vscode/mcp.json` | `.github/copilot-instructions.md` | |
+| `gemini` | `.gemini/settings.json` | `GEMINI.md` | |
+| `codex` | printed (its config is global: `~/.codex/config.toml`) | `AGENTS.md` | |
+| `generic` | | `AGENTS.md` | |
+
+It also creates a starter `kanban.md` if the folder has none. The instruction block is a few lines between `<!-- kanbanmd:start -->` and `<!-- kanbanmd:end -->` that tell the agent to use the tools, fall back to the CLI, and never hand-edit the board. Running `init` again changes nothing; it refreshes only that block. It never overwrites a JSON file it cannot parse, a different `kanban` server entry or an edited skill (use `--force` to replace those), and `--no-mcp`, `--no-skill`, `--no-instructions` and `--no-board` skip a part. Claude Code asks you to approve a project MCP server the first time.
+
+To add only the MCP server, with no files written:
 
 ```bash
-claude mcp add kanban -- node /path/to/Kanban.md/mcp/server.js --dir /path/to/your/project
+claude mcp add kanban -- npx -y @ashikahmad/kanbanmd mcp
 ```
 
-or in a JSON config:
+or in any client's JSON config:
 
 ```json
-{ "mcpServers": { "kanban": { "command": "node", "args": ["/path/to/Kanban.md/mcp/server.js", "--dir", "/path/to/your/project"] } } }
+{ "mcpServers": { "kanban": { "command": "npx", "args": ["-y", "@ashikahmad/kanbanmd", "mcp"] } } }
 ```
 
-Add `--read-only` (or set `KANBANMD_READONLY=1`) to expose only the five read tools. That uses fewer tokens and makes writing impossible.
+The server works on the folder it is started in (clients start it from the project folder); add `--dir /path` to point elsewhere. Add `--read-only` (or set `KANBANMD_READONLY=1`) to expose only the five read tools. That uses fewer tokens and makes writing impossible.
 
 ## The tools
 

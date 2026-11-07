@@ -1,6 +1,6 @@
 # Kanban.md Project Board
 
-<!-- Config: Last Task ID: 34 -->
+<!-- Config: Last Task ID: 38 -->
 <!-- Format: v3 -->
 <!-- Kanban.md board. Format, rules and tools (app, CLI, MCP): https://github.com/ashikahmad/Kanban.md -->
 
@@ -68,7 +68,10 @@ One-time "Save as folder project" that writes kanban.md and archive.md, with no 
 **Created**: 2026-10-22  
 **Tags**: #app  
 
-Keep a board inside the browser with no folder, which also would make the app usable in Firefox and Safari. Agents could only read it while a tab is open. Design notes: drafts/browser-storage-plan.md.
+Keep a board inside the browser with no folder, which makes the app interactive in Firefox and Safari: edits are kept locally and written to files only when the user chooses ('Save to files'). Needs clear indicators of where the data is and whether it differs from the folder it came from or from the last export; UX in drafts/sources-ux.md. Agents can read it only while a tab is open (no bridge yet). Pairs with TASK-035 (open a folder read-only, then make an editable copy) and TASK-003 (save as folder project / download). Design notes: drafts/browser-storage-plan.md.
+
+**Notes**:
+Not doing it for now. Prefer `kanbanmd serve` as described in TASK-037
 
 ### TASK-005 | Shared task viewer, editor and exporter page
 **Status**: ideas  
@@ -409,4 +412,57 @@ A task can list the tasks it waits on (**Blocked by**: TASK-007, TASK-012). Only
 **Tags**: #format  
 
 The parser reserves **Links**, **Review** and **Dependencies** as sections that are kept verbatim and cannot be edited (core/board.js, core/patch.js; the page reports them as unsupported). Nothing reads them and the format has no spec for them; they exist so hand-written or imported sections survive the v3 migration. With **Blocked by** now the real way to link tasks, decide: keep the preserved sections as they are, make them editable (and define a format), or drop the support. Questions to answer: do any real boards use them, what would editing look like, and does dropping them risk losing text on old files.
+
+### TASK-035 | Firefox and Safari: open a local folder read-only (picked-folder source)
+**Status**: in-progress  
+**Priority**: Medium  
+**Category**: App  
+**Created**: 2026-11-07  
+**Tags**: #app  
+
+Folder mode needs showDirectoryPicker, which Firefox and Safari lack. Add a 'picked folder' data source next to folderSource and webSource (src/scripts/03a-sources.js): read kanban.md, archive.md and the backlog file from an <input webkitdirectory> pick, writable: false, same read-only banner as the web board (03b-web-board.js). No polling: the files are a snapshot, so offer 'Pick again' to refresh. Where showDirectoryPicker is missing, the Folder button leads here instead of a dead end. Saving back is out of scope: editing in these browsers comes from kanbanmd serve (TASK-037); a browser-storage source (TASK-004) is parked. Mozilla thread 1264779 is only about file:// links and does not help.
+
+**Notes**:
+Built: picked-folder source (pickedSource in 03a-sources.js, 03c-picked-folder.js), hidden webkitdirectory input used when showDirectoryPicker is missing. Checked with simulated Firefox files in the page: good folder, nested and non-md files ignored, no kanban.md, not a board, write refused. Banner: Read-only, Pick the folder again, Edit with kanbanmd (copies the serve command). Not checked in a real Firefox; drag-and-drop not added.
+
+### TASK-036 | One-line install: npm package, kanbanmd init, project .mcp.json
+**Status**: in-progress  
+**Priority**: Medium  
+**Category**: MCP  
+**Created**: 2026-11-07  
+**Tags**: #mcp #cli  
+
+Agents fall back to editing kanban.md by hand when the MCP is not configured. Plan in drafts/firefox-serve-brief.md ('Plan: installer'). One npm package 'kanbanmd' (check the name is free): bin kanbanmd with commands mcp, serve, init; @modelcontextprotocol/sdk is the only dependency (kept, loaded lazily by 'mcp'). 'npx -y kanbanmd init' (offline, idempotent, --dry-run): default board if missing; merge mcpServers.kanban into project .mcp.json (keep other servers, abort on invalid JSON); copy the skill; marker-delimited use-the-tools block in AGENTS.md and CLAUDE.md. Also 'claude mcp add kanban -- npx -y kanbanmd mcp'. Tests: init cases, npm pack file list, packed tarball runs help, serve and an MCP handshake. Docs: ai-agents.md and README one-liners. Needs the owner's npm account to publish.
+
+**Notes**:
+Built, not published. Package @ashikahmad/kanbanmd (scoped), commands mcp / serve / init; init --agent claude,cursor,vscode,gemini,codex,generic|all (asks on a terminal), idempotent, never overwrites what it did not write, --dry-run. SDK is the only dependency (moved to root; mcp/package.json removed). 12 new tests (334 pass); packed tarball installed in an empty project and init, board, serve and an MCP handshake (14 tools) all worked. Docs updated. Left: set repository fields after the repo move (TASK-038), then npm publish by the owner, then check the one-liners from a clean folder. Details: drafts/firefox-serve-brief.md.
+
+### TASK-037 | kanbanmd serve: local service that serves the page and makes any browser read-write
+**Status**: in-progress  
+**Priority**: Medium  
+**Category**: App  
+**Created**: 2026-11-07  
+**Tags**: #app #cli  
+
+Run 'kanbanmd serve --dir .' (zero-dependency node:http, 127.0.0.1, stable default port 4777 then next free). It serves the bundled kanbanmd.html and a small API, so the page and API always match and Firefox/Safari edit the real folder; agents see the same files. The page uses a new serviceSource (read/version/write over fetch, If-Match etag, same polling/merge as folderSource; SSE push optional).
+Access: no handshake dialog (running the command is the consent). Server prints and opens /?t=<one-time token>; it sets an HttpOnly SameSite=Strict cookie and redirects with the token stripped. Check Host and Origin on every request (DNS rebinding, cross-site writes); serve only kanban.md, archive.md and the backlog file; write through the locked, verified io/node-fs.js path.
+Hosted app or picked-folder (TASK-035) banner: 'Read-only. To edit, run npx kanbanmd serve in your project' with a copy button; no cross-origin connect from the hosted page for now (optional --allow-origin later). Chromium keeps the folder picker. Builds on TASK-035; complements TASK-004 (browser storage, for users without Node) and TASK-036 (install). Tests: token, bad token, bad Host/Origin, conflict, path whitelist.
+
+**Notes**:
+Built: cli/serve.js (node:http, zero deps), 'kanbanmd serve [--port N] [--no-open]', serviceSource + openServiceBoard in the page, banner 'Editing via kanbanmd' / 'kanbanmd stopped'. Auth: key in the printed URL -> HttpOnly SameSite=Strict cookie; Host/Origin checks; X-Kanbanmd header on writes; file whitelist; 5 MB cap; atomic temp+rename; optional If-Match. Tests: test/serve.test.mjs (8). Checked end to end in the browser: page edit reached the file, an agent note reached the page via polling, stopping the service shows the disconnected banner. Not done: SSE push, a hosted-page opt-in (--allow-origin), Windows/Linux open-browser check, a real Firefox run.
+Decision: scope stays one folder. No --root project list, no folder browser; one serve per project. Easier to explain and trust.
+Menu pass: sources grouped first (Open folder…, Open from a web address…), then board tools, project, app. On a served page the folder item reads 'Open another folder…' and a 'Back to <folder>' item returns to the served board. In browsers without folder editing it reads 'Open folder (read-only)…'. Empty separators hide. German and Chinese strings added for web.*, picked.*, service.*.
+Review pass: footer status bar replaces the source banner. Shows the open source and, on a served page, the served board's state (ok / stopped / expired) even while another source is open; a chip returns to the served board; 'Synced hh:mm:ss' on the right. Fixed: ?board= now wins over the served board, 401/403 shows 'Session expired', Firefox served page keeps the read-only label, empty picked folder says so, t() no longer mangles $& in names, service key uses the full path. Skipped: If-Match from the page (needs a per-file version in write()), page-side unit tests.
+Refresh pass: the footer's read time on a read-only board is now a button with a trailing refresh icon. A web board is fetched again; a picked folder opens an explainer dialog (choose the same folder again; another folder opens that board). Read-only sources use a text fingerprint as their version, so a refresh toasts 'Board updated' or 'Already up to date' and only redraws on change. The 'Refresh folder…' menu item is gone.
+
+### TASK-038 | Move to a fresh GitHub repo (leave the fork network)
+**Status**: planned  
+**Priority**: Medium  
+**Category**: Docs  
+**Created**: 2026-11-07  
+**Due**: 2026-11-08  
+**Tags**: #docs  
+
+Kanban.md has drifted far from ioniks/MarkdownTaskManager and has no PRs of its own open, so replace the GitHub fork with a fresh repo instead of asking Support to detach it. Credit and licence stay in the files (MPL-2.0 LICENSE and notices, README credit line, docs/about-this-fork.md).
+Checklist: (1) decide the name (same name keeps the Pages URL and links) and rename or archive the old repo first so the name is free; (2) create the new repo, push all branches and tags with full history (git push --mirror) so commits and authorship stay; (3) recreate settings: Pages source = GitHub Actions, description, topics, branch protection; issues on if wanted; (4) fix the places that name the repo: README, docs, site-src, the source comment and GitHub menu link in the app (PR #11), package metadata, git remote origin; keep the upstream remote locally; (5) old PRs #1 to #11 and their discussion are not carried over, so note the old repo's address in the README or keep it archived; (6) verify the Pages deploy and the hosted app, then archive or delete the old repo. Ask the owner before deleting anything.
 

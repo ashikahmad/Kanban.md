@@ -8,6 +8,14 @@
         //   write(name, text)   (writable sources only)
         // folderSource() is a project folder (read and write); webSource() is a board on the web (read-only).
 
+        // A cheap fingerprint of a file's text, the version token of the read-only sources (they have no
+        // modified time or ETag worth trusting): equal text, equal token. Not a security hash.
+        function fingerprint(text) {
+            let h = 0x811c9dc5;
+            for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 0x01000193); }
+            return (h >>> 0).toString(16) + ':' + text.length;
+        }
+
         // The project folder, through the File System Access API.
         function folderSource(dirHandle) {
             const file = async (name) => {
@@ -33,18 +41,84 @@
         }
 
         // A board on the web (`?board=<url>`), always read-only. `place` is resolveBoardUrl()'s result. Each file
-        // is fetched once and kept: there is no reload or polling yet, so a file's version never changes.
+        // is fetched once and kept, so a source's versions never change; the page refreshes by opening a new source (refreshBoard).
         const WEB_MAX_BYTES = 5 * 1024 * 1024;
         function webSource(place) {
             const fetched = {};
             const get = (name) => fetched[name] || (fetched[name] = fetchBoardFile(place, name));
             return {
-                kind: 'web', key: place.href, label: place.label, href: place.href, writable: false,
+                kind: 'web', key: place.href, label: place.label, href: place.href, place, writable: false,
                 async read(name) {
                     const text = await get(name);
-                    return text === null ? null : { text, version: 1 };
+                    return text === null ? null : { text, version: fingerprint(text) };
                 },
-                async version(name) { return (await get(name)) === null ? null : 1; },
+                async version(name) { const text = await get(name); return text === null ? null : fingerprint(text); },
+                async write() { throw new Error('This board is read-only'); },
+            };
+        }
+
+        // The project folder, through `kanbanmd serve` (cli/serve.js): the page was served by it, so the files
+        // are reached on the page's own origin with its session cookie. Works in any browser. `connected`
+        // turns false when a request cannot reach the service (it was stopped) and true again when one does.
+        function serviceSource(info) {
+            const src = {
+                kind: 'service', key: info.path || info.name, label: info.name, path: info.path || info.name, writable: true,
+                async call(name, init) {
+                    let res;
+                    try {
+                        res = await fetch(`${info.api}/file/${encodeURIComponent(name)}`, {
+                            cache: 'no-store', credentials: 'same-origin',
+                            ...init, headers: { 'X-Kanbanmd': '1', ...((init && init.headers) || {}) },
+                        });
+                    } catch (e) { setServiceState('stopped'); throw e; }
+                    setServiceState(serviceStateOf(res.status));
+                    return res;
+                },
+                async read(name) {
+                    const res = await src.call(name);
+                    if (res.status === 404) return null;
+                    if (!res.ok) throw new Error(`kanbanmd answered ${res.status}`);
+                    return { text: await res.text(), version: res.headers.get('ETag') };
+                },
+                async version(name) {
+                    const res = await src.call(name, { method: 'HEAD' });
+                    if (res.status === 404) return null;
+                    if (!res.ok) throw new Error(`kanbanmd answered ${res.status}`);
+                    return res.headers.get('ETag');
+                },
+                async write(name, text) {
+                    const res = await src.call(name, { method: 'PUT', headers: { 'Content-Type': 'text/markdown; charset=utf-8' }, body: text });
+                    if (!res.ok) throw new Error(`kanbanmd answered ${res.status}`);
+                },
+            };
+            return src;
+        }
+
+        // A folder picked with <input webkitdirectory> (browsers without the File System Access API: Firefox,
+        // Safari). `files` is the input's FileList. Only the folder's own .md files are kept. They are a snapshot
+        // and cannot be written back, so the board is read-only; picking the folder again refreshes it (refreshPickedFolder).
+        function pickedSource(files) {
+            const kept = {};
+            let folder = '';
+            for (const f of files) {
+                const parts = (f.webkitRelativePath || '').split('/');
+                if (!folder && parts.length > 1) folder = parts[0];
+                if (parts.length === 2 && /\.md$/i.test(parts[1])) kept[parts[1]] = f;
+            }
+            return {
+                kind: 'picked', key: folder, label: folder, writable: false, files: kept,
+                async read(name) {
+                    const f = kept[name];
+                    if (!f) return null;
+                    if (f.size > WEB_MAX_BYTES) throw webError('tooLarge');
+                    const text = await f.text();
+                    return { text, version: fingerprint(text) };
+                },
+                async version(name) {
+                    const f = kept[name];
+                    if (!f) return null;
+                    return f.size > WEB_MAX_BYTES ? 'large:' + f.size : fingerprint(await f.text());
+                },
                 async write() { throw new Error('This board is read-only'); },
             };
         }
@@ -82,9 +156,11 @@
 
         // Switch to another source (or none). The save base is dropped first, so nothing in flight can apply
         // the previous board's changes to the new source; loadKanbanFile() sets a new one.
+        let sourceOpenedAt = 0;
         function useSource(next) {
             persistBase = null;
             source = next;
+            sourceOpenedAt = Date.now(); // a read-only board is a snapshot: the status bar says when it was read
             applySourceUi();
         }
 
