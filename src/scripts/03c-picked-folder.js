@@ -51,8 +51,16 @@
             set('serveHelpCopy', 'serveHelp.copy');
         }
 
+        // A folder that cannot be opened: on the start screen (webNotice), or as a toast when a board is already open
+        // (the start screen is hidden then, and the open board stays as it is).
+        function pickError(code) {
+            if (source) showNotification(t('web.error.' + code, { status: '' }), 'error');
+            else showWebNotice({ kind: 'error', code, place: null });
+        }
+
         async function openPickedFolder(files) {
             const src = pickedSource(files);
+            const origin = source; // the board open when the folder was chosen
             try {
                 if (!src.label) throw webError('noBoard');
                 const board = await src.read('kanban.md');
@@ -60,15 +68,15 @@
                 if (!looksLikeBoard(board.text)) throw webError('notBoard');
             } catch (e) {
                 if (!e.webCode) console.warn('Could not open the folder:', e);
-                showWebNotice({ kind: 'error', code: e.webCode || 'network', place: null });
+                pickError(e.webCode || 'network');
                 return false;
             }
             webNotice = null;
-            if (source && source.kind === 'picked' && source.label === src.label) {
+            if (origin && origin.kind === 'picked' && origin.label === src.label) {
                 // The folder that is open, chosen again: a refresh, not a new board.
                 try {
-                    const changed = await adoptRefreshed(src);
-                    showNotification(t(changed ? 'status.refreshed' : 'status.upToDate'), 'success');
+                    const changed = await adoptRefreshed(src, origin);
+                    if (changed !== null) showNotification(t(changed ? 'status.refreshed' : 'status.upToDate'), 'success');
                 } catch (e) { showNotification(t('status.refreshFailed'), 'error'); }
                 return true;
             }
@@ -84,5 +92,5 @@
             const files = Array.from(e.target.files || []);
             e.target.value = ''; // picking the same folder again must fire this again
             if (files.length) await openPickedFolder(files);
-            else showWebNotice({ kind: 'error', code: 'noBoard', place: null }); // an empty folder: say so, not nothing
+            else pickError('noBoard'); // an empty folder: say so, not nothing
         });

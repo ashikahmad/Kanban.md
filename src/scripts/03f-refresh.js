@@ -11,14 +11,17 @@
         }
 
         // Make `next` (a freshly read source for the same board) the open one, unless it holds exactly what is open.
-        // Returns true when the board changed. Throws when `next` cannot be read: the open board stays as it was.
-        async function adoptRefreshed(next) {
+        // Returns true when the board changed, false when not, and null when the user moved to another source meanwhile
+        // (`origin` is the source the refresh started from: nothing is applied then). Throws when `next` cannot be read:
+        // the open board stays as it was.
+        async function adoptRefreshed(next, origin) {
             const board = await next.read('kanban.md');
             if (!board) throw webError('notFound');
             if (!looksLikeBoard(board.text)) throw webError('notBoard');
             const now = { board: board.version, archive: await next.version('archive.md'), backlog: await next.version(backlogFileNameOf(board.text)) };
             let before = null;
             try { before = await readVersions(); } catch (e) { /* an old picked file may have changed on disk: count as changed */ }
+            if (source !== origin) return null;
             if (before && deepEqual(before, now)) {
                 sourceOpenedAt = Date.now(); // still looked at just now: the read time moves, the board stays
                 renderStatusBar();
@@ -36,10 +39,11 @@
         async function refreshBoard() {
             if (!source || source.writable || refreshing) return;
             if (source.kind === 'picked') { refreshPickedFolder(); return; }
+            const origin = source;
             setRefreshing(true);
             try {
-                const changed = await adoptRefreshed(webSource(source.place));
-                showNotification(t(changed ? 'status.refreshed' : 'status.upToDate'), 'success');
+                const changed = await adoptRefreshed(webSource(origin.place), origin);
+                if (changed !== null) showNotification(t(changed ? 'status.refreshed' : 'status.upToDate'), 'success');
             } catch (e) {
                 console.warn('Could not refresh the board:', e);
                 showNotification(t('status.refreshFailed'), 'error');
