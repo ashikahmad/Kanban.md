@@ -14,6 +14,12 @@
         <div class="menu-wrap">
             <button class="btn btn-ghost btn-icon" id="moreMenuBtn" onclick="toggleMoreMenu(event)" aria-haspopup="true" aria-expanded="false" title="Menu" aria-label="Menu"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg></button>
             <div class="popover" id="moreMenu" onclick="event.stopPropagation()">
+                <button id="selectFolderBtn" class="menu-item" onclick="closeMenus()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></svg><span class="mi-label">Folder</span></button>
+                <button id="openUrlBtn" class="menu-item" onclick="closeMenus(); openBoardFromUrl()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg><span class="mi-label">Open from a web address…</span></button>
+                <button id="serviceBackBtn" class="menu-item" style="display: none;" onclick="closeMenus(); backToServiceBoard()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 3.5 5 8l4.5 4.5M5.5 8H14"/></svg><span class="mi-label">Back to served board</span></button>
+                <button id="pickedRefreshBtn" class="menu-item" style="display: none;" onclick="closeMenus(); pickFolderFiles()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 3v3h-3"/></svg><span class="mi-label">Refresh folder…</span></button>
+                <button id="pickedEditBtn" class="menu-item" style="display: none;" onclick="closeMenus(); openServeHelp()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg><span class="mi-label">Edit with kanbanmd</span></button>
+                <div class="menu-sep"></div>
                 <button id="archiveBtn" class="menu-item" style="display: none;" onclick="closeMenus()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h12v3H2zM3 7v6h10V7M6.5 9.5h3"/></svg><span class="mi-label">Archives</span></button>
                 <button id="manageColsBtn" class="menu-item" style="display: none;" onclick="closeMenus()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3h3v10h-3zM6.5 3h3v10h-3zM10.5 3h3v10h-3z"/></svg><span class="mi-label">Columns</span></button>
                 <button id="orderToggleBtn" class="menu-item" style="display: none;" onclick="closeMenus(); toggleManualOrder()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M3 11l2 2 2-2M11 13V3M9 5l2-2 2 2"/></svg><span class="mi-label">Manual order</span></button>
@@ -21,8 +27,6 @@
                 <button id="housekeepingBtn" class="menu-item" style="display: none;" onclick="closeMenus(); editHousekeepingSettings()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg><span class="mi-label">Housekeeping</span></button>
                 <button id="backlogOpenBtn" class="menu-item" style="display: none;" onclick="closeMenus(); openBacklogModal()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 3.5h12v3H2zM3 6.5v6h10v-6M6.5 9h3"/></svg><span class="mi-label">Open backlog</span></button>
                 <button id="backlogToggleBtn" class="menu-item" style="display: none;" onclick="closeMenus(); toggleBacklogFile()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7l3 3v8H3zM10 2.5v3h3M5.5 9h5M5.5 11.5h5"/></svg><span class="mi-label">Backlog file</span></button>
-                <button id="selectFolderBtn" class="menu-item" onclick="closeMenus()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4.5h4l1.5 1.5H14v6.5H2z"/></svg><span class="mi-label">Folder</span></button>
-                <button id="openUrlBtn" class="menu-item" onclick="closeMenus(); openBoardFromUrl()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg><span class="mi-label">Open from a web address…</span></button>
                 <div class="menu-sep"></div>
                 <button id="renameProjectBtn" class="menu-item" style="display: none;" title="Rename project" onclick="closeMenus(); renameCurrentProject()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.5 2.5l3 3L5 14H2v-3z"/></svg><span class="mi-label">Rename project</span></button>
                 <button id="deleteProjectBtn" class="menu-item danger" style="display: none;" title="Delete project" onclick="closeMenus(); deleteCurrentProject()"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M5 4.5l.5 8.5h5l.5-8.5"/></svg><span class="mi-label">Delete project</span></button>
@@ -88,7 +92,7 @@
     </header>
     <div id="activeFilters"></div>
     <div id="housekeepingBar" class="hk-bar" style="display: none;" role="status"></div>
-    <div id="sourceBar" class="source-bar" style="display: none;" role="status"></div>
+    <input type="file" id="pickFolderInput" webkitdirectory multiple hidden aria-hidden="true" tabindex="-1">
 
     <div class="container">
         <div id="welcomeScreen" class="welcome"></div>
@@ -260,6 +264,49 @@
             <div class="modal-body">
                 <input type="text" id="backlogSearch" placeholder="Search backlog..." style="margin-bottom: var(--s-3);">
                 <div id="backlogList" class="list-rows" onclick="onBacklogListClick(event)" style="max-height: 500px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status bar: where the board comes from, and the served board's state -->
+    <footer id="statusBar" class="status-bar" style="display: none;"></footer>
+
+    <!-- Before the browser's own folder dialog (Firefox, Safari), which calls reading a folder an "upload" -->
+    <div id="pickNoteModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="pickNoteTitle">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2 id="pickNoteTitle">Opening a folder in this browser</h2>
+                <button class="close-btn" onclick="closePickNote()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="pickNoteText"></p>
+            </div>
+            <div class="actions">
+                <button class="btn btn-secondary" id="pickNoteCancel" onclick="closePickNote()">Cancel</button>
+                <button class="btn btn-primary" id="pickNoteContinue" onclick="continuePickNote()">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to edit a picked (read-only) folder: serve it with kanbanmd -->
+    <div id="serveHelpModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="serveHelpTitle">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-header">
+                <h2 id="serveHelpTitle">Edit this folder in your browser</h2>
+                <button class="close-btn" onclick="closeServeHelp()" aria-label="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="serveHelpIntro"></p>
+                <ol class="steps">
+                    <li id="serveHelpStep1"></li>
+                    <li><span id="serveHelpStep2"></span>
+                        <div class="cmd-row"><code id="serveHelpCmd">kanbanmd serve</code><button class="btn btn-secondary btn-sm" id="serveHelpCopy" onclick="copyServeCommand()">Copy</button></div>
+                    </li>
+                    <li id="serveHelpStep3"></li>
+                </ol>
+            </div>
+            <div class="actions">
+                <button class="btn btn-primary" id="serveHelpClose" onclick="closeServeHelp()">Close</button>
             </div>
         </div>
     </div>

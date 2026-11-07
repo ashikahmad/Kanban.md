@@ -49,11 +49,20 @@
             webNotice = null;
             useSource(src);
             await loadKanbanFile();
+            showBoardView(false);
+            return true;
+        }
+
+        // The board view once a source has opened. Read-only sources get no New task or column buttons.
+        function showBoardView(editable) {
             document.getElementById('welcomeScreen').style.display = 'none';
             document.getElementById('kanbanView').style.display = 'block';
             document.getElementById('filterBar').style.display = 'block';
             document.getElementById('archiveBtn').style.display = 'inline-flex';
-            return true;
+            if (editable) {
+                document.getElementById('newTaskBtn').style.display = 'inline-flex';
+                document.getElementById('manageColsBtn').style.display = 'inline-flex';
+            }
         }
 
         function confirmWebBoard() {
@@ -101,35 +110,33 @@
             </div>`;
         }
 
-        // Body class and banner for the open source. Leaving a web board for a folder also drops ?board= from the
-        // address, so a reload opens the folder and not the web board again.
-        function applySourceUi() {
-            const ro = readOnly();
-            document.body.classList.toggle('readonly', ro);
-            const bar = document.getElementById('sourceBar');
-            if (bar) {
-                bar.textContent = '';
-                bar.style.display = ro ? '' : 'none';
-                if (ro) {
-                    const badge = document.createElement('span');
-                    badge.className = 'source-badge';
-                    badge.innerHTML = '<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
-                    badge.append(t('web.readOnly'));
-                    const link = document.createElement('a');
-                    link.className = 'source-link';
-                    link.href = source.href || '#';
-                    link.target = '_blank'; link.rel = 'noopener noreferrer';
-                    link.textContent = source.label;
-                    bar.append(badge, link);
-                    if ('showDirectoryPicker' in window) {
-                        const open = document.createElement('button');
-                        open.type = 'button'; open.className = 'btn btn-secondary btn-sm';
-                        open.textContent = t('web.openFolder');
-                        open.title = t('web.openFolderHint');
-                        open.addEventListener('click', () => document.getElementById('selectFolderBtn').click());
-                        bar.appendChild(open);
-                    }
-                }
+        // The "open" group of the menu follows the source. Browsers without the File System Access API can only
+        // take a read-only snapshot, which the label says. On a page served by `kanbanmd serve`, picking a folder
+        // leaves the served one, so the label says "another" and a "Back to" item returns to it.
+        function updateSourceMenu() {
+            const svc = window.KANBANMD_SERVICE;
+            const canEdit = 'showDirectoryPicker' in window;
+            const folder = document.querySelector('#selectFolderBtn .mi-label');
+            if (folder) folder.textContent = t(!canEdit ? 'header.folderReadOnly' : svc ? 'header.folderAnother' : 'header.folder');
+            for (const id of ['pickedRefreshBtn', 'pickedEditBtn']) document.getElementById(id).style.display = source && source.kind === 'picked' ? '' : 'none';
+            document.querySelector('#pickedRefreshBtn .mi-label').textContent = t('header.refreshFolder');
+            document.getElementById('pickedRefreshBtn').title = t('picked.againHint');
+            document.querySelector('#pickedEditBtn .mi-label').textContent = t('picked.edit');
+            document.getElementById('pickedEditBtn').title = t('picked.editHint');
+            applyPickDialogTexts();
+            const back = document.getElementById('serviceBackBtn');
+            if (back) {
+                back.style.display = svc && !(source && source.kind === 'service') ? '' : 'none';
+                back.querySelector('.mi-label').textContent = t('header.backToService');
+                back.title = (svc && svc.path) || '';
             }
+        }
+
+        // Body class, menu and status bar (03e-status-bar.js) for the open source. Leaving a web board for a folder
+        // also drops ?board= from the address, so a reload opens the folder and not the web board again.
+        function applySourceUi() {
+            updateSourceMenu();
+            document.body.classList.toggle('readonly', readOnly());
+            renderStatusBar();
             if (source && source.kind !== 'web' && boardParam() !== null) stripBoardParam();
         }

@@ -1,8 +1,26 @@
 /* Boards from the web: the read-only bar under the header, and the ask / error card on the start screen. */
-.source-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); margin: var(--s-3) var(--s-4); padding: var(--s-2) var(--s-3); background: var(--c-fill); border: 1px solid var(--c-border); border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--c-muted); }
-.source-bar .source-badge { display: inline-flex; align-items: center; gap: var(--s-1); font-weight: 600; color: var(--c-text); }
-.source-bar .source-link { flex: 1 1 200px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-muted); }
-.source-bar .source-link:hover { color: var(--c-text); }
+/* The status bar: a thin footer, the last row of the page's flex column (the board scroller above it ends exactly at it), with the source (and the served board's state) on the left, the last check on the right. */
+.status-bar { flex: none; display: flex; align-items: center; gap: var(--s-3); min-height: 28px; padding: 2px var(--s-4); background: var(--c-column); border-top: 1px solid var(--c-border); font-size: var(--fs-xs); color: var(--c-muted); }
+.status-left { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: 0 var(--s-3); min-width: 0; }
+/* A thin line centred in the gap between the footer's parts (the source, the way back to the served board). */
+.status-left > * + * { position: relative; }
+.status-left > * + *::before { content: ""; position: absolute; left: calc(var(--s-3) / -2); top: 50%; width: 1px; height: 14px; transform: translateY(-50%); background: var(--c-border-strong); }
+.status-seg { display: inline-flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.status-seg strong, .status-badge { display: inline-flex; align-items: center; gap: var(--s-1); font-weight: 600; color: var(--c-text); }
+.status-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-muted); }
+a.status-label:hover { color: var(--c-text); }
+.status-sync { flex: none; font-variant-numeric: tabular-nums; }
+.status-bar .btn-sm { height: 22px; }
+.status-chip { gap: var(--s-2); }
+.status-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-ok); }
+.status-dot--stopped { background: var(--c-danger); }
+.status-dot--expired { background: var(--c-warn); }
+body.has-status .notification { bottom: calc(var(--s-5) + 28px); }
+
+/* The "edit with kanbanmd" steps and the command to copy. */
+.steps { margin: var(--s-3) 0 0 var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
+.cmd-row { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-2); padding: var(--s-2) var(--s-3); background: var(--c-fill); border: 1px solid var(--c-border); border-radius: var(--r-sm); }
+.cmd-row code { flex: 1; min-width: 0; font-family: 'Consolas', 'Monaco', monospace; font-size: var(--fs-sm); color: var(--c-text); user-select: all; overflow-x: auto; white-space: nowrap; }
 
 /* A read-only board has nothing to add or arrange (the controls are also left out where they are drawn). */
 body.readonly #newTaskBtn, body.readonly #manageColsBtn, body.readonly #housekeepingBar { display: none !important; }

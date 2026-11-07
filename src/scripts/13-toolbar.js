@@ -22,7 +22,18 @@
         }
 
         function toggleFilterPanel(event) { togglePopover('filterPanel', 'filterToggleBtn', event); }
-        function toggleMoreMenu(event) { togglePopover('moreMenu', 'moreMenuBtn', event); }
+        // Hide separators that have no visible item before them or after them (the groups come and go with the board).
+        function tidyMenuSeparators() {
+            const items = [...document.getElementById('moreMenu').children];
+            let seenItem = false, pending = null;
+            for (const el of items) {
+                if (el.classList.contains('menu-sep')) { el.style.display = 'none'; if (seenItem) pending = el; continue; }
+                if (el.style.display === 'none') continue;
+                if (pending) { pending.style.display = ''; pending = null; }
+                seenItem = true;
+            }
+        }
+        function toggleMoreMenu(event) { tidyMenuSeparators(); togglePopover('moreMenu', 'moreMenuBtn', event); }
         function toggleThemeMenu(event) { togglePopover('themeMenu', 'themeMenuBtn', event); }
 
         document.addEventListener('click', (e) => { if (!e.target.closest('.dd-menu')) closeMenus(); });
@@ -33,6 +44,8 @@
             if (document.getElementById('shareModal').classList.contains('active')) closeShareDialog();
             else if (document.getElementById('taskModal').classList.contains('active')) closeModal();
             else if (document.getElementById('columnsModal').classList.contains('active')) closeColumnsModal();
+            else if (document.getElementById('serveHelpModal').classList.contains('active')) closeServeHelp();
+            else if (document.getElementById('pickNoteModal').classList.contains('active')) closePickNote();
             else if (document.getElementById('archiveModal').classList.contains('active')) closeArchiveModal();
             else if (document.getElementById('backlogModal').classList.contains('active')) closeBacklogModal();
         });

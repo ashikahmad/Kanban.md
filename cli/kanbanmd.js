@@ -2,6 +2,7 @@
 // kanbanmd: command line front end for the board core. Every command prints one JSON document.
 //   kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command> [args]
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { getBoard, getTask, getConfig, listArchive, getStats, summarizeChanges } from '../core/read.js';
 import { etagOf } from '../core/text.js';
@@ -9,9 +10,11 @@ import { getHousekeeping, archiveCandidates } from '../core/housekeeping.js';
 import { parseHousekeepingSpec } from '../core/housekeeping-spec.js';
 import { BoardError } from '../core/text.js';
 import { TASK_FIELDS } from '../core/ops.js';
+import { runInit, parseAgents, promptAgents, AGENT_NAMES } from './init.js';
+import { startServer, openBrowser, DEFAULT_PORT } from './serve.js';
 import { readWorkspace, readActivity, mutate, migrateProject } from '../io/node-fs.js';
 
-const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse', 'apply', 'enable', 'disable']);
+const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse', 'apply', 'enable', 'disable', 'no-open', 'force', 'yes', 'no-mcp', 'no-skill', 'no-instructions', 'no-board']);
 function parseArgs(argv) {
     const flags = {}, pos = [];
     for (let i = 0; i < argv.length; i++) {
@@ -29,6 +32,10 @@ const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
 
   housekeeping [--apply] [--set SPEC|off|reset]   what to archive or review; --apply archives the finished ones in one edit;
                       --set "done=done after=30d | backlog=backlog after=90d | max=200" edits the policy
+  serve [--port N] [--no-open]                     serve the page and this folder on 127.0.0.1 so any browser can edit it (Ctrl-C stops)
+  init [--agent claude,cursor,vscode,gemini,codex,generic|all] [--force] [--yes] [--no-mcp] [--no-skill] [--no-instructions] [--no-board]
+                      set this folder up for AI agents: MCP config, skill, instruction block, a starter board (--dry-run previews)
+  mcp [--read-only]   run the MCP server (stdio) for this folder; this is what an agent's MCP config starts
   migrate                                          rewrite kanban.md / archive.md in the current format (backups kept)
   board [filters]     compact task list in display order.  (alias: list)
   task <id> [--fields a,b]   one task in full, with its etag.  (alias: show)
@@ -90,6 +97,32 @@ async function main() {
             return;
         }
         console.log(JSON.stringify({ ok: true, ...getHousekeeping(ws) }));
+        return;
+    }
+
+    if (cmd === 'mcp') {
+        await import('../mcp/server.js'); // loaded only here, so the other commands never need the MCP SDK
+        await new Promise(() => {}); // the server keeps the process alive over stdio
+    }
+
+    if (cmd === 'init') {
+        const pkg = JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8')).name;
+        let agents;
+        if (flags.agent !== undefined) agents = parseAgents(flags.agent);
+        else if (process.stdin.isTTY && !flags.yes) agents = await promptAgents();
+        else agents = ['claude'];
+        const report = runInit({ dir, agents, pkg, dryRun: opt.dryRun, force: !!flags.force, mcp: !flags['no-mcp'], skill: !flags['no-skill'], instructions: !flags['no-instructions'], board: !flags['no-board'] });
+        console.log(JSON.stringify({ ok: true, ...report }, null, 2));
+        return;
+    }
+
+    if (cmd === 'serve') {
+        const html = readFileSync(fileURLToPath(new URL('../kanbanmd.html', import.meta.url)), 'utf8');
+        const svc = await startServer({ dir, html, port: flags.port !== undefined ? Number(flags.port) : DEFAULT_PORT });
+        console.log(`Kanban.md is serving ${dir}\n\n  ${svc.url}\n\nOpen that address (it carries the access key for this run). Ctrl-C to stop.`);
+        if (!flags['no-open']) openBrowser(svc.url);
+        await new Promise((r) => { process.once('SIGINT', r); process.once('SIGTERM', r); });
+        await svc.close();
         return;
     }
 

@@ -209,7 +209,7 @@
         .menu-item.danger .ic { color: inherit; }
         .menu-item:hover { background: var(--c-hover); }
         .menu-item.danger { color: var(--c-danger); }
-        .menu-sep { height: 1px; margin: var(--s-1) 0; background: var(--c-border); }
+        .menu-sep { height: 1px; margin: var(--s-2) 0; background: var(--c-border-strong); } /* the plain border is the same shade as the dark popover */
         .menu-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); padding: var(--s-1) var(--s-3); font-size: var(--fs-sm); color: var(--c-muted); }
         .menu-label { display: inline-flex; align-items: center; gap: var(--s-2); color: var(--c-text); font-weight: 400; }
         .menu-label .ic { color: var(--c-muted); }

@@ -35,7 +35,7 @@ Kanban.md turns two Markdown files, `kanban.md` and `archive.md`, into an intera
 
 - **Not a hosted service.** No accounts, permissions, notifications or live co-editing. Teams share a board through git or a synced folder.
 - **Not a server or an API.** Agents use the CLI and the MCP server; there is no HTTP API.
-- **Editing needs a Chromium browser.** Opening and editing a folder needs a Chromium-based desktop browser (Chrome, Edge, Opera, Brave). Firefox, Safari and iOS can still [view a board from the web](docs/using-the-board.md#viewing-a-board-from-the-web), read-only.
+- **Editing needs a Chromium browser.** Opening and editing a folder needs a Chromium-based desktop browser (Chrome, Edge, Opera, Brave). In Firefox and Safari you can open a folder read-only, [view a board from the web](docs/using-the-board.md#viewing-a-board-from-the-web), or edit the real folder by running `kanbanmd serve` in it (needs Node; see [Firefox and Safari](docs/getting-started.md#firefox-and-safari)).
 - **Not a reporting tool.** There are no charts or time tracking yet.
 
 ## Install and first run
@@ -51,11 +51,11 @@ More options, including keeping the app in one shared place and using it across 
 ## Use it with AI agents
 
 ```bash
-npm run mcp:install      # once, inside this repository
-claude mcp add kanban -- node /path/to/Kanban.md/mcp/server.js --dir /path/to/your/project
+npx -y @ashikahmad/kanbanmd init                  # in your project: MCP config, skill and agent instructions
+claude mcp add kanban -- npx -y @ashikahmad/kanbanmd mcp   # or just the MCP server
 ```
 
-The same operations are available from the shell as the `kanbanmd` CLI (`node cli/kanbanmd.js --dir . board --status in-progress`). Copy [`AI_WORKFLOW.md`](AI_WORKFLOW.md) into your project so your assistant knows the rules, and see [Working with AI agents](docs/ai-agents.md) for the tools, the per-assistant templates and the Claude Code skill.
+The same operations are available from the shell as the `kanbanmd` CLI (`npx -y @ashikahmad/kanbanmd board --status in-progress`). Copy [`AI_WORKFLOW.md`](AI_WORKFLOW.md) into your project so your assistant knows the rules, and see [Working with AI agents](docs/ai-agents.md) for the tools, the per-assistant templates and the Claude Code skill.
 
 ## Documentation
 

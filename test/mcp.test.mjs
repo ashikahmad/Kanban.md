@@ -9,9 +9,9 @@ import { migrateBoardText, migrateArchiveText } from '../core/migrate.js';
 import { parseBoard } from '../core/board.js';
 import { mutate } from '../io/node-fs.js';
 
-const SDK = new URL('../mcp/node_modules/@modelcontextprotocol/sdk/dist/esm/', import.meta.url);
+const SDK = new URL('../node_modules/@modelcontextprotocol/sdk/dist/esm/', import.meta.url);
 const installed = existsSync(new URL('client/index.js', SDK));
-const skip = installed ? false : 'run `npm install` in mcp/ to enable the MCP tests';
+const skip = installed ? false : 'run `npm install` to enable the MCP tests';
 const raw = (n) => readFileSync(new URL(`./fixtures/${n}.md`, import.meta.url), 'utf8');
 
 function project() {

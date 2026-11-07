@@ -5,11 +5,10 @@
 The app is built from `src/` into one self-contained file, `kanbanmd.html`.
 
 ```bash
-npm install          # once: build tools only, the output has no dependencies
+npm install          # once: build tools, plus the MCP SDK (the package's only runtime dependency)
 npm run build        # minified kanbanmd.html
 npm run build:dev    # readable kanbanmd.html while you work
 npm test             # unit, property and end-to-end tests
-npm run mcp:install  # installs the MCP SDK (enables the MCP server and its tests)
 npm run measure      # token cost of reads and writes, raw file vs tools
 ```
 

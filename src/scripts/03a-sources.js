@@ -49,6 +49,67 @@
             };
         }
 
+        // The project folder, through `kanbanmd serve` (cli/serve.js): the page was served by it, so the files
+        // are reached on the page's own origin with its session cookie. Works in any browser. `connected`
+        // turns false when a request cannot reach the service (it was stopped) and true again when one does.
+        function serviceSource(info) {
+            const src = {
+                kind: 'service', key: info.path || info.name, label: info.name, path: info.path || info.name, writable: true,
+                async call(name, init) {
+                    let res;
+                    try {
+                        res = await fetch(`${info.api}/file/${encodeURIComponent(name)}`, {
+                            cache: 'no-store', credentials: 'same-origin',
+                            ...init, headers: { 'X-Kanbanmd': '1', ...((init && init.headers) || {}) },
+                        });
+                    } catch (e) { setServiceState('stopped'); throw e; }
+                    setServiceState(serviceStateOf(res.status));
+                    return res;
+                },
+                async read(name) {
+                    const res = await src.call(name);
+                    if (res.status === 404) return null;
+                    if (!res.ok) throw new Error(`kanbanmd answered ${res.status}`);
+                    return { text: await res.text(), version: res.headers.get('ETag') };
+                },
+                async version(name) {
+                    const res = await src.call(name, { method: 'HEAD' });
+                    if (res.status === 404) return null;
+                    if (!res.ok) throw new Error(`kanbanmd answered ${res.status}`);
+                    return res.headers.get('ETag');
+                },
+                async write(name, text) {
+                    const res = await src.call(name, { method: 'PUT', headers: { 'Content-Type': 'text/markdown; charset=utf-8' }, body: text });
+                    if (!res.ok) throw new Error(`kanbanmd answered ${res.status}`);
+                },
+            };
+            return src;
+        }
+
+        // A folder picked with <input webkitdirectory> (browsers without the File System Access API: Firefox,
+        // Safari). `files` is the input's FileList. Only the folder's own .md files are kept. They are a snapshot
+        // and cannot be written back, so the board is read-only; picking the folder again refreshes it.
+        function pickedSource(files) {
+            const kept = {};
+            let folder = '';
+            for (const f of files) {
+                const parts = (f.webkitRelativePath || '').split('/');
+                if (!folder && parts.length > 1) folder = parts[0];
+                if (parts.length === 2 && /\.md$/i.test(parts[1])) kept[parts[1]] = f;
+            }
+            return {
+                kind: 'picked', key: folder, label: folder, writable: false, files: kept,
+                async read(name) {
+                    const f = kept[name];
+                    if (!f) return null;
+                    if (f.size > WEB_MAX_BYTES) throw webError('tooLarge');
+                    return { text: await f.text(), version: 1 };
+                },
+                async version(name) { return kept[name] ? 1 : null; },
+                async write() { throw new Error('This board is read-only'); },
+            };
+        }
+
         // Why a web board could not be opened: `webCode` names the 'web.error.*' message.
         function webError(code, status) {
             const e = new Error(code);
@@ -82,9 +143,11 @@
 
         // Switch to another source (or none). The save base is dropped first, so nothing in flight can apply
         // the previous board's changes to the new source; loadKanbanFile() sets a new one.
+        let sourceOpenedAt = 0;
         function useSource(next) {
             persistBase = null;
             source = next;
+            sourceOpenedAt = Date.now(); // a read-only board is a snapshot: the status bar says when it was read
             applySourceUi();
         }
 

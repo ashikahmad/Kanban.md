@@ -5,7 +5,7 @@ Kanban.md is one HTML file. You open it in a browser, point it at a folder, and 
 ## Requirements
 
 - To edit boards, a Chromium-based desktop browser: Chrome 86+, Edge 86+, Opera 72+ or Brave 1.17+. Opening a folder needs the File System Access API.
-- Firefox, Safari and iOS/iPadOS cannot open folders, so they cannot edit boards; Android has limited support. Any browser can still [view a board from the web](using-the-board.md#viewing-a-board-from-the-web), read-only.
+- Firefox, Safari and iOS/iPadOS cannot open folders for editing; Android has limited support. See [Firefox and Safari](#firefox-and-safari) below. Any browser can also [view a board from the web](using-the-board.md#viewing-a-board-from-the-web), read-only.
 - Windows, macOS and Linux all work.
 
 ## Install in three steps
@@ -89,3 +89,16 @@ There is no importer. The format is plain Markdown, so a short script (or an AI 
 - The app downloads something only when you open a [board from the web](using-the-board.md#viewing-a-board-from-the-web) with `?board=`, and only from the address you give. For another site it asks first.
 - The page asks for exactly two things: read and write access to the folder you pick, and IndexedDB to remember your recent projects in your browser.
 - The source is readable in the HTML file, and in `src/`.
+
+## Firefox and Safari
+
+These browsers lack the File System Access API, so the **Folder** button works differently:
+
+- **Open a folder, read-only.** Pick the folder: the board is shown as it was at that moment (use *Pick the folder again* to refresh). Nothing is written.
+- **Edit the real folder with `kanbanmd serve`.** In the project folder run:
+
+  ```bash
+  node /path/to/Kanban.md/cli/kanbanmd.js serve        # or `kanbanmd serve` after `npm link`
+  ```
+
+  It prints an address on `127.0.0.1` (and opens it). That page is the same app, now editing the folder, in any browser. Agents using the CLI or MCP see the same files and your edits show up within a couple of seconds. The address carries a key for this run; other sites and other computers cannot use the service. Stop it with Ctrl-C. `--port N` picks the port (default 4777, the next free one if busy), `--no-open` skips opening the browser. It reaches only the folder it was started in; for another project, run it there too (it takes the next free port).

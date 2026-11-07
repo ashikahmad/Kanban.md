@@ -1,24 +1,49 @@
 {
-  "name": "kanban-md",
+  "name": "@ashikahmad/kanbanmd",
   "version": "2.0.0",
-  "private": true,
+  "description": "Kanban.md: a Markdown Kanban board for people and AI agents. The app (one HTML file), the kanbanmd CLI, an MCP server, and `kanbanmd serve` to edit a folder in any browser.",
+  "license": "MPL-2.0",
   "type": "module",
-  "description": "Single-file Markdown Kanban task manager — built from src/ into one self-contained, dependency-free kanbanmd.html",
+  "bin": {
+    "kanbanmd": "cli/kanbanmd.js"
+  },
+  "files": [
+    "cli/",
+    "core/",
+    "io/",
+    "mcp/server.js",
+    "mcp/tools.js",
+    "kanbanmd.html",
+    ".claude/skills/markdown-task-manager/SKILL.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "kanban",
+    "markdown",
+    "mcp",
+    "ai-agents",
+    "cli",
+    "task-manager"
+  ],
   "scripts": {
     "build": "node build.mjs",
     "build:dev": "node build.mjs --dev",
     "test": "node --test test/*.test.mjs",
     "measure": "node test/tools/measure.mjs",
-    "mcp:install": "npm install --prefix mcp",
-    "build:site": "node build-site.mjs"
+    "build:site": "node build-site.mjs",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",
     "html-minifier-terser": "^7.2.0",
     "marked": "^18.1.1",
     "terser": "^5.51.2"
-  },
-  "bin": {
-    "kanbanmd": "cli/kanbanmd.js"
   }
 }

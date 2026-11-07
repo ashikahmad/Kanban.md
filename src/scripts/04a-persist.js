@@ -222,6 +222,7 @@
             pollBusy = true;
             try {
                 const now = await readVersions();
+                markSynced();
                 if (now.board === lastSeenVersion.board && now.archive === lastSeenVersion.archive && now.backlog === lastSeenVersion.backlog) return;
                 const disk = await readProjectFiles();
                 if (disk.board === persistBase.boardText && disk.archive === persistBase.archiveText && disk.backlog === persistBase.backlogText) return; // touched, not changed
