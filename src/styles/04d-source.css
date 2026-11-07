@@ -10,12 +10,25 @@
 .status-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-muted); }
 a.status-label:hover { color: var(--c-text); }
 .status-sync { flex: none; font-variant-numeric: tabular-nums; }
+/* The read time of a read-only board is a button: the whole text and its trailing refresh icon. */
+.status-refresh { display: inline-flex; align-items: center; gap: var(--s-2); align-self: stretch; margin: -2px calc(var(--s-3) * -1) -2px 0; padding: 0 var(--s-3); border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.status-refresh:hover:not(:disabled), .status-refresh:focus-visible { background: var(--c-fill); color: var(--c-text); }
+.status-refresh:disabled { cursor: progress; }
+.status-refresh-icon { display: inline-flex; }
+.status-refresh .ic { width: 14px; height: 14px; }
+.status-refresh.is-busy .ic { animation: status-spin 0.8s linear infinite; }
+@keyframes status-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .status-refresh.is-busy .ic { animation: none; } }
 .status-bar .btn-sm { height: 22px; }
 .status-chip { gap: var(--s-2); }
 .status-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-ok); }
 .status-dot--stopped { background: var(--c-danger); }
 .status-dot--expired { background: var(--c-warn); }
 body.has-status .notification { bottom: calc(var(--s-5) + 28px); }
+
+/* The refresh dialog's pointer to `kanbanmd serve`, with a link to the steps. */
+.note-serve { margin-top: var(--s-3); color: var(--c-muted); font-size: var(--fs-sm); }
+.note-serve a { color: var(--c-accent); }
 
 /* The "edit with kanbanmd" steps and the command to copy. */
 .steps { margin: var(--s-3) 0 0 var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }

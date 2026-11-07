@@ -3,18 +3,21 @@
         // Errors show on the start screen like those of a web board (webNotice).
 
         // Browsers without folder editing call reading a folder an "upload". Say what really happens before their
-        // dialog appears, once; "Continue" is a click, so the browser still allows the folder dialog to open.
-        const PICK_NOTE_KEY = 'kanbanmd.pickNoteSeen';
-        function pickNoteSeen() { try { return localStorage.getItem(PICK_NOTE_KEY) === '1'; } catch (e) { return false; } }
+        // dialog appears, every time a folder is opened; "Continue" is a click, so the browser still allows the folder dialog to open.
 
-        function pickFolderFiles() {
-            if (pickNoteSeen()) { document.getElementById('pickFolderInput').click(); return; }
+        // The same dialog also explains "refresh" for the folder that is open (mode 'refresh'): a page cannot
+        // re-read a picked folder, so the user is asked to choose it again.
+        let pickNoteMode = 'first';
+        function showPickNote(mode) {
+            pickNoteMode = mode;
+            applyPickDialogTexts();
             document.getElementById('pickNoteModal').classList.add('active');
             document.getElementById('pickNoteContinue').focus();
         }
+        function pickFolderFiles() { showPickNote('first'); }
+        function refreshPickedFolder() { showPickNote('refresh'); }
         function closePickNote() { document.getElementById('pickNoteModal').classList.remove('active'); }
         function continuePickNote() {
-            try { localStorage.setItem(PICK_NOTE_KEY, '1'); } catch (e) { /* asked again next time */ }
             closePickNote();
             document.getElementById('pickFolderInput').click();
         }
@@ -36,8 +39,13 @@
         // The texts of the two dialogs above (called when the language changes: see updateSourceMenu).
         function applyPickDialogTexts() {
             const set = (id, key) => { document.getElementById(id).textContent = t(key); };
-            set('pickNoteTitle', 'picked.noteTitle'); set('pickNoteContinue', 'picked.noteContinue'); set('pickNoteCancel', 'web.cancel');
-            document.getElementById('pickNoteText').innerHTML = markdownToHtml(t('picked.noteText')); // **bold**, like the task details (escapes HTML)
+            const refresh = pickNoteMode === 'refresh' && source;
+            set('pickNoteTitle', refresh ? 'picked.refreshTitle' : 'picked.noteTitle');
+            set('pickNoteContinue', refresh ? 'picked.refreshContinue' : 'picked.noteContinue'); set('pickNoteCancel', 'web.cancel');
+            document.getElementById('pickNoteText').innerHTML = markdownToHtml(refresh ? t('picked.refreshText', { name: source.label }) : t('picked.noteText')); // **bold**, like the task details (escapes HTML)
+            document.getElementById('pickNoteServe').style.display = refresh ? '' : 'none';
+            document.getElementById('pickNoteServeText').innerHTML = markdownToHtml(t('picked.refreshServe')).replace(/^<p[^>]*>|<\/p>$/g, '');
+            set('pickNoteServeLink', 'picked.refreshHow');
             set('serveHelpTitle', 'serveHelp.title'); set('serveHelpIntro', 'serveHelp.intro'); set('serveHelpStep1', 'serveHelp.step1');
             set('serveHelpStep2', 'serveHelp.step2'); set('serveHelpStep3', 'serveHelp.step3'); set('serveHelpClose', 'serveHelp.close');
             set('serveHelpCopy', 'serveHelp.copy');
@@ -56,6 +64,14 @@
                 return false;
             }
             webNotice = null;
+            if (source && source.kind === 'picked' && source.label === src.label) {
+                // The folder that is open, chosen again: a refresh, not a new board.
+                try {
+                    const changed = await adoptRefreshed(src);
+                    showNotification(t(changed ? 'status.refreshed' : 'status.upToDate'), 'success');
+                } catch (e) { showNotification(t('status.refreshFailed'), 'error'); }
+                return true;
+            }
             useSource(src);
             await loadKanbanFile();
             showBoardView(false);

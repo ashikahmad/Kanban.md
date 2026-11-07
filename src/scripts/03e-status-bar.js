@@ -37,6 +37,7 @@
         }
         setInterval(pingService, 3000);
 
+        const REFRESH_ICON = '<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.5M13 3v3h-3"/></svg>';
         const LOCK_ICON = '<svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
 
         function renderStatusBar() {
@@ -95,12 +96,24 @@
                 left.append(chip);
             }
 
-            const sync = el('span', 'status-sync');
-            sync.id = 'statusSync';
-            if (source && source.writable && lastSyncAt) sync.textContent = t('status.synced', { time: new Date(lastSyncAt).toLocaleTimeString() });
-            else if (source && !source.writable && sourceOpenedAt) {
-                sync.textContent = t('status.read', { time: new Date(sourceOpenedAt).toLocaleTimeString() });
+            // Right: a writable board says when it was last checked; a read-only one is a snapshot, so its read time
+            // is also the button that reads it again (see refreshBoard).
+            let sync;
+            if (source && !source.writable && sourceOpenedAt) {
+                const time = new Date(sourceOpenedAt).toLocaleTimeString();
+                sync = el('button', 'status-sync status-refresh' + (refreshing ? ' is-busy' : ''));
+                sync.type = 'button';
+                sync.disabled = refreshing;
                 sync.title = new Date(sourceOpenedAt).toLocaleString();
+                sync.setAttribute('aria-label', t('status.readRefresh', { time }));
+                const icon = el('span', 'status-refresh-icon');
+                icon.innerHTML = REFRESH_ICON;
+                sync.append(el('span', '', t('status.read', { time })), icon);
+                sync.addEventListener('click', refreshBoard);
+            } else {
+                sync = el('span', 'status-sync');
+                if (source && source.writable && lastSyncAt) sync.textContent = t('status.synced', { time: new Date(lastSyncAt).toLocaleTimeString() });
             }
+            sync.id = 'statusSync';
             bar.append(left, sync);
         }

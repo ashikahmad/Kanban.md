@@ -118,9 +118,7 @@
             const canEdit = 'showDirectoryPicker' in window;
             const folder = document.querySelector('#selectFolderBtn .mi-label');
             if (folder) folder.textContent = t(!canEdit ? 'header.folderReadOnly' : svc ? 'header.folderAnother' : 'header.folder');
-            for (const id of ['pickedRefreshBtn', 'pickedEditBtn']) document.getElementById(id).style.display = source && source.kind === 'picked' ? '' : 'none';
-            document.querySelector('#pickedRefreshBtn .mi-label').textContent = t('header.refreshFolder');
-            document.getElementById('pickedRefreshBtn').title = t('picked.againHint');
+            document.getElementById('pickedEditBtn').style.display = source && source.kind === 'picked' ? '' : 'none';
             document.querySelector('#pickedEditBtn .mi-label').textContent = t('picked.edit');
             document.getElementById('pickedEditBtn').title = t('picked.editHint');
             applyPickDialogTexts();
