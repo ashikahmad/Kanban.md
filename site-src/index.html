@@ -171,7 +171,7 @@ footer p + p { margin-top: 8px; }
         <span class="b"><svg aria-hidden="true"><use href="#br-opera"/></svg>Opera</span>
         <span class="b"><svg aria-hidden="true"><use href="#br-brave"/></svg>Brave</span>
       </div>
-      <p class="note small">Opening a local folder may not work in other browsers, such as Firefox and Safari; any browser can still view a board read-only. Your files stay on your machine.</p>
+      <p class="note small">In Firefox and Safari you can open a folder read-only, view any board from the web, or edit the real folder by running <code>kanbanmd serve</code> in it. Your files stay on your machine.</p>
     </div>
 
     <div class="shot">
@@ -238,7 +238,7 @@ footer p + p { margin-top: 8px; }
           <ul class="plain no">
             <li><strong>Not a hosted service.</strong> No accounts, permissions, notifications or live co-editing. Teams share a board through git or a synced folder.</li>
             <li><strong>Not a server or an API.</strong> Agents use the CLI and the MCP server; there is no HTTP API.</li>
-            <li><strong>Editing needs a Chromium browser.</strong> Opening and editing your own folder needs Chrome, Edge, Opera or Brave on desktop. Firefox, Safari and iOS can still open any board from a web address, read-only.</li>
+            <li><strong>Editing in place needs a Chromium browser.</strong> Opening and editing your own folder directly needs Chrome, Edge, Opera or Brave on desktop. In Firefox and Safari you can open a folder read-only, open any board from a web address, or edit the real folder by running <code>kanbanmd serve</code> in it (needs Node).</li>
             <li><strong>Not a reporting tool.</strong> There are no charts or time tracking yet.</li>
           </ul>
         </div>
@@ -259,13 +259,11 @@ footer p + p { margin-top: 8px; }
     <section>
       <h2>Use it with AI agents</h2>
       <p class="sub">The same operations are available from the shell as the <code>kanbanmd</code> CLI and through an MCP server.</p>
-<pre><span class="c"># once, inside this repository</span>
-npm run mcp:install
+<pre><span class="c"># in your project: MCP config, skill and agent instructions</span>
+npx -y @ashikahmad/kanbanmd init
 
-<span class="c"># then register it with your assistant, e.g. Claude Code</span>
-claude mcp add kanban -- \
-  node /path/to/Kanban.md/mcp/server.js \
-  --dir /path/to/your/project</pre>
+<span class="c"># or just register the MCP server, e.g. with Claude Code</span>
+claude mcp add kanban -- npx -y @ashikahmad/kanbanmd mcp</pre>
       <p class="note">Copy <a href="@REPO@/blob/master/AI_WORKFLOW.md"><code>AI_WORKFLOW.md</code></a> into your project so your assistant knows the rules, and see <a href="@REPO@/blob/master/docs/ai-agents.md">Working with AI agents</a> for the tools and per-assistant templates.</p>
     </section>
 
