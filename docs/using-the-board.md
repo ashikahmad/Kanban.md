@@ -78,12 +78,12 @@ Because edits are written as minimal patches, changing one card touches only tha
 
 Add `?board=` and the address of a `kanban.md` to the app's address to open that board read-only. This project's own board, for example: [`app/?board=../board/kanban.md`](https://ashikahmad.github.io/Kanban.md/app/?board=../board/kanban.md). You can also pick **Open from a web address…** in the burger menu (or the link under **Get Started**) and paste the address: a `kanban.md` file, its folder, or a GitHub link to it.
 
-- **Read-only.** You can browse, search, filter, open the archive and share a task. Nothing can be added, moved, edited or archived, and nothing is saved. A bar under the header shows where the board comes from; **Open a local folder** there switches to a project folder on your device, to edit a board of your own.
+- **Read-only.** You can browse, search, filter, open the archive and share a task. Nothing can be added, moved, edited or archived, and nothing is saved. The status bar at the bottom shows *Read-only*, the address the board comes from and when it was read; the burger menu's folder item switches to a project folder on your device, to edit a board of your own.
 - **The address** can be relative to the app (`../board/kanban.md`), a folder (`../board/` means the `kanban.md` in it), or a full `https://` address. A link to a file's page on github.com is turned into the raw file. `archive.md`, and the backlog file if the board names one, are read from the same folder when they exist.
 - **Other sites ask first.** A board on the same site as the app opens at once. For a board on any other site, the app asks before downloading it, and contacts that site only if you agree. No cookies or referrer are sent.
 - **The site has to allow it.** Browsers let a page read another site's files only when that site allows it (CORS). Raw GitHub files (`raw.githubusercontent.com`) and GitHub Pages do. Pages behind a sign-in do not.
 - **Any browser.** Viewing needs no folder access, so it also works in Firefox and Safari.
-- The board is downloaded once, when the page opens. Reload the page to see later changes.
+- The board is downloaded when the page opens. Click the read time in the status bar to download it again: the app says *Board updated* or *Already up to date*, and redraws only if something changed.
 
 ## Optional features
 

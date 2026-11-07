@@ -94,11 +94,11 @@ There is no importer. The format is plain Markdown, so a short script (or an AI 
 
 These browsers lack the File System Access API, so the **Folder** button works differently:
 
-- **Open a folder, read-only.** Pick the folder: the board is shown as it was at that moment (use *Pick the folder again* to refresh). Nothing is written.
+- **Open a folder, read-only.** Pick the folder: the board is shown as it was at that moment. Nothing is written, and nothing is uploaded: the browser may call the folder dialog an "Upload", so the app explains that first, each time. The status bar at the bottom shows *Read-only*, the folder name and when it was read. Click the read time to refresh: a browser cannot re-read a folder by itself, so the app asks you to choose the same folder again (choosing a different one opens that board instead).
 - **Edit the real folder with `kanbanmd serve`.** In the project folder run:
 
   ```bash
   node /path/to/Kanban.md/cli/kanbanmd.js serve        # or `kanbanmd serve` after `npm link`
   ```
 
-  It prints an address on `127.0.0.1` (and opens it). That page is the same app, now editing the folder, in any browser. Agents using the CLI or MCP see the same files and your edits show up within a couple of seconds. The address carries a key for this run; other sites and other computers cannot use the service. Stop it with Ctrl-C. `--port N` picks the port (default 4777, the next free one if busy), `--no-open` skips opening the browser. It reaches only the folder it was started in; for another project, run it there too (it takes the next free port).
+  It prints an address on `127.0.0.1` (and opens it). That page is the same app, now editing the folder, in any browser; its status bar shows *Served board* and whether the service is still running, and if you open another folder or a web board from there, the status bar and the menu's **Back to served board** return you. Agents using the CLI or MCP see the same files and your edits show up within a couple of seconds. The address carries a key for this run; other sites and other computers cannot use the service. Stop it with Ctrl-C. `--port N` picks the port (default 4777, the next free one if busy), `--no-open` skips opening the browser. It reaches only the folder it was started in; for another project, run it there too (it takes the next free port).

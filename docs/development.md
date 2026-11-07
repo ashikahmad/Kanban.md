@@ -20,7 +20,7 @@ Edit the sources in `src/` and rebuild. Do not edit `kanbanmd.html` directly: it
 |---|---|
 | `core/` | The pure board logic: parse, generate, validated minimal-patch operations, reads, migration, housekeeping, the backlog file, sharing. No I/O. |
 | `io/` | The Node file layer: atomic writes and locking. |
-| `cli/` | The `kanbanmd` command. |
+| `cli/` | The `kanbanmd` command, including `serve` (the local file service) and `init` (project setup for agents). |
 | `mcp/` | The MCP server and its tool definitions. |
 | `src/` | The page: `index.html`, `scripts/`, `styles/`. The build bundles `core/` into it with esbuild, so the page, the CLI and the MCP server always agree on the format. |
 | `test/` | Tests and fixtures. `test/tools/page-harness.js` and `page-checks.js` check the page in a browser against a fake in-memory folder (see the header of each file). |
@@ -32,7 +32,7 @@ Useful starting points in `src/`:
 
 - `styles/00-variables.css` holds the design tokens: spacing, radius, type scale and the light and dark colour ladders. Change a colour or a size there.
 - Surfaces are layered `--c-page` < `--c-column` < `--c-card` < `--c-pop`, so a new component only has to pick the right level.
-- `scripts/13-toolbar.js` has the menus and popovers, `scripts/06-filters.js` the filter logic, `scripts/04a-persist.js` how the page saves and watches the files, and `scripts/02-i18n.js` the translations.
+- `scripts/13-toolbar.js` has the menus and popovers, `scripts/06-filters.js` the filter logic, `scripts/04a-persist.js` how the page saves and watches the files, `scripts/03a-sources.js` to `03f-refresh.js` the data sources (folder, web, picked folder, served), the status bar and refreshing a read-only board, and `scripts/02-i18n.js` the translations.
 
 ## How we run this project
 
