@@ -456,7 +456,7 @@ Review pass: footer status bar replaces the source banner. Shows the open source
 Refresh pass: the footer's read time on a read-only board is now a button with a trailing refresh icon. A web board is fetched again; a picked folder opens an explainer dialog (choose the same folder again; another folder opens that board). Read-only sources use a text fingerprint as their version, so a refresh toasts 'Board updated' or 'Already up to date' and only redraws on change. The 'Refresh folder…' menu item is gone.
 
 ### TASK-038 | Move to a fresh GitHub repo (leave the fork network)
-**Status**: planned  
+**Status**: done  
 **Priority**: Medium  
 **Category**: Docs  
 **Created**: 2026-11-07  
@@ -465,4 +465,7 @@ Refresh pass: the footer's read time on a read-only board is now a button with a
 
 Kanban.md has drifted far from ioniks/MarkdownTaskManager and has no PRs of its own open, so replace the GitHub fork with a fresh repo instead of asking Support to detach it. Credit and licence stay in the files (MPL-2.0 LICENSE and notices, README credit line, docs/about-this-fork.md).
 Checklist: (1) decide the name (same name keeps the Pages URL and links) and rename or archive the old repo first so the name is free; (2) create the new repo, push all branches and tags with full history (git push --mirror) so commits and authorship stay; (3) recreate settings: Pages source = GitHub Actions, description, topics, branch protection; issues on if wanted; (4) fix the places that name the repo: README, docs, site-src, the source comment and GitHub menu link in the app (PR #11), package metadata, git remote origin; keep the upstream remote locally; (5) old PRs #1 to #11 and their discussion are not carried over, so note the old repo's address in the README or keep it archived; (6) verify the Pages deploy and the hosted app, then archive or delete the old repo. Ask the owner before deleting anything.
+
+**Notes**:
+Done 2026-11-08: old repo renamed to ashikahmad/Kanban.md-old and archived (PRs #1-11 stay there); new public ashikahmad/Kanban.md created with master, three unmerged branches, all tags and full history; Pages source = Actions (site live again); dev branch created from master; package.json repository/homepage/bugs set; note added to docs/about-this-fork.md. Not carried over: PRs #1-11, the fork label.
 
