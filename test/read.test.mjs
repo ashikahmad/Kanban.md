@@ -203,7 +203,7 @@ test('token savings hold: targeted reads cost a small fraction of reading the fi
   assert.ok(ratio('in full') < 0.05);
   assert.ok(ratio('counts') < 0.10);
   assert.ok(ratio('every task') < 0.25, 'even a full first page stays well under the raw file');
-  assert.ok(tokens(m.toolSchemas) < 2000, 'the tool schemas must stay small: they are paid every session');
-  assert.ok(m.toolSchemas < m.rules / 2, 'and well under the format rules they replace');
-  assert.ok(tokens(m.toolSchemasReadOnly) < 700, 'a read-only server is cheaper still');
+  assert.ok(tokens(m.toolSchemas) < 2600, 'the tool schemas and the guide must stay small: they are paid every session');
+  assert.ok(tokens(m.rules) < 700, 'the guide alone stays short');
+  assert.ok(tokens(m.toolSchemasReadOnly) < 1200, 'a read-only server is cheaper still');
 });

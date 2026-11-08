@@ -12,6 +12,7 @@ import { applyOp } from '../../core/ops.js';
 import { generateTaskBlock } from '../../core/board.js';
 import { etagOf } from '../../core/text.js';
 import { publicTools, SERVER_INSTRUCTIONS } from '../../mcp/tools.js';
+import { AGENT_GUIDE } from '../../core/guide.js';
 
 const TODAY = '2026-10-25';
 const root = new URL('../../', import.meta.url);
@@ -81,7 +82,7 @@ function writeScenarios(name, board) {
 }
 
 export function measure() {
-    const rules = size(read('AI_WORKFLOW.md')) + size(read('.claude/skills/markdown-task-manager/SKILL.md'));
+    const rules = size(AGENT_GUIDE);
     const toolSchemas = size(publicTools()) + size(SERVER_INSTRUCTIONS);
     const toolSchemasReadOnly = size(publicTools({ readOnly: true })) + size(SERVER_INSTRUCTIONS);
     const scenarios = [];
@@ -104,7 +105,7 @@ export function measure() {
 if (import.meta.url === `file://${process.argv[1]}`) {
     const m = measure();
     if (process.argv.includes('--json')) { console.log(JSON.stringify(m, null, 2)); process.exit(0); }
-    console.log(`Per-session fixed cost\n  format rules an agent loads today (AI_WORKFLOW.md + skill): ~${tokens(m.rules)} tokens\n  tool schemas + server instructions (all tools):             ~${tokens(m.toolSchemas)} tokens\n  same, --read-only (5 tools):                                ~${tokens(m.toolSchemasReadOnly)} tokens\n`);
+    console.log(`Per-session fixed cost\n  the agent guide alone (kanbanmd guide):                       ~${tokens(m.rules)} tokens\n  all tool schemas + the guide as server instructions:        ~${tokens(m.toolSchemas)} tokens\n  same, --read-only (5 tools):                                ~${tokens(m.toolSchemasReadOnly)} tokens\n`);
     let last = '';
     for (const s of m.scenarios) {
         if (s.board !== last) { console.log(`\n${s.board}   raw kanban.md = ~${tokens(s.raw)} tokens`); last = s.board; }

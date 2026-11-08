@@ -14,10 +14,10 @@ const act = (r, f) => r.actions.find((a) => a.file === f);
 test('claude on a fresh folder: board, .mcp.json, skill and a CLAUDE.md block', () => {
     const d = tmp();
     const r = runInit({ dir: d, agents: ['claude'], pkg: PKG });
-    assert.deepEqual(r.actions.map((a) => a.file), ['kanban.md', '.mcp.json', '.claude/skills/markdown-task-manager/SKILL.md', 'CLAUDE.md']);
+    assert.deepEqual(r.actions.map((a) => a.file), ['board/kanban.md', '.mcp.json', '.claude/skills/markdown-task-manager/SKILL.md', 'CLAUDE.md']);
     assert.deepEqual(JSON.parse(read(d, '.mcp.json')), { mcpServers: { kanban: { command: 'npx', args: ['-y', PKG, 'mcp'] } } });
-    assert.match(read(d, 'CLAUDE.md'), /kanbanmd:start[\s\S]*npx -y @scope\/kanbanmd board[\s\S]*kanbanmd:end/);
-    assert.match(read(d, 'kanban.md'), /^# Kanban Board/);
+    assert.match(read(d, 'CLAUDE.md'), /kanbanmd:start[\s\S]*Tasks live in `board\/`[\s\S]*npx -y @scope\/kanbanmd guide[\s\S]*kanbanmd:end/);
+    assert.match(read(d, 'board/kanban.md'), /^# Kanban Board/);
     assert.ok(r.next.some((n) => /approve/.test(n)));
 });
 
@@ -74,11 +74,11 @@ test('instructions: text outside the markers is untouched, the block is refreshe
     runInit({ dir: d, agents: ['generic'], pkg: PKG });
     let t = read(d, 'AGENTS.md');
     assert.ok(t.startsWith('# Mine\n\nKeep this.\n\n<!-- kanbanmd:start -->'));
-    writeFileSync(join(d, 'AGENTS.md'), t.replace('Archive only when asked.', 'OLD TEXT').replace('# Mine', '# Mine edited'));
+    writeFileSync(join(d, 'AGENTS.md'), t.replace('never hand-edit the files', 'OLD TEXT').replace('# Mine', '# Mine edited'));
     runInit({ dir: d, agents: ['generic'], pkg: PKG });
     t = read(d, 'AGENTS.md');
     assert.ok(t.startsWith('# Mine edited'));
-    assert.ok(!t.includes('OLD TEXT') && t.includes('Archive only when asked.'));
+    assert.ok(!t.includes('OLD TEXT') && t.includes('never hand-edit the files'));
     writeFileSync(join(d, 'AGENTS.md'), '<!-- kanbanmd:start -->\nno end marker\n');
     const r = runInit({ dir: d, agents: ['generic'], pkg: PKG });
     assert.equal(act(r, 'AGENTS.md').action, 'skipped');
@@ -128,4 +128,14 @@ test('the published package holds the CLI, core, MCP server, page and skill, and
     const files = out[0].files.map((f) => f.path);
     for (const must of ['cli/kanbanmd.js', 'cli/serve.js', 'cli/init.js', 'core/index.js', 'io/node-fs.js', 'mcp/server.js', 'mcp/tools.js', 'kanbanmd.html', '.claude/skills/markdown-task-manager/SKILL.md', 'package.json', 'LICENSE']) assert.ok(files.includes(must), `missing ${must}`);
     for (const f of files) assert.ok(!/^(test|src|drafts|board|docs|node_modules|site)\//.test(f), `should not ship ${f}`);
+});
+
+test('an existing board folder is kept, and the block names it', () => {
+    const d = tmp();
+    mkdirSync(join(d, 'docs'));
+    writeFileSync(join(d, 'docs', 'kanban.md'), '# Kanban Board\n');
+    const r = runInit({ dir: d, agents: ['claude'], pkg: PKG });
+    assert.equal(r.board, 'docs');
+    assert.ok(!existsSync(join(d, 'board')));
+    assert.match(read(d, 'CLAUDE.md'), /Tasks live in `docs\/`/);
 });

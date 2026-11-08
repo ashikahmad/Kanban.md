@@ -13,6 +13,8 @@ import { TASK_FIELDS } from '../core/ops.js';
 import { runInit, parseAgents, promptAgents, AGENT_NAMES } from './init.js';
 import { startServer, openBrowser, DEFAULT_PORT } from './serve.js';
 import { readWorkspace, readActivity, mutate, migrateProject } from '../io/node-fs.js';
+import { resolveBoardDir } from '../io/board-dir.js';
+import { AGENT_GUIDE } from '../core/guide.js';
 
 const BOOL = new Set(['dry-run', 'at-end', 'overdue', 'reverse', 'apply', 'enable', 'disable', 'no-open', 'force', 'yes', 'no-mcp', 'no-skill', 'no-instructions', 'no-board']);
 function parseArgs(argv) {
@@ -29,10 +31,12 @@ function parseArgs(argv) {
 }
 
 const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
+(the board folder is --dir or KANBANMD_DIR, else board/, else the current folder, else docs/)
 
+  guide               print the rules an AI agent follows with the board (MCP clients get them from the server)
   housekeeping [--apply] [--set SPEC|off|reset]   what to archive or review; --apply archives the finished ones in one edit;
                       --set "done=done after=30d | backlog=backlog after=90d | max=200" edits the policy
-  serve [--port N] [--no-open]                     serve the page and this folder on 127.0.0.1 so any browser can edit it (Ctrl-C stops)
+  serve [--port N] [--no-open]                     serve the page and the board folder on 127.0.0.1 so any browser can edit it (Ctrl-C stops)
   init [--agent claude,cursor,vscode,gemini,codex,generic|all] [--force] [--yes] [--no-mcp] [--no-skill] [--no-instructions] [--no-board]
                       set this folder up for AI agents: MCP config, skill, instruction block, a starter board (--dry-run previews)
   mcp [--read-only]   run the MCP server (stdio) for this folder; this is what an agent's MCP config starts
@@ -50,8 +54,9 @@ const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
   apply <json | ->                                 apply one op as JSON
   create --title T [--status ID] [--priority P] [--category C] [--assignees a,b] [--tags x,y]
          [--due YYYY-MM-DD] [--description D]
-  update <id> --<field> <value> ...                fields: ${TASK_FIELDS.join(', ')}
-  move <id> <status> [--before ID | --at-end]       in place by default; a position relocates the block
+  update <id> --<field> <value> ... [--if-match ETAG]   fields: ${TASK_FIELDS.join(', ')}; --if-match fails if the task changed since you read it
+  move <id> <status> [--before ID | --at-end] [--if-match ETAG]   in place by default; a position relocates the block;
+                      into in-progress sets Started, into done sets Finished (leaving done clears it)
   sort --mode blocks|ids|positions|clear [--order asc|desc] [--scope board|archive|both]   (mode is required)
        blocks: reorder file blocks by id.  ids / positions: write Order keys from id order / current order.
        clear: remove all Order keys.
@@ -66,12 +71,16 @@ function summary(t) {
 
 async function main() {
     const { flags, pos } = parseArgs(process.argv.slice(2));
-    const dir = resolve(flags.dir || process.env.KANBANMD_DIR || '.');
+    const explicit = flags.dir || process.env.KANBANMD_DIR;
+    const root = resolve(explicit || '.'); // the project folder (init sets one up)
+    const dir = resolveBoardDir(explicit);  // the board folder: board/, else the project folder, else docs/
     const [cmd, ...a] = pos;
     const opt = { dryRun: !!flags['dry-run'], actor: flags.actor || 'cli' };
     const need = (n, what) => { if (a.length < n) throw new BoardError('usage', `Missing ${what}`, { hint: 'Run kanbanmd --help' }); };
 
     if (!cmd || cmd === 'help' || flags.help !== undefined) { console.log(HELP); return; }
+
+    if (cmd === 'guide') { process.stdout.write(AGENT_GUIDE); return; }
 
     if (cmd === 'backlog' && (flags.enable || flags.disable)) {
         const op = flags.disable ? { type: 'setBacklogFile', enabled: false } : { type: 'setBacklogFile', enabled: true, column: flags.column, file: flags.file };
@@ -111,7 +120,7 @@ async function main() {
         if (flags.agent !== undefined) agents = parseAgents(flags.agent);
         else if (process.stdin.isTTY && !flags.yes) agents = await promptAgents();
         else agents = ['claude'];
-        const report = runInit({ dir, agents, pkg, dryRun: opt.dryRun, force: !!flags.force, mcp: !flags['no-mcp'], skill: !flags['no-skill'], instructions: !flags['no-instructions'], board: !flags['no-board'] });
+        const report = runInit({ dir: root, agents, pkg, dryRun: opt.dryRun, force: !!flags.force, mcp: !flags['no-mcp'], skill: !flags['no-skill'], instructions: !flags['no-instructions'], board: !flags['no-board'] });
         console.log(JSON.stringify({ ok: true, ...report }, null, 2));
         return;
     }

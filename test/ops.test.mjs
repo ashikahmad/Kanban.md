@@ -51,10 +51,10 @@ test('updateTask status touches exactly one line', () => {
   assert.deepEqual(out.files.map((f) => f.name), ['kanban.md']);
 });
 
-test('moveTask edits the status in place: one line, file order unchanged', () => {
+test('moveTask edits the status in place: status line plus the date, file order unchanged', () => {
   const ws = demo();
   const out = apply(ws, { type: 'moveTask', id: 'TASK-004', status: 'done' });
-  assert.deepEqual(removedAdded(ws.board, out.board), [1, 1]);
+  assert.deepEqual(removedAdded(ws.board, out.board), [1, 2]); // the status line, and Finished is added
   assert.deepEqual(parseBoard(out.board).tasks.map((t) => t.id), parseBoard(ws.board).tasks.map((t) => t.id));
   assert.equal(parseBoard(out.board).tasks.find((t) => t.id === 'TASK-004').status, 'done');
 });
@@ -626,7 +626,7 @@ test('sort clear removes every key and display order falls back to file position
 test('under ordering a move before a task is a status+key edit and never moves a block', () => {
   const ws = keyed();
   const out = apply(ws, { type: 'moveTask', id: 'TASK-001', status: 'in-progress', before: 'TASK-007' });
-  assert.deepEqual(removedAdded(ws.board, out.board), [2, 2]);
+  assert.deepEqual(removedAdded(ws.board, out.board), [2, 3]); // status and key, plus Started
   assert.deepEqual(ids(out.board), ids(ws.board));
   const c = col(out.board, 'in-progress');
   assert.equal(c[c.indexOf('TASK-001') + 1], 'TASK-007');
@@ -640,7 +640,7 @@ test('under ordering a move atEnd lands last in the column; a plain move keeps t
   const key = parseBoard(ws.board).tasks.find((t) => t.id === 'TASK-002').order;
   const b = apply(ws, { type: 'moveTask', id: 'TASK-002', status: 'in-progress' });
   assert.equal(parseBoard(b.board).tasks.find((t) => t.id === 'TASK-002').order, key);
-  assert.deepEqual(removedAdded(ws.board, b.board), [1, 1]); // status line only
+  assert.deepEqual(removedAdded(ws.board, b.board), [1, 2]); // status line, plus Started
 });
 
 test('moving to where a task already is changes nothing', () => {
@@ -724,4 +724,33 @@ test('an edit keeps each line as it is: a board without breaks gains none, one w
   assert.match(b.board, /\*\*Priority\*\*: Low\n/);
   assert.match(b.board, /\*\*Due\*\*: 2027-01-01 {2}\n/);
   assert.equal(stripBreaks(b.board), stripBreaks(a.board));
+});
+
+test('moving into in-progress sets Started when empty, and never overwrites one', () => {
+  const ws = demo();
+  const t0 = parseBoard(ws.board).tasks.find((t) => t.status === 'review' && !t.started);
+  const a = apply(ws, { type: 'moveTask', id: t0.id, status: 'in-progress' });
+  assert.equal(parseBoard(a.board).tasks.find((t) => t.id === t0.id).started, '2026-01-01');
+  const b = apply({ ...a }, { type: 'moveTask', id: t0.id, status: 'review' });
+  const c = apply({ ...b }, { type: 'moveTask', id: t0.id, status: 'in-progress' });
+  assert.equal(parseBoard(c.board).tasks.find((t) => t.id === t0.id).started, '2026-01-01'); // kept from the first time
+});
+
+test('moving into done sets Finished; leaving done clears it; a Finished already there is kept on a move into done', () => {
+  const ws = demo();
+  const t0 = parseBoard(ws.board).tasks.find((t) => t.status === 'in-progress');
+  const a = apply(ws, { type: 'moveTask', id: t0.id, status: 'done' });
+  assert.equal(parseBoard(a.board).tasks.find((t) => t.id === t0.id).completed, '2026-01-01');
+  const b = apply({ ...a }, { type: 'moveTask', id: t0.id, status: 'review' });
+  assert.equal(parseBoard(b.board).tasks.find((t) => t.id === t0.id).completed, '');
+  assert.ok(!/\*\*Finished\*\*/.test(b.board.split(new RegExp(`### ${t0.id} \\|`))[1].split('### TASK-')[0]));
+});
+
+test('a move inside the same kind of column changes no dates', () => {
+  const ws = demo();
+  const t0 = parseBoard(ws.board).tasks.find((t) => t.status === 'in-progress');
+  const a = apply(ws, { type: 'moveTask', id: t0.id, status: 'review' });
+  const before = parseBoard(ws.board).tasks.find((t) => t.id === t0.id), after = parseBoard(a.board).tasks.find((t) => t.id === t0.id);
+  assert.equal(after.started, before.started);
+  assert.equal(after.completed, before.completed);
 });
