@@ -1,6 +1,6 @@
 # Kanban.md Project Board
 
-<!-- Config: Last Task ID: 38 -->
+<!-- Config: Last Task ID: 39 -->
 <!-- Format: v3 -->
 <!-- Kanban.md board. Format, rules and tools (app, CLI, MCP): https://github.com/ashikahmad/Kanban.md -->
 
@@ -28,8 +28,7 @@
 **Started**: 2026-10-22  
 **Tags**: #app #site  
 
-Open a public board with ?board=<url-to-kanban.md> and view it read-only. Built on a data-source layer: a folder source reads and writes the project folder as today; a web source reads kanban.md, archive.md and the backlog file from the URL and is always read-only. The same layer later carries browser storage (TASK-004) and Save as folder project (TASK-003). Design: drafts/github-pages-plan.md.
-
+Open a public board with ?board=<url-to-kanban.md> and view it read-only. Built on a data-source layer: a folder source reads and writes the project folder as today; a web source reads kanban.md, archive.md and the backlog file from the URL and is always read-only. The same layer later carries browser storage (TASK-004) and Save as folder project (TASK-003). Design: docs/design/github-pages-plan.md.
 Decisions: same-origin URLs load at once, other hosts ask first; ?board= in the query string; no Reload button or polling for now; remote images in notes are allowed. Works without the File System Access API, so read-only boards also open in Firefox and Safari.
 
 **Subtasks**:
@@ -68,7 +67,7 @@ One-time "Save as folder project" that writes kanban.md and archive.md, with no 
 **Created**: 2026-10-22  
 **Tags**: #app  
 
-Keep a board inside the browser with no folder, which makes the app interactive in Firefox and Safari: edits are kept locally and written to files only when the user chooses ('Save to files'). Needs clear indicators of where the data is and whether it differs from the folder it came from or from the last export; UX in drafts/sources-ux.md. Agents can read it only while a tab is open (no bridge yet). Pairs with TASK-035 (open a folder read-only, then make an editable copy) and TASK-003 (save as folder project / download). Design notes: drafts/browser-storage-plan.md.
+Keep a board inside the browser with no folder, which makes the app interactive in Firefox and Safari: edits are kept locally and written to files only when the user chooses ('Save to files'). Needs clear indicators of where the data is and whether it differs from the folder it came from or from the last export; UX notes: sources-ux.md in the git history. Agents can read it only while a tab is open (no bridge yet). Pairs with TASK-035 (open a folder read-only, then make an editable copy) and TASK-003 (save as folder project / download). Design notes: docs/design/browser-storage-plan.md.
 
 **Notes**:
 Not doing it for now. Prefer `kanbanmd serve` as described in TASK-037
@@ -242,7 +241,7 @@ The automated page checks use a fake in-memory folder; the real File System Acce
 **Created**: 2026-10-22  
 **Tags**: #site  
 
-A first product page that links to this board, hosts the app, and later offers sample boards. Plan and hand-off brief: drafts/github-pages-plan.md.
+A first product page that links to this board, hosts the app, and later offers sample boards. Plan and hand-off brief: docs/design/github-pages-plan.md.
 
 ### TASK-024 | Rewrite the README and docs; open this board
 **Status**: in-progress  
@@ -432,7 +431,7 @@ Built: picked-folder source (pickedSource in 03a-sources.js, 03c-picked-folder.j
 **Created**: 2026-11-07  
 **Tags**: #mcp #cli  
 
-Agents fall back to editing kanban.md by hand when the MCP is not configured. Plan in drafts/firefox-serve-brief.md ('Plan: installer'). One npm package 'kanbanmd' (check the name is free): bin kanbanmd with commands mcp, serve, init; @modelcontextprotocol/sdk is the only dependency (kept, loaded lazily by 'mcp'). 'npx -y kanbanmd init' (offline, idempotent, --dry-run): default board if missing; merge mcpServers.kanban into project .mcp.json (keep other servers, abort on invalid JSON); copy the skill; marker-delimited use-the-tools block in AGENTS.md and CLAUDE.md. Also 'claude mcp add kanban -- npx -y kanbanmd mcp'. Tests: init cases, npm pack file list, packed tarball runs help, serve and an MCP handshake. Docs: ai-agents.md and README one-liners. Needs the owner's npm account to publish.
+Agents fall back to editing kanban.md by hand when the MCP is not configured. Plan: see 'Plan: installer' in firefox-serve-brief.md in the git history. One npm package 'kanbanmd' (check the name is free): bin kanbanmd with commands mcp, serve, init; @modelcontextprotocol/sdk is the only dependency (kept, loaded lazily by 'mcp'). 'npx -y kanbanmd init' (offline, idempotent, --dry-run): default board if missing; merge mcpServers.kanban into project .mcp.json (keep other servers, abort on invalid JSON); copy the skill; marker-delimited use-the-tools block in AGENTS.md and CLAUDE.md. Also 'claude mcp add kanban -- npx -y kanbanmd mcp'. Tests: init cases, npm pack file list, packed tarball runs help, serve and an MCP handshake. Docs: ai-agents.md and README one-liners. Needs the owner's npm account to publish.
 
 **Notes**:
 Built, not published. Package @ashikahmad/kanbanmd (scoped), commands mcp / serve / init; init --agent claude,cursor,vscode,gemini,codex,generic|all (asks on a terminal), idempotent, never overwrites what it did not write, --dry-run. SDK is the only dependency (moved to root; mcp/package.json removed). 12 new tests (334 pass); packed tarball installed in an empty project and init, board, serve and an MCP handshake (14 tools) all worked. Docs updated. Left: set repository fields after the repo move (TASK-038), then npm publish by the owner, then check the one-liners from a clean folder. Details: drafts/firefox-serve-brief.md.
@@ -468,4 +467,18 @@ Checklist: (1) decide the name (same name keeps the Pages URL and links) and ren
 
 **Notes**:
 Done 2026-11-08: old repo renamed to ashikahmad/Kanban.md-old and archived (PRs #1-11 stay there); new public ashikahmad/Kanban.md created with master, three unmerged branches, all tags and full history; Pages source = Actions (site live again); dev branch created from master; package.json repository/homepage/bugs set; note added to docs/about-this-fork.md. Not carried over: PRs #1-11, the fork label.
+
+### TASK-039 | AI workflow redesign: one agent guide, auto dates, board folder
+**Status**: done  
+**Priority**: High  
+**Category**: MCP  
+**Assigned**: @ashikahmad (Ashik Ahmad)  
+**Created**: 2026-11-08  
+**Started**: 2026-11-08  
+**Finished**: 2026-11-08  
+
+One contract for every agent (kanbanmd guide, also the MCP instructions and the skill), tools first and never hand-edited files; moves set Started and Finished; the board lives in board/ and is found automatically. Replaces AI_WORKFLOW.md and the seven per-assistant templates. Docs: docs/ai-agents.md.
+
+**Notes**:
+Result: core/guide.js holds the single contract text (kanbanmd guide, MCP server instructions, skill body; a test keeps the three equal). core/ops.js moveTask sets Started into in-progress and Finished into done, and clears Finished on leaving done (columns matched by role). io/board-dir.js finds board/, then the project folder, then docs/; CLI, mcp and serve use it. init creates board/kanban.md and writes a four-line block. Removed AI_WORKFLOW.md and the seven *.md.exemple files. Audit fixes: server version from package.json, --if-match in --help, get_board_stats description, token numbers. Tested: npm test (344 pass). Not done: the page's own drag and drop does not set Started/Finished yet.
 

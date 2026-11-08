@@ -3,10 +3,12 @@
 // not write (a JSON file it cannot parse, a different "kanban" server entry, an edited skill), and with
 // `dryRun` it changes nothing and only reports. It returns a report; the CLI prints it as JSON.
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { createDefaultBoardContent } from '../core/index.js';
 import { BoardError } from '../core/text.js';
+import { projectBlock } from '../core/guide.js';
+import { findBoardDir, BOARD_FOLDER } from '../io/board-dir.js';
 
 const START = '<!-- kanbanmd:start -->', END = '<!-- kanbanmd:end -->';
 const SKILL_REL = '.claude/skills/markdown-task-manager/SKILL.md';
@@ -50,15 +52,8 @@ export async function promptAgents(input = process.stdin, output = process.stder
     } finally { rl.close(); }
 }
 
-const instructions = (pkg) => `${START}
-## Task board (Kanban.md)
-
-This project's tasks live in \`kanban.md\` (finished ones in \`archive.md\`).
-
-- Use the Kanban MCP tools when they are connected (\`get_board\`, \`get_task\`, \`save_task\`, \`move_task\`, ...).
-- Otherwise use the CLI, for example \`npx -y ${pkg} board\`, \`task TASK-001\`, \`move TASK-001 done\`, \`create --title "..."\`. Add \`--dry-run\` to preview. Run it with \`--help\` for everything.
-- Do not read or hand-edit \`kanban.md\` while either is available: they cost far fewer tokens, validate every change and merge with the human's edits.
-- Create a task before starting work, move it as you go, and reference \`TASK-NNN\` in commits. Archive only when asked.
+const instructions = (pkg, folder) => `${START}
+${projectBlock(pkg, folder)}
 ${END}
 `;
 
@@ -85,7 +80,10 @@ export function runInit({ dir, agents, pkg, dryRun = false, force = false, mcp =
     const seen = new Set();
     const once = (rel) => (seen.has(rel) ? false : seen.add(rel));
 
-    if (board && !existsSync(abs('kanban.md'))) put('kanban.md', createDefaultBoardContent(), 'created', 'a new empty board');
+    // The board lives in its own folder: an existing one (board/, the project folder, docs/) is kept, else board/ is created.
+    const found = findBoardDir(dir);
+    const folder = found ? (relative(dir, found) || '.') : BOARD_FOLDER;
+    if (board && !found) put(`${BOARD_FOLDER}/kanban.md`, createDefaultBoardContent(), 'created', 'a new empty board');
 
     for (const name of agents) {
         const a = AGENTS[name];
@@ -125,7 +123,7 @@ export function runInit({ dir, agents, pkg, dryRun = false, force = false, mcp =
 
         if (wantInstr) for (const rel of a.instr || []) {
             if (!once(rel)) continue;
-            const block = instructions(pkg), had = existsSync(abs(rel));
+            const block = instructions(pkg, folder), had = existsSync(abs(rel));
             const cur = had ? readFileSync(abs(rel), 'utf8') : '';
             const out = withBlock(cur, block);
             if (out === null) note(rel, 'skipped', `its ${START} / ${END} markers are unbalanced; fix or remove them and run again`);
@@ -135,5 +133,5 @@ export function runInit({ dir, agents, pkg, dryRun = false, force = false, mcp =
     }
 
     if (agents.includes('claude') && mcp) next.push('Claude Code asks you to approve the project MCP server the first time it starts a session here.');
-    return { agents, dryRun, actions, ...(manual.length && { manual }), ...(next.length && { next }) };
+    return { agents, dryRun, board: folder, actions, ...(manual.length && { manual }), ...(next.length && { next }) };
 }

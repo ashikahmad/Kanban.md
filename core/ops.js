@@ -10,7 +10,7 @@
 import { parseBoard, parseArchive, parseBacklog, generateArchive, generateTaskBlock, normalizeConfig, orderedTasks, parseTaskIds } from './board.js';
 import { BoardError, firstDifference, etagOf, stripEol, toEol } from './text.js';
 import { CURRENT_VERSION } from './migrate.js';
-import { normalizeHousekeeping, formatHousekeepingSpec } from './housekeeping-spec.js';
+import { normalizeHousekeeping, formatHousekeepingSpec, resolveHousekeeping } from './housekeeping-spec.js';
 import { resolveBacklogFile, formatBacklogFileSpec, isValidStoreFileName, BACKLOG_DEFAULT_FILE } from './backlog-spec.js';
 import * as P from './patch.js';
 
@@ -315,6 +315,28 @@ function maxId(ctx) {
     return [...ctx.state.tasks, ...ctx.state.backlog, ...ctx.state.archive].reduce((m, t) => Math.max(m, parseInt((t.id.match(/(\d+)$/) || [])[1], 10) || 0), 0);
 }
 
+
+// Moving a task sets its dates, like the page's "Started" and "Finished" fields would be filled by hand: into the
+// in-progress column sets Started when empty, into the done column sets Finished when empty, and leaving the done
+// column clears Finished. Columns are found by role (the housekeeping done column, a column named like "in progress").
+const PROGRESS_NAME = /^(in[-_ ]?progress|doing|wip|started|active)$/i;
+function datesForMove(config, task, status, today) {
+    if (task.status === status) return {};
+    const cols = config.columns || [];
+    const plain = (s) => s.replace(/[^\w\s-]/g, '').trim();
+    const progress = (cols.find((c) => PROGRESS_NAME.test(c.id) || PROGRESS_NAME.test(plain(c.name))) || {}).id;
+    const done = resolveHousekeeping(config).done.column;
+    const out = {};
+    if (status === progress && !task.started) out.started = today;
+    if (status === done && !task.completed) out.completed = today;
+    if (task.status === done && status !== done && task.completed) out.completed = '';
+    return out;
+}
+
+function setDates(ctx, found, task, dates) {
+    for (const [k, v] of Object.entries(dates)) { task[k] = v; P.setField(ctx.board, locate(ctx, found), k, v); }
+}
+
 const OPS = {
     createTask(ctx, op, env) {
         const f = normalizeFields(op.task || fail('missing_field', 'createTask needs a "task" object'), ctx.state.config, { partial: false });
@@ -352,7 +374,7 @@ const OPS = {
         return { id: after.id, kind: found.kind };
     },
 
-    moveTask(ctx, op) {
+    moveTask(ctx, op, env) {
         let found = findTask(ctx, op.id);
         if (found.kind === 'archive') fail('task_archived', `${found.task.id} is archived`, { hint: 'Restore it first.' });
         checkEtag(ctx, found, op);
@@ -360,7 +382,8 @@ const OPS = {
         const status = op.status === undefined ? found.task.status : normalizeFields({ status: op.status }, config, { partial: true }).status;
         if (op.before && op.atEnd) fail('invalid_field', 'give either before or atEnd, not both');
         const bc = resolveBacklogFile(config);
-        const setStatus = () => { const before = clone(found.task); found.task.status = status; patchFields(ctx, found, before, found.task); };
+        const dates = datesForMove(config, found.task, status, env.today());
+        const setStatus = () => { const before = clone(found.task); found.task.status = status; Object.assign(found.task, dates); patchFields(ctx, found, before, found.task); };
         if (found.kind === 'backlog') {
             if (status === bc.column) return { id: found.task.id, kind: 'backlog' }; // already in the backlog (no positions there)
             setStatus();       // promote: the status edit is the whole change; the block then moves to kanban.md
@@ -383,7 +406,7 @@ const OPS = {
         if (positional && orderActive(tasks)) {
             // Manual ordering is on: write a key, never relocate the block.
             ensureKeys(ctx);
-            if (statusChanged) { P.setField(ctx.board, locate(ctx, found), 'status', status); t.status = status; }
+            if (statusChanged) { P.setField(ctx.board, locate(ctx, found), 'status', status); t.status = status; setDates(ctx, found, t, dates); }
             const col = orderedTasks(tasks).filter((x) => x.status === status);
             const ti = col.indexOf(t);
             const others = col.filter((x) => x !== t);
@@ -418,7 +441,7 @@ const OPS = {
         const reordered = idx < 0 ? tasks : [...rest.slice(0, idx), t, ...rest.slice(idx)];
         const orderChanged = reordered.some((x, i) => x !== tasks[i]);
 
-        if (statusChanged) P.setField(ctx.board, locate(ctx, found), 'status', status);
+        if (statusChanged) { P.setField(ctx.board, locate(ctx, found), 'status', status); setDates(ctx, found, t, dates); }
         if (orderChanged) {
             const lines = P.cutBlock(ctx.board, locate(ctx, found));
             const anchor = idx < rest.length ? P.locateTask(ctx.board, 'board', rest[idx].id) : null;

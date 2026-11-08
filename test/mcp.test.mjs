@@ -39,7 +39,7 @@ test('server lists the tools with small schemas and short instructions', { skip 
     const { tools } = await c.listTools();
     assert.deepEqual(tools.map((t) => t.name), ['get_board', 'get_task', 'get_config', 'get_board_stats', 'get_changes_since', 'save_task', 'move_task', 'subtask', 'add_note', 'archive_tasks', 'restore_task', 'delete_task', 'sort_tasks', 'update_config']);
     assert.ok(JSON.stringify(tools).length < 7200, 'schemas are paid on every session');
-    assert.ok(c.getInstructions().length < 600);
+    assert.ok(c.getInstructions().length < 2500, 'the guide is paid on every session');
     assert.ok(tools.every((t) => t.inputSchema.type === 'object' && t.description));
   } finally { await c.close(); }
 });

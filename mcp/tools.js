@@ -6,6 +6,7 @@ import { BoardError } from '../core/text.js';
 import { getBoard, getTask, getConfig, listArchive, getStats, summarizeChanges } from '../core/read.js';
 import { readWorkspace, readActivity, mutate } from '../io/node-fs.js';
 import { etagOf } from '../core/text.js';
+import { AGENT_GUIDE } from '../core/guide.js';
 
 const filterProps = {
     status: { type: ['string', 'array'], items: { type: 'string' }, description: 'column id(s)' },
@@ -42,7 +43,7 @@ export const TOOLS = [
     },
     {
         name: 'get_board_stats',
-        description: 'Counts by status, assignee and priority, plus overdue and due-soon tasks.',
+        description: 'Counts by status, assignee and priority, plus overdue and due-soon tasks, and housekeeping suggestions (archive finished tasks, review stale backlog): tell the user about those, never act on them unasked.',
         inputSchema: { type: 'object', properties: {} },
         run: (ws) => getStats(ws),
     },
@@ -160,7 +161,7 @@ TOOLS.push(
     },
 );
 
-export const SERVER_INSTRUCTIONS = 'Kanban board in markdown files. Read with get_board (filtered summaries) and get_task; change it only through the write tools, never by editing the files. Ids look like TASK-014; statuses are column ids (get_config). Empty fields are omitted. Pass a task\'s etag as ifMatch to avoid overwriting someone else\'s edit; dryRun previews. If get_board_stats lists housekeeping suggestions, tell the user; do not archive without asking.';
+export const SERVER_INSTRUCTIONS = AGENT_GUIDE;
 
 export const publicTools = ({ readOnly = false } = {}) => TOOLS.filter((t) => !(readOnly && t.write)).map(({ name, description, inputSchema }) => ({ name, description, inputSchema }));
 
