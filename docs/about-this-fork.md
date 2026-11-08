@@ -2,6 +2,8 @@
 
 Kanban.md is a fork of [ioniks/MarkdownTaskManager](https://github.com/ioniks/MarkdownTaskManager), released under the Mozilla Public License 2.0 (see [`LICENSE`](../LICENSE)). The original project and its contributors created the idea this one is built on: a Kanban board that lives in plain Markdown files and runs from a single HTML file. Thank you.
 
+Kanban.md began as a GitHub fork. In November 2026 it moved to a fresh repository with the same name (the full commit history, with its authorship, came along), and the fork was kept as [`ashikahmad/Kanban.md-old`](https://github.com/ashikahmad/Kanban.md-old), archived. Its pull requests #1 to #11 and their discussion live there, so a "PR #11" mentioned in older notes means that repository.
+
 This page is for anyone curious about how the two differ. You do not need it to use Kanban.md.
 
 ## What the original gave us
