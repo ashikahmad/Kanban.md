@@ -2,7 +2,7 @@
         // A quiet bar under the header when the board has grown past its policy (finished tasks left on the
         // board, an old backlog, too many tasks). It only suggests: the one action is "Archive done", which
         // asks first and archives everything in a single edit. The policy is the optional **Housekeeping**
-        // line in kanban.md (defaults apply without it); see drafts/mcp-file-plan.md, section 12b.
+        // line in kanban.md (defaults apply without it); see docs/design/mcp-file-plan.md, section 12b.
         const HK_SNOOZE_MS = 7 * 24 * 3600 * 1000;
         let hkState = { suggestions: [], staleIds: new Set() };
 

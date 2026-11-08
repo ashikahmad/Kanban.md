@@ -77,7 +77,7 @@ Boards here are ~100 KB of markdown, so localStorage would physically work. Inde
 
 ### 5.1 Storage adapter (the seam)
 
-> Superseded by the data-source interface in `drafts/github-pages-plan.md` ("Data sources"), built first for the read-only URL board (TASK-001). Browser storage becomes a `'browser'` source on that interface. The sketch below is kept for history.
+> Superseded by the data-source interface in `github-pages-plan.md` ("Data sources"), built first for the read-only URL board (TASK-001). Browser storage becomes a `'browser'` source on that interface. The sketch below is kept for history.
 
 New file `src/scripts/03a-backends.js`. One interface, two implementations:
 
@@ -279,7 +279,7 @@ Each phase is a separate commit. Phases 1 and 5 touch existing behavior and get 
 ## 7. How to build it "as a draft"
 
 - Work on a new branch off `redesign` (suggest `draft/browser-storage`), keeping the current uncommitted example-file changes out of it.
-- `build.mjs` writes `kanbanmd.html` at the repo root. For the draft, add an `--out` option (e.g. `npm run build:draft` → `drafts/kanbanmd.browser.html`) so the draft build can sit next to the stable one and be opened side by side without overwriting it.
+- `build.mjs` writes `kanbanmd.html` at the repo root. For the draft, add an `--out` option (e.g. `npm run build:draft` → `docs/design/kanbanmd.browser.html`) so the draft build can sit next to the stable one and be opened side by side without overwriting it.
 
 ## 8. Test plan
 

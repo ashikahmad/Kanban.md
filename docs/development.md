@@ -24,8 +24,8 @@ Edit the sources in `src/` and rebuild. Do not edit `kanbanmd.html` directly: it
 | `mcp/` | The MCP server and its tool definitions. |
 | `src/` | The page: `index.html`, `scripts/`, `styles/`. The build bundles `core/` into it with esbuild, so the page, the CLI and the MCP server always agree on the format. |
 | `test/` | Tests and fixtures. `test/tools/page-harness.js` and `page-checks.js` check the page in a browser against a fake in-memory folder (see the header of each file). |
-| `docs/` | These guides, the screenshots in `images/`, and the demo board in `demo/`. |
-| `drafts/` | Design records: decisions, measurements and a log of how the CLI and MCP work was built. |
+| `docs/` | These guides, the screenshots in `images/`, and the example boards in `examples/` (one folder each). |
+| `docs/design/` | Design records: decisions, measurements and a log of how the CLI and MCP work was built. |
 | `board/` | This project's own public board. See below. |
 
 Useful starting points in `src/`:
@@ -55,4 +55,4 @@ Guidelines: readable, commented code; keep it fast with 1,000+ tasks; follow ARI
 ## Related reading
 
 - [About this fork](about-this-fork.md): where the project comes from and how it differs from the original.
-- `drafts/mcp-file-plan.md`: the design record for the shared core, the CLI and the MCP server, including known limits and deliberate non-goals.
+- [`design/mcp-file-plan.md`](design/mcp-file-plan.md): the design record for the shared core, the CLI and the MCP server, including known limits and deliberate non-goals.

@@ -62,7 +62,7 @@ Where a board comes from is a data source. A folder source reads and writes the 
 
 ```js
 DataSource {
-  kind: 'folder' | 'web' | 'browser'      // 'browser' later (TASK-004, drafts/browser-storage-plan.md)
+  kind: 'folder' | 'web' | 'browser'      // 'browser' later (TASK-004, docs/design/browser-storage-plan.md)
   label                                   // folder name, or host/path
   writable: boolean                       // web: always false
   read(name)    -> Promise<string|null>   // null = not found
@@ -71,7 +71,7 @@ DataSource {
 }
 ```
 
-The interface works on file names because saving already does (`readProjectFiles` / `writeProjectFile` in `04a-persist.js`, for `kanban.md`, `archive.md` and the backlog file). This replaces the `Backend` sketch in `drafts/browser-storage-plan.md` §5.1, which predates live sync.
+The interface works on file names because saving already does (`readProjectFiles` / `writeProjectFile` in `04a-persist.js`, for `kanban.md`, `archive.md` and the backlog file). This replaces the `Backend` sketch in `docs/design/browser-storage-plan.md` §5.1, which predates live sync.
 
 - **`FolderSource(dirHandle)`**: the existing `getFileHandle` / `createWritable` code, moved. The state holds one `source` instead of `directoryHandle`, `kanbanFileHandle` and `archiveFileHandle`.
 - **`WebSource(url)`**: resolves `kanban.md`, `archive.md` (missing is fine) and the backlog file the board names, against the board URL. Fetches with `credentials: 'omit'`, `referrerPolicy: 'no-referrer'` and a size cap. Only `http:` and `https:`.
