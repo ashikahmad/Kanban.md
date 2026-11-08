@@ -6,7 +6,7 @@
 .status-left > * + * { position: relative; }
 .status-left > * + *::before { content: ""; position: absolute; left: calc(var(--s-3) / -2); top: 50%; width: 1px; height: 14px; transform: translateY(-50%); background: var(--c-border-strong); }
 .status-seg { display: inline-flex; align-items: center; gap: var(--s-2); min-width: 0; }
-.status-seg strong, .status-badge { display: inline-flex; align-items: center; gap: var(--s-1); font-weight: 600; color: var(--c-text); }
+.status-seg strong, .status-badge { display: inline-flex; align-items: center; gap: var(--s-1); font-weight: 600; color: var(--c-text); white-space: nowrap; }
 .status-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--c-muted); }
 a.status-label:hover { color: var(--c-text); }
 .status-sync { flex: none; font-variant-numeric: tabular-nums; }
@@ -24,6 +24,8 @@ a.status-label:hover { color: var(--c-text); }
 .status-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-ok); }
 .status-dot--stopped { background: var(--c-danger); }
 .status-dot--expired { background: var(--c-warn); }
+/* Phone width: the footer wraps onto two rows, where the thin separators would hang at a row's start. */
+@media (max-width: 480px) { .status-left > * + *::before { display: none; } }
 body.has-status .notification { bottom: calc(var(--s-5) + 28px); }
 
 /* The refresh dialog's pointer to `kanbanmd serve`, with a link to the steps. */
@@ -33,7 +35,7 @@ body.has-status .notification { bottom: calc(var(--s-5) + 28px); }
 /* The "edit with kanbanmd" steps and the command to copy. */
 .steps { margin: var(--s-3) 0 0 var(--s-5); display: flex; flex-direction: column; gap: var(--s-3); }
 .cmd-row { display: flex; align-items: center; gap: var(--s-2); margin-top: var(--s-2); padding: var(--s-2) var(--s-3); background: var(--c-fill); border: 1px solid var(--c-border); border-radius: var(--r-sm); }
-.cmd-row code { flex: 1; min-width: 0; font-family: 'Consolas', 'Monaco', monospace; font-size: var(--fs-sm); color: var(--c-text); user-select: all; overflow-x: auto; white-space: nowrap; }
+.cmd-row code { flex: 1; min-width: 0; font-family: 'Consolas', 'Monaco', monospace; font-size: var(--fs-sm); color: var(--c-text); user-select: all; overflow-wrap: anywhere; }
 
 /* A read-only board has nothing to add or arrange (the controls are also left out where they are drawn). */
 body.readonly #newTaskBtn, body.readonly #manageColsBtn, body.readonly #housekeepingBar { display: none !important; }
