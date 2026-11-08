@@ -98,7 +98,7 @@ These browsers lack the File System Access API, so the **Folder** button works d
 - **Edit the real folder with `kanbanmd serve`.** In the project folder run:
 
   ```bash
-  node /path/to/Kanban.md/cli/kanbanmd.js serve        # or `kanbanmd serve` after `npm link`
+  npx -y @ashikahmad/kanbanmd serve                       # needs Node 18 or newer; or `kanbanmd serve` if installed globally
   ```
 
   It prints an address on `127.0.0.1` (and opens it). That page is the same app, now editing the folder, in any browser; its status bar shows *Served board* and whether the service is still running, and if you open another folder or a web board from there, the status bar and the menu's **Back to served board** return you. Agents using the CLI or MCP see the same files and your edits show up within a couple of seconds. The address carries a key for this run; other sites and other computers cannot use the service. Stop it with Ctrl-C. `--port N` picks the port (default 4777, the next free one if busy), `--no-open` skips opening the browser. It reaches only the folder it was started in; for another project, run it there too (it takes the next free port).
