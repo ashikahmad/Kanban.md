@@ -12,7 +12,7 @@ Up to its 2.0 release, the original project provided:
 
 - The single-file, no-server app on the File System Access API, with drag and drop, task metadata, subtasks, filters, archive, multi-project and auto-save.
 - Dark mode, four interface languages, mobile touch support, and security hardening against XSS.
-- The AI-assistant workflow (`AI_WORKFLOW.md`, the per-assistant templates and the Claude Code skill).
+- The AI-assistant workflow: a workflow document, per-assistant templates and a Claude Code skill (this fork has since replaced them with the tools and one agent guide).
 - The "status as a field" file layout, with automatic, backed-up migration from the first format, and a modular `src/` tree compiled into the single HTML file.
 
 All of that is still here.

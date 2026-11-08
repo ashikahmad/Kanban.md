@@ -617,12 +617,12 @@
   const shown = (id) => getComputedStyle(document.getElementById(id)).display !== 'none';
 
   await check('web board: a same-origin address opens at once, read-only, with no edit controls', async () => {
-    freshStart('?board=/docs/demo/kanban.md');
+    freshStart('?board=/docs/examples/orbit-product-board/kanban.md');
     await openBoardParam(boardParam());
     ok(readOnly() && source.kind === 'web', 'web source');
     ok(tasks.length > 5 && archivedTasks.length > 0, `board ${tasks.length} and archive ${archivedTasks.length} loaded`);
     ok(document.body.classList.contains('readonly'), 'body.readonly');
-    ok(shown('sourceBar') && document.getElementById('sourceBar').innerText.includes('/docs/demo/kanban.md'), 'banner with the address');
+    ok(shown('sourceBar') && document.getElementById('sourceBar').innerText.includes('/docs/examples/orbit-product-board/kanban.md'), 'banner with the address');
     ok(shown('kanbanView') && !shown('welcomeScreen'), 'board shown');
     eq(document.querySelectorAll('.column-add-btn, .task-edit-btn').length, 0, 'no add or edit buttons');
     ok([...document.querySelectorAll('.task-card')].every((c) => !c.draggable), 'cards cannot be dragged');
@@ -645,7 +645,7 @@
 
   await check('web board: nothing is written, and the edit functions change nothing', async () => {
     freshStart();
-    const log = fakeWeb({ '/kanban.md': await H.get('/docs/demo/kanban.md'), '/archive.md': await H.get('/docs/demo/archive.md') });
+    const log = fakeWeb({ '/kanban.md': await H.get('/docs/examples/orbit-product-board/kanban.md'), '/archive.md': await H.get('/docs/examples/orbit-product-board/archive.md') });
     const projectsBefore = (await loadRecentProjects()).length;
     await openBoardParam('/x/kanban.md');
     let writes = 0; source.write = async () => { writes++; };
@@ -676,7 +676,7 @@
 
   await check('web board: "Open board" fetches without cookies or referrer and shows it read-only', async () => {
     freshStart('?board=https://example.com/team/');
-    const log = fakeWeb({ '/team/kanban.md': await H.get('/docs/demo/kanban.md') }); // no archive.md: optional
+    const log = fakeWeb({ '/team/kanban.md': await H.get('/docs/examples/orbit-product-board/kanban.md') }); // no archive.md: optional
     await openBoardParam(boardParam());
     await confirmWebBoard(); await settle();
     ok(readOnly(), 'opened'); eq(archivedTasks.length, 0, 'missing archive is fine');
@@ -719,7 +719,7 @@
     await openBoardParam(boardParam());
     setLanguage('fr'); ok(welcomeText().includes(t('web.confirmTitle')) && /tableau/.test(welcomeText()), 'ask in French');
     setLanguage('en');
-    freshStart('?board=/docs/demo/kanban.md'); await openBoardParam(boardParam());
+    freshStart('?board=/docs/examples/orbit-product-board/kanban.md'); await openBoardParam(boardParam());
     setLanguage('fr'); ok(document.getElementById('sourceBar').innerText.includes('Lecture seule'), 'banner in French');
     eq(document.querySelector('#homeLink .mi-label').textContent, 'Site de Kanban.md', 'menu website link in French');
     eq(document.querySelectorAll('#taskModalActions button').length, 0, 'no edit buttons from the language refresh');
@@ -727,7 +727,7 @@
   });
 
   await check('web board: opening a folder afterwards is editable again and drops ?board=', async () => {
-    freshStart('?board=/docs/demo/kanban.md');
+    freshStart('?board=/docs/examples/orbit-product-board/kanban.md');
     await openBoardParam(boardParam());
     ok(readOnly());
     await fresh();

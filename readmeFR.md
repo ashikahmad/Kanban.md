@@ -11,7 +11,7 @@
 > *La documentation détaillée du dossier `docs/` est disponible en anglais uniquement.*
 
 ![Tableau Kanban.md](docs/images/app-overview.jpg)
-*Le tableau avec les données d'exemple de `docs/demo`.*
+*Le tableau avec les données d'exemple de `docs/examples/orbit-product-board`.*
 
 Kanban.md transforme deux fichiers Markdown, `kanban.md` et `archive.md`, en un tableau interactif. L'application tient dans un seul fichier HTML qui s'exécute dans votre navigateur et lit et écrit directement dans votre dossier. Pas de serveur, pas de compte, pas de base de données : vos tâches restent dans des fichiers que vous pouvez lire, modifier, comparer et versionner.
 
@@ -44,9 +44,9 @@ Kanban.md transforme deux fichiers Markdown, `kanban.md` et `archive.md`, en un 
 
 1. Téléchargez [`kanbanmd.html`](kanbanmd.html).
 2. Ouvrez-le dans Chrome, Edge, Opera ou Brave.
-3. Choisissez un dossier. S'il est vide, l'application crée `kanban.md` et `archive.md` pour vous.
+3. Choisissez un dossier, idéalement un dossier `board/` dans votre projet. S'il est vide, l'application crée `kanban.md` et `archive.md` pour vous.
 
-Envie de jeter un œil d'abord ? Choisissez le dossier [`docs/demo`](docs/demo) : un tableau d'exemple avec des tâches fictives.
+Envie de jeter un œil d'abord ? Choisissez un dossier de [`docs/examples`](docs/examples) : un tableau d'exemple avec des tâches fictives.
 
 D'autres options, dont garder l'application à un endroit partagé et l'utiliser sur plusieurs projets, sont décrites dans [Getting started](docs/getting-started.md) (en anglais).
 
@@ -57,7 +57,7 @@ npx -y @ashikahmad/kanbanmd init                  # dans votre projet : config M
 claude mcp add kanban -- npx -y @ashikahmad/kanbanmd mcp   # ou seulement le serveur MCP
 ```
 
-Les mêmes opérations sont disponibles depuis le shell avec la CLI `kanbanmd` (`npx -y @ashikahmad/kanbanmd board --status in-progress`). Copiez [`AI_WORKFLOW.md`](AI_WORKFLOW.md) dans votre projet pour que votre assistant connaisse les règles, et consultez [Working with AI agents](docs/ai-agents.md) (en anglais) pour les outils, les modèles par assistant et la skill Claude Code.
+Les mêmes opérations sont disponibles depuis le shell avec la CLI `kanbanmd` (`npx -y @ashikahmad/kanbanmd board --status in-progress`). `kanbanmd init` prépare un projet pour votre assistant et `kanbanmd guide` affiche les règles qu'il suit. Consultez [Working with AI agents](docs/ai-agents.md) (en anglais) pour le déroulement, les outils et la skill Claude Code.
 
 ## Documentation
 
