@@ -9,7 +9,7 @@ your-project/
 └── backlog.md      # optional, for a very large backlog
 ```
 
-The current format is **v3**, marked with `<!-- Format: v3 -->`. For the full field-by-field reference, see [`examples/README.md`](../examples/README.md) (currently written in French) and the sample files next to it.
+The current format is **v3**, marked with `<!-- Format: v3 -->`. The sections below are the field-by-field reference; [`examples/`](examples) holds complete sample boards.
 
 Under the format marker, a board usually carries one more comment that says what the file is and where its rules and tools live:
 

@@ -13,10 +13,8 @@ mkdirSync(`${OUT}/app`, { recursive: true });
 
 writeFileSync(`${OUT}/index.html`, readFileSync('site-src/index.html', 'utf8').replaceAll('@REPO@', REPO));
 cpSync('kanbanmd.html', `${OUT}/app/index.html`);
-for (const f of ['kanban.md', 'archive.md']) {
-  cpSync(`board/${f}`, `${OUT}/board/${f}`);
-  cpSync(`docs/demo/${f}`, `${OUT}/demo/${f}`);
-}
+for (const f of ['kanban.md', 'archive.md']) cpSync(`board/${f}`, `${OUT}/board/${f}`);
+cpSync('docs/examples', `${OUT}/examples`, { recursive: true }); // one folder per example board
 for (const f of ['board-light', 'board-dark', 'board-light-narrow', 'board-dark-narrow']) cpSync(`docs/images/${f}.jpg`, `${OUT}/images/${f}.jpg`);
 writeFileSync(`${OUT}/.nojekyll`, '');
-console.log(`Built ${OUT}/ (landing page, app, board, demo)`);
+console.log(`Built ${OUT}/ (landing page, app, board, examples)`);

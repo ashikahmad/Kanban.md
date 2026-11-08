@@ -14,39 +14,33 @@ Kanban.md is one HTML file. You open it in a browser, point it at a folder, and 
 2. Open it in your browser (double-click).
 3. Pick a folder to keep your tasks in.
 
-If the folder is empty, the app creates `kanban.md` and `archive.md` for you. You can name the project, and the app remembers it for next time.
+If the folder is empty, the app creates `kanban.md` and `archive.md` for you (pick a `board/` folder, see below). You can name the project, and the app remembers it for next time.
 
-**Want to look around first?** Pick the `docs/demo` folder of this repository. It holds a small sample board ("Orbit Product Board") with dummy tasks and a few archived ones.
+**Want to look around first?** Pick a folder from `docs/examples` in this repository, for instance `orbit-product-board`. It holds a small sample board ("Orbit Product Board") with dummy tasks and a few archived ones.
 
 ## Where to put the files
 
-### In your project root
+### In a `board/` folder (recommended)
 
 ```
 my-project/
-├── kanban.md
-├── archive.md
+├── board/
+│   ├── kanban.md
+│   ├── archive.md
+│   └── backlog.md     # only if you switch the backlog file on
 ├── src/
 └── package.json
 ```
 
-Open `kanbanmd.html`, pick `my-project/`, and start creating tasks. This keeps the board next to the code, so tasks and commits live in the same repository.
+Open `kanbanmd.html`, pick `my-project/board/`, and start creating tasks. The board sits next to the code, so tasks and commits live in the same repository, and the three board files stay together with nothing else in the folder. `kanbanmd init` creates this layout, and the AI tools and `kanbanmd serve` find a `board/` folder on their own.
 
-### In a subfolder
+### In the project root or another folder
 
-```
-my-project/
-├── .tasks/            # or docs/tasks/, .kanban/, ...
-│   ├── kanban.md
-│   └── archive.md
-└── src/
-```
-
-Pick the `.tasks/` folder when the app asks.
+Older projects keep `kanban.md` and `archive.md` right in the project folder, and that still works: pick that folder. `docs/` also works for the tools. Any other folder (`.tasks/`, `docs/tasks/`, ...) works in the app; the tools and `serve` then need `--dir` (or `KANBANMD_DIR`) to point at it.
 
 ### Version them, or not
 
-Task files work well under version control: you get history, review and sync for free. If you would rather keep them out of git, add `kanban.md`, `archive.md` (or the folder) to `.gitignore`.
+Task files work well under version control: you get history, review and sync for free. If you would rather keep them out of git, add the `board/` folder (or `kanban.md` and `archive.md`) to `.gitignore`.
 
 The tools can leave a few working files in the folder. Add these to `.gitignore`:
 
@@ -58,7 +52,7 @@ The tools can leave a few working files in the folder. Add these to `.gitignore`
 
 ## Where to keep `kanbanmd.html`
 
-**One copy per project.** Put `kanbanmd.html` next to `kanban.md`. Each project is self-contained and you can commit the app with it, but you update each copy by hand.
+**One copy per project.** Put `kanbanmd.html` in the project folder, next to `board/`. Each project is self-contained and you can commit the app with it, but you update each copy by hand.
 
 **One shared copy.** Keep a single `kanbanmd.html` somewhere like `~/tools/`, bookmark it, and open any project folder from it. The app remembers your last 10 projects, so switching is one click.
 

@@ -4,12 +4,12 @@ Kanban.md has no server, so sharing a board means sharing its files. Git is the 
 
 ## Share the board with your team
 
-Commit `kanban.md` and `archive.md` with the rest of the project. Each person opens the same folder in the app.
+Commit the board folder (`board/`: `kanban.md`, `archive.md`, `backlog.md`) with the rest of the project. Each person opens the same folder in the app.
 
 ```bash
 git pull                              # get everyone's updates
 # work in the app
-git add kanban.md archive.md
+git add board/
 git commit -m "Update tasks"
 git push
 ```
@@ -21,8 +21,8 @@ Because the app writes minimal patches, a normal day's edits are small, line-lev
 The format is simple Markdown, so conflicts are usually easy to resolve by hand. If you would rather take one side:
 
 ```bash
-git checkout --theirs kanban.md    # take the remote version
-git checkout --ours kanban.md      # keep the local version
+git checkout --theirs board/kanban.md    # take the remote version
+git checkout --ours board/kanban.md      # keep the local version
 ```
 
 Then reopen the folder in the app (or wait a couple of seconds for it to notice the change).
@@ -43,13 +43,15 @@ git checkout main && git merge feature/TASK-042-notifications
 
 ## Ways teams use it
 
-**Software development.** Plan sprints, track bugs (`#bug` plus a priority), and use a Review column with a checklist in the subtasks. Record technical decisions in the task notes before archiving.
+Each of these has a sample board in [`examples/`](examples).
 
-**Product and project work.** One task per feature, deadlines on the cards, filter by person. Search the archive for retrospectives.
+**Software development.** Plan sprints, track bugs (`#bug` plus a priority), and use a Review column with a checklist in the subtasks. Record technical decisions in the task notes before archiving. ([sample board](examples/software-development))
 
-**Personal use.** A to-do list with subtasks, side projects with notes, or a journal where each task is an entry and the archive is the full log.
+**Product and project work.** One task per feature, deadlines on the cards, filter by person. Search the archive for retrospectives. ([sample board](examples/orbit-product-board))
 
-**Working with AI agents.** Everyone, human or agent, sees the same files. See [Working with AI agents](ai-agents.md).
+**Personal use.** A to-do list with subtasks, side projects with notes, or a journal where each task is an entry and the archive is the full log. ([sample board](examples/personal))
+
+**Working with AI agents.** Everyone, human or agent, sees the same files. See [Working with AI agents](ai-agents.md) and the [sample board](examples/ai-agents).
 
 ## What it is not
 

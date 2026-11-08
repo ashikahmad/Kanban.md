@@ -162,7 +162,7 @@ footer p + p { margin-top: 8px; }
       <p class="lead">Two Markdown files become an interactive board. The whole app is one HTML file that reads and writes your folder directly: no server, no account, no database. You use the browser, your AI agents use the command line, and both edit the same files.</p>
       <div class="cta">
         <a class="btn primary" id="cta-app" href="app/">Open the app</a>
-        <a class="btn" id="cta-demo" href="app/?board=../demo/kanban.md">See the demo board</a>
+        <a class="btn" id="cta-demo" href="app/?board=../examples/orbit-product-board/kanban.md">See the demo board</a>
       </div>
       <div class="browsers">
         <span class="bl">Works on desktop in</span>
@@ -184,7 +184,7 @@ footer p + p { margin-top: 8px; }
         <img src="images/board-light.jpg" alt="The Kanban.md board with sample tasks in four columns: Backlog, In Progress, In Review and Done" width="1820" height="1137">
       </picture>
     </div>
-    <p class="cap">The demo board from <code>docs/demo</code>. We also run this project on <a href="app/?board=../board/kanban.md">our own board</a>.</p>
+    <p class="cap">The demo board from <code>docs/examples</code>. We also run this project on <a href="app/?board=../board/kanban.md">our own board</a>.</p>
 
     <section id="what-you-get">
       <h2>What you get</h2>
@@ -253,7 +253,7 @@ footer p + p { margin-top: 8px; }
       <ol class="steps">
         <li><a href="app/">Open the app</a> in Chrome, Edge, Opera or Brave.</li>
         <li>Pick a folder. If it is empty, the app creates <code>kanban.md</code> and <code>archive.md</code> for you.</li>
-        <li>Want to look around first? <a href="app/?board=../demo/kanban.md">Open the demo board</a> read-only, in any browser. To try editing it, download the <a href="@REPO@/tree/master/docs/demo"><code>docs/demo</code></a> folder and pick that.</li>
+        <li>Want to look around first? <a href="app/?board=../examples/orbit-product-board/kanban.md">Open the demo board</a> read-only, in any browser. To try editing it, download the <a href="@REPO@/tree/master/docs/examples/orbit-product-board"><code>docs/examples/orbit-product-board</code></a> folder and pick that.</li>
       </ol>
       <p class="note">Prefer a local copy? Download <a href="@REPO@/blob/master/kanbanmd.html"><code>kanbanmd.html</code></a> and open it in your browser. More options are in <a href="@REPO@/blob/master/docs/getting-started.md">Getting started</a>. Your browser may ask again for folder permission each session.</p>
     </section>
@@ -266,7 +266,7 @@ npx -y @ashikahmad/kanbanmd init
 
 <span class="c"># or just register the MCP server, e.g. with Claude Code</span>
 claude mcp add kanban -- npx -y @ashikahmad/kanbanmd mcp</pre>
-      <p class="note">Copy <a href="@REPO@/blob/master/AI_WORKFLOW.md"><code>AI_WORKFLOW.md</code></a> into your project so your assistant knows the rules, and see <a href="@REPO@/blob/master/docs/ai-agents.md">Working with AI agents</a> for the tools and per-assistant templates.</p>
+      <p class="note"><code>kanbanmd guide</code> prints the rules an agent follows, and the server sends them too, so there is nothing to copy per assistant. See <a href="@REPO@/blob/master/docs/ai-agents.md">Working with AI agents</a> for the workflow and the tools.</p>
     </section>
 
     <section>
