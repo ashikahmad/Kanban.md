@@ -2,7 +2,7 @@
         // Off (the default): a card sits where its block is in the file, and dropping one relocates the
         // block. On: each task carries an Order number, a drop writes one number (two lines of diff) and no
         // block moves. The first drop on a board that has no keys asks once; the answer is remembered for
-        // the project. See drafts/mcp-file-plan.md, section 5.7.
+        // the project. See docs/design/mcp-file-plan.md, section 5.7.
         function orderingActive() { return tasks.some((x) => x.order !== null && x.order !== undefined); }
 
         function orderChoiceKey() { return 'kanbanmd.orderChoice.' + (source ? source.key : ''); }

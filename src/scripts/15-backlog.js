@@ -2,7 +2,7 @@
         // With a backlog file (optional: the "**Backlog file**:" config line), the backlog column's tasks live in
         // backlog.md and the column on the board is a stub. This panel lists them, lets you promote one to a
         // column, archive it, or open it. A task's status decides its file, so every action is an ordinary
-        // status change; see drafts/mcp-file-plan.md (12b, steps 8-9).
+        // status change; see docs/design/mcp-file-plan.md (12b, steps 8-9).
         function backlogColumnId() {
             const bc = resolveBacklogFile(config);
             return bc ? bc.column : null;
