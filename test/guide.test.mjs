@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { AGENT_GUIDE, projectBlock } from '../core/guide.js';
 import { SERVER_INSTRUCTIONS } from '../mcp/tools.js';
 import { findBoardDir, resolveBoardDir } from '../io/board-dir.js';
@@ -58,4 +58,12 @@ test('the CLI works from a project folder with board/, no --dir needed', () => {
     board(d, 'board');
     const out = JSON.parse(execFileSync('node', [new URL('../cli/kanbanmd.js', import.meta.url).pathname, 'stats'], { cwd: d, encoding: 'utf8' }));
     assert.equal(out.ok, true);
+});
+
+test('serve refuses a folder with no board and creates nothing', () => {
+    const base = mkdtempSync(join(tmpdir(), 'kmd-serve-'));
+    const r = spawnSync(process.execPath, [join(process.cwd(), 'cli/kanbanmd.js'), 'serve', '--no-open'], { cwd: base, encoding: 'utf8', timeout: 5000 });
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr + r.stdout, /no kanban\.md/i);
+    assert.ok(!existsSync(join(base, 'kanban.md')) && !existsSync(join(base, 'archive.md')));
 });

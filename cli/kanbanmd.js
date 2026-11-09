@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // kanbanmd: command line front end for the board core. Every command prints one JSON document.
 //   kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command> [args]
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
 import { getBoard, getTask, getConfig, listArchive, getStats, summarizeChanges } from '../core/read.js';
 import { etagOf } from '../core/text.js';
 import { getHousekeeping, archiveCandidates } from '../core/housekeeping.js';
@@ -126,6 +126,8 @@ async function main() {
     }
 
     if (cmd === 'serve') {
+        // The page makes a blank board when it finds none, so never serve a folder that has no board: it would write one there.
+        if (!existsSync(join(dir, 'kanban.md'))) throw new BoardError('no_board', `No kanban.md in ${dir}; serve does not create one`, { hint: 'Run kanbanmd init to set a board up here, or kanbanmd --dir <board folder> serve' });
         const html = readFileSync(fileURLToPath(new URL('../kanbanmd.html', import.meta.url)), 'utf8');
         const svc = await startServer({ dir, html, port: flags.port !== undefined ? Number(flags.port) : DEFAULT_PORT });
         console.log(`Kanban.md is serving ${dir}\n\n  ${svc.url}\n\nOpen that address (it carries the access key for this run). Ctrl-C to stop.`);
