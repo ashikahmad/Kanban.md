@@ -102,3 +102,11 @@ test('kanbanmd --version and -v print the package version', () => {
         assert.equal(r.stdout.trim(), want);
     }
 });
+
+test('serve refuses a folder with no board and creates nothing', () => {
+    const base = mkdtempSync(join(tmpdir(), 'kmd-serve-'));
+    const r = spawnSync(process.execPath, [join(process.cwd(), 'cli/kanbanmd.js'), 'serve', '--no-open'], { cwd: base, encoding: 'utf8', timeout: 5000 });
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr + r.stdout, /no kanban\.md/i);
+    assert.ok(!existsSync(join(base, 'kanban.md')) && !existsSync(join(base, 'archive.md')));
+});
