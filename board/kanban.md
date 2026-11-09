@@ -460,6 +460,7 @@ Refresh pass: the footer's read time on a read-only board is now a button with a
 **Category**: Docs  
 **Created**: 2026-11-07  
 **Due**: 2026-11-08  
+**Finished**: 2026-11-08  
 **Tags**: #docs  
 
 Kanban.md has drifted far from ioniks/MarkdownTaskManager and has no PRs of its own open, so replace the GitHub fork with a fresh repo instead of asking Support to detach it. Credit and licence stay in the files (MPL-2.0 LICENSE and notices, README credit line, docs/about-this-fork.md).
