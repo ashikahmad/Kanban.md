@@ -5,7 +5,7 @@
 // line, so every byte it does not name stays exactly as it was (hand formatting, CRLF, unknown
 // sections). The locators reuse the same patterns as the parser in board.js, and ops.js verifies
 // every result by re-parsing it, so a disagreement between the two aborts the write.
-import { splitLines, stripEol, lineEol, detectEol, toEol } from './text.js';
+import { splitLines, stripEol, lineEol, detectEol, toEol, fencedLines } from './text.js';
 import { generateBoard, generateTaskBlock, FIELD_BREAK } from './board.js';
 import { formatHousekeepingSpec } from './housekeeping-spec.js';
 import { formatBacklogFileSpec } from './backlog-spec.js';
@@ -75,9 +75,13 @@ export function fieldsOf(doc, loc) {
         subHeaders: [], subItems: [], notes: -1, extraStart: -1, stop: end, lastContent: start,
     };
     let inSub = false;
+    const fencedIn = fencedLines(doc.lines.slice(start, end).map(stripEol));
+    const fenced = { }; // by absolute line number
+    for (let k = 0; k < fencedIn.length; k++) if (fencedIn[k]) fenced[start + k] = true; // code in the description is text, not metadata or sections
     for (let i = start + 1; i < end; i++) {
         const line = L(i);
         if (line.trim()) f.lastContent = i;
+        if (fenced[i]) continue;
         if (f.stop === end && STOP_RE.test(line)) f.stop = i;
         if (f.notes < 0 && /\*\*Notes\*\*:[ \t\r]*$/.test(line) && lineEol(doc.lines[i])) f.notes = i;
         if (f.extraStart < 0 && /^\s*\*\*(Links|Review|Dependencies)\*\*\s*:/i.test(line)) f.extraStart = i;
@@ -95,6 +99,7 @@ export function fieldsOf(doc, loc) {
     // all marked joined, so an edit falls back to rewriting the block instead of mangling the line.
     for (let i = start + 1; i < f.stop; i++) {
         const line = L(i);
+        if (fenced[i]) continue;
         const m = FIELD_LINE.exec(line);
         if (!m) continue;
         const parts = line.split(new RegExp(`\\s*\\|\\s*(?=\\*\\*(?:${FIELD_LABELS})\\*\\*\\s*:)`));
@@ -108,6 +113,7 @@ export function fieldsOf(doc, loc) {
     let interleaved = false;
     for (let i = start + 1; i < f.stop; i++) {
         const line = L(i);
+        if (fenced[i]) { dl.push(i); continue; } // every line of a code block belongs to the description, blank ones too
         if (META_LINE_RE.test(line) || FIELD_LINE.test(line)) { if (dl.length) interleaved = true; continue; }
         if (line.trim()) dl.push(i);
     }

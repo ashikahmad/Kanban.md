@@ -1,4 +1,5 @@
 import { BLOCKED_LABEL } from './links.js';
+import { fencedLines } from './text.js';
 import { parseHousekeepingSpec, formatHousekeepingSpec } from './housekeeping-spec.js';
 import { parseBacklogFileSpec, formatBacklogFileSpec } from './backlog-spec.js';
 
@@ -245,7 +246,10 @@ const SECTION_LINE_RE = /^\*\*(Subtasks|Notes|Links|Review|Dependencies)\*\*/;
 // several fields joined by " | " (the v1/v2 layout); each segment is read on its own.
 function scanFields(lines) {
     const out = {};
-    for (const line of lines) {
+    const fenced = fencedLines(lines);
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (fenced[i]) continue; // code in the description is not metadata
         if (SECTION_LINE_RE.test(line)) break;
         if (!FIELD_LINE_RE.test(line)) continue;
         for (const seg of line.split(FIELD_SPLIT_RE)) {
@@ -306,7 +310,11 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
     let descriptionLines = [];
     let inDescription = false;
 
-    for (let line of lines) {
+    const fencedDesc = fencedLines(lines);
+    for (let li = 0; li < lines.length; li++) {
+        const line = lines[li];
+        // Code keeps every line as written (blank lines, indentation); nothing in it is metadata or a section
+        if (fencedDesc[li]) { inDescription = true; descriptionLines.push(line.replace(/\r$/, '')); continue; }
         // Skip metadata lines
         if (FIELD_LINE_RE.test(line) || line.match(/^\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags)\*\*/)) {
             continue;
@@ -331,7 +339,9 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
     // would then re-emit them BOTH as subtasks and inside task.extra, duplicating them on
     // every parse→generate→parse cycle (subtasks growing 2→4→6…). Scoping keeps it 1:1.
     let inSubtasksSection = false;
-    for (let line of lines) {
+    for (let li = 0; li < lines.length; li++) {
+        const line = lines[li];
+        if (fencedDesc[li]) continue;
         if (/^\s*\*\*Subtasks\*\*/i.test(line)) { inSubtasksSection = true; continue; }
         if (inSubtasksSection && /^\s*\*\*[^*\r\n]+\*\*\s*:/.test(line)) inSubtasksSection = false;
         if (inSubtasksSection) {
@@ -341,10 +351,8 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
     }
 
     // Parse notes - everything after **Notes**: until end of task
-    const notesMatch = content.match(/\*\*Notes\*\*:\s*\n([\s\S]*?)$/);
-    if (notesMatch) {
-        task.notes = notesMatch[1].trim();
-    }
+    const notesAt = lines.findIndex((l, i) => !fencedDesc[i] && /\*\*Notes\*\*:\s*$/.test(l)); // not one quoted in a code block
+    if (notesAt >= 0) task.notes = lines.slice(notesAt + 1).join('\n').trim();
 
     // Preserve unsupported sections verbatim. SCOPE: exactly **Links**/**Review**/**Dependencies**
     // — the three headers the description loop STOPS at but never stores, so they alone vanish
@@ -358,7 +366,9 @@ function parseTask(id, title, content, fallbackStatus, honorStatusField = false,
     const extraStop = /^\s*\*\*(Status|Order|Priority|Category|Assigned|Created|Started|Due|Finished|Tags|Subtasks)\*\*/i;
     const extraLines = [];
     let capturingExtra = false;
-    for (let line of lines) {
+    for (let li = 0; li < lines.length; li++) {
+        const line = lines[li];
+        if (fencedDesc[li]) { if (capturingExtra) extraLines.push(line); continue; }
         // Stop the whole scan at **Notes**: notes is captured greedily to end-of-block, so
         // anything after it is already preserved there — scanning past it would double-capture.
         if (/^\s*\*\*Notes\*\*/i.test(line)) break;
