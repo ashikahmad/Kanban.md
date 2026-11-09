@@ -30,7 +30,7 @@ function parseArgs(argv) {
     return { flags, pos };
 }
 
-const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>
+const HELP = `kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command>      kanbanmd --version | -v
 (the board folder is --dir or KANBANMD_DIR, else board/, else the current folder, else docs/)
 
   guide               print the rules an AI agent follows with the board (MCP clients get them from the server)
@@ -70,6 +70,11 @@ function summary(t) {
 }
 
 async function main() {
+    const argv = process.argv.slice(2);
+    if (argv.length === 1 && ['--version', '-v', '-V'].includes(argv[0])) {
+        console.log(JSON.parse(readFileSync(fileURLToPath(new URL('../package.json', import.meta.url)), 'utf8')).version);
+        return;
+    }
     const { flags, pos } = parseArgs(process.argv.slice(2));
     const explicit = flags.dir || process.env.KANBANMD_DIR;
     const root = resolve(explicit || '.'); // the project folder (init sets one up)

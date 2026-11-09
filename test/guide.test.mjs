@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { AGENT_GUIDE, projectBlock } from '../core/guide.js';
 import { SERVER_INSTRUCTIONS } from '../mcp/tools.js';
 import { findBoardDir, resolveBoardDir } from '../io/board-dir.js';
@@ -58,4 +58,13 @@ test('the CLI works from a project folder with board/, no --dir needed', () => {
     board(d, 'board');
     const out = JSON.parse(execFileSync('node', [new URL('../cli/kanbanmd.js', import.meta.url).pathname, 'stats'], { cwd: d, encoding: 'utf8' }));
     assert.equal(out.ok, true);
+});
+
+test('kanbanmd --version and -v print the package version', () => {
+    const want = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')).version;
+    for (const flag of ['--version', '-v']) {
+        const r = spawnSync(process.execPath, [join(process.cwd(), 'cli/kanbanmd.js'), flag], { encoding: 'utf8' });
+        assert.equal(r.status, 0);
+        assert.equal(r.stdout.trim(), want);
+    }
 });
