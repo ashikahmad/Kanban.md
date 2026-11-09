@@ -16,10 +16,20 @@ export function findBoardDir(base) {
 // --dir / KANBANMD_DIR when given (the folder itself when it holds kanban.md, else looked through like a project
 // folder), otherwise the working directory looked through. With no board anywhere it falls back to the folder asked
 // for, so the error names a place the user chose.
-export function resolveBoardDir(explicit, cwd = process.cwd()) {
+export function resolveBoardDir(explicit, cwd = process.cwd(), warn = (msg) => console.error(msg)) {
     if (explicit) {
         const dir = resolve(cwd, explicit);
-        return existsSync(join(dir, 'kanban.md')) ? dir : findBoardDir(dir) || dir;
+        return existsSync(join(dir, 'kanban.md')) ? dir : searched(dir, warn) || dir;
     }
-    return findBoardDir(cwd) || resolve(cwd);
+    return searched(cwd, warn) || resolve(cwd);
+}
+
+// findBoardDir, saying so when another folder under `base` also holds a kanban.md: the first one wins, and
+// the user should know which board is being edited.
+function searched(base, warn) {
+    const found = findBoardDir(base);
+    if (!found) return null;
+    const others = CANDIDATES.map((rel) => resolve(base, rel)).filter((d) => d !== found && existsSync(join(d, 'kanban.md')));
+    if (others.length) warn(`kanbanmd: using ${found}; ${others.join(', ')} also hold${others.length > 1 ? '' : 's'} a kanban.md`);
+    return found;
 }

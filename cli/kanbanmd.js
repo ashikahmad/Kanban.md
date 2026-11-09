@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // kanbanmd: command line front end for the board core. Every command prints one JSON document.
 //   kanbanmd [--dir DIR] [--dry-run] [--actor NAME] <command> [args]
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { resolve } from 'node:path';
+import { resolve, join, basename, dirname } from 'node:path';
 import { getBoard, getTask, getConfig, listArchive, getStats, summarizeChanges } from '../core/read.js';
 import { etagOf } from '../core/text.js';
 import { getHousekeeping, archiveCandidates } from '../core/housekeeping.js';
@@ -69,10 +69,15 @@ function summary(t) {
     return { id: t.id, title: t.title, status: t.status, ...(t.order != null && { order: t.order }), priority: t.priority, assignees: t.assignees, due: t.due, tags: t.tags };
 }
 
+// --dir may name the board folder itself (board/ or docs/ holding kanban.md); init wants the project around it.
+function projectRootOf(dir) {
+    return existsSync(join(dir, 'kanban.md')) && ['board', 'docs'].includes(basename(dir)) ? dirname(dir) : dir;
+}
+
 async function main() {
     const { flags, pos } = parseArgs(process.argv.slice(2));
     const explicit = flags.dir || process.env.KANBANMD_DIR;
-    const root = resolve(explicit || '.'); // the project folder (init sets one up)
+    const root = projectRootOf(resolve(explicit || '.')); // the project folder (init sets one up)
     const dir = resolveBoardDir(explicit);  // the board folder: board/, else the project folder, else docs/
     const [cmd, ...a] = pos;
     const opt = { dryRun: !!flags['dry-run'], actor: flags.actor || 'cli' };
