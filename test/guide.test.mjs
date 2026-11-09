@@ -83,3 +83,13 @@ test('init --dir board sets up the project around it, not inside it', () => {
     assert.ok(existsSync(join(base, '.mcp.json')) || existsSync(join(base, 'CLAUDE.md')));
     assert.ok(!existsSync(join(base, 'board', '.mcp.json')) && !existsSync(join(base, 'board', 'CLAUDE.md')));
 });
+
+test('init --dir keeps a project folder that is itself called docs', () => {
+    const base = join(mkdtempSync(join(tmpdir(), 'kmd-docsrepo-')), 'docs');
+    mkdirSync(join(base, '.git'), { recursive: true });
+    writeFileSync(join(base, 'kanban.md'), '# x');
+    const r = spawnSync(process.execPath, [join(process.cwd(), 'cli/kanbanmd.js'), 'init', '--dir', '.', '--no-board'], { cwd: base, encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+    assert.ok(existsSync(join(base, '.mcp.json')) || existsSync(join(base, 'CLAUDE.md')));
+    assert.ok(!existsSync(join(base, '..', '.mcp.json')) && !existsSync(join(base, '..', 'CLAUDE.md')));
+});

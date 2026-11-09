@@ -71,7 +71,9 @@ function summary(t) {
 
 // --dir may name the board folder itself (board/ or docs/ holding kanban.md); init wants the project around it.
 function projectRootOf(dir) {
-    return existsSync(join(dir, 'kanban.md')) && ['board', 'docs'].includes(basename(dir)) ? dirname(dir) : dir;
+    const isBoardFolder = existsSync(join(dir, 'kanban.md')) && ['board', 'docs'].includes(basename(dir));
+    const isProject = ['.git', 'package.json'].some((m) => existsSync(join(dir, m))); // a repo that happens to be called docs
+    return isBoardFolder && !isProject ? dirname(dir) : dir;
 }
 
 async function main() {
