@@ -143,3 +143,20 @@ export function unifiedDiff(aText, bText, name = 'file', context = 3) {
     }
     return out.join('\n') + '\n';
 }
+
+// Which lines sit inside a ``` fenced code block (the fence lines too). Code is text: a line in it that looks like a
+// field (**Status**: ...) or a section (**Notes**:) is not one, and its blank lines and indentation must survive.
+// A fence that is never closed is not a code block (the page does not render it as one), so it masks nothing.
+export function fencedLines(lines) {
+    const mask = new Array(lines.length).fill(false);
+    const fence = (l) => /^\s*```/.test(l);
+    for (let i = 0; i < lines.length; i++) {
+        if (!fence(lines[i])) continue;
+        let j = i + 1;
+        while (j < lines.length && !fence(lines[j])) j++;
+        if (j >= lines.length) break;
+        for (let k = i; k <= j; k++) mask[k] = true;
+        i = j;
+    }
+    return mask;
+}
